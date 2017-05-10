@@ -1,6 +1,6 @@
 with init(len, arr) as (
   -- edit password length and possible characters here
-  select 32, string_to_array('123456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ~@_%', null)
+  select 32, string_to_array('123456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ~!@#$%^&*()_+[]{}_-\/?', null)
 ), arrlen(l) as (
   select count(*)
   from (select unnest(arr) from init) _
