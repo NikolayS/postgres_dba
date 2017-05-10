@@ -1,3 +1,12 @@
+-- When you do "CREATE ROLE ... PASSWORD '...';" manually in psql,
+-- password goes to log files, psql/bash history files, AWS logfiles, etc.
+-- This is insecure.
+-- This interactive script solves this problem.
+
+-- SOLVED: avoid passwords in psql/bash history files
+-- TODO: avoid passwords in logfiles (idea: to use function/select/with to print it 
+--       just to output, w/o any RAISEs that also throws everything to log).
+
 \prompt "Username?" postgres_dba_username
 \prompt "Superuser? (1 if yes, 0 if no)" postgres_dba_is_superuser
 \prompt "Login? (1 if yes, 0 if no)" postgres_dba_login
