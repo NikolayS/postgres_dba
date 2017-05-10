@@ -1,5 +1,5 @@
 with init(len, arr) as (
-  select 16, string_to_array('23456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ&#%@', null)
+  select 16, string_to_array('123456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ&#%@', null)
 ), arrlen(l) as (
   select count(*)
   from (select unnest(arr) from init) _
