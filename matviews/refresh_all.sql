@@ -18,13 +18,9 @@ declare
   done_cnt integer; -- how many matviews refreshed
   curts timestamptz;
 begin
-  begin
-    if current_setting('postgres_dba.refresh_matviews_with_data_forced')::boolean then
-      set postgres_dba.refresh_matviews_with_data = true;
-    end if;
-  exception when others then
-    -- nothing
-  end;
+  if current_setting('postgres_dba.refresh_matviews_with_data_forced', true)::boolean then
+    set postgres_dba.refresh_matviews_with_data = true;
+  end if;
   if current_setting('postgres_dba.refresh_matviews_with_data')::boolean then
     raise notice 'Refreshing ALL matviews (run ''set postgres_dba.refresh_matviews_with_data_forced = TRUE;'' to refresh only matviews w/o data).';
     for matview in

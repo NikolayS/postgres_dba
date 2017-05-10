@@ -1,0 +1,53 @@
+\prompt "Username?" postgres_dba_username
+\prompt "Superuser? (1 if yes, 0 if no)" postgres_dba_is_superuser
+\prompt "Login? (1 if yes, 0 if no)" postgres_dba_login
+
+\set q_postgres_dba_username '\'' :postgres_dba_username '\''
+\set q_postgres_dba_is_superuser '\'' :postgres_dba_is_superuser '\''
+\set q_postgres_dba_login '\'' :postgres_dba_login '\''
+
+begin;
+
+\o /dev/null
+select set_config('postgres_dba.username', :q_postgres_dba_username, true);
+select set_config('postgres_dba.is_superuser', :q_postgres_dba_is_superuser, true);
+select set_config('postgres_dba.login', :q_postgres_dba_login, true);
+\o
+
+do $$
+declare
+  pwd text;
+  j int4;
+  allowed text;
+  allowed_len int4;
+  sql text;
+begin
+  if current_setting('postgres_dba.username')::text = '' then
+    raise exception 'Username is not specified.';
+  end if;
+  allowed := '23456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ&#%@';
+  allowed_len := length(allowed);
+  pwd := '';
+  while length(pwd) < 16 loop
+    j := int4(random() * allowed_len);
+    pwd := pwd || substr(allowed, j+1, 1);
+  end loop;
+  sql := 'create role ' || current_setting('postgres_dba.username')::text
+    || (case when lower(current_setting('postgres_dba.is_superuser')::text) not in ('0', '', 'no', 'false', 'n', 'f') then ' superuser' else '' end)
+    || (case when lower(current_setting('postgres_dba.login')::text) not in ('0', '', 'no', 'false', 'n', 'f') then ' login' else '' end)
+    || ' password ''' || pwd || ''';';
+  raise notice 'SQL: %', sql;
+  execute sql;
+  raise notice 'User % created, password: %', current_setting('postgres_dba.username')::text, pwd;
+end;
+$$ language plpgsql;
+
+commit;
+
+\unset postgres_dba_username
+\unset postgres_dba_username
+\unset postgres_dba_login
+\unset q_postgres_dba_username
+\unset q_postgres_dba_username
+\unset q_postgres_dba_login
+
