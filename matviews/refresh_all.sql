@@ -1,6 +1,6 @@
 -- Use this to do the very 1st REFRESH for your matviews
 -- In case when there are complex relations between matviews,
--- it might perform multiple iterations and eventyally refreshes
+-- it might perform multiple iterations and eventually refreshes
 -- all matviews (either all w/o data or absolutely all -- it's up to you).
 
 -- set thos to TRUE here if you need ALL matviews to be refrehsed, not only those that already have been refreshed
@@ -56,8 +56,8 @@ begin
       end;
     end loop;
 
-    exit when 0 = (select count(*) from pg_matviews where not ispopulated);
     iter := iter + 1;
+    exit when iter > 10 or 0 = (select count(*) from pg_matviews where not ispopulated);
   end loop;
 
   raise notice 'Finished! % matviews refreshed in % iterations. It took %', done_cnt, iter, (clock_timestamp() - now())::text;
