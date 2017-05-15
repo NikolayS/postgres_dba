@@ -61,7 +61,7 @@ begin
     exit when iter > 10 or 0 = (select count(*) from pg_matviews where not ispopulated);
   end loop;
 
-  raise notice 'Finished! % matviews refreshed in % iterations. It took %', done_cnt, iter, (clock_timestamp() - now())::text;
+  raise notice 'Finished! % matview(s) refreshed in % iteration(s). It took %', done_cnt, iter, (clock_timestamp() - now())::text;
 end;
 $$ language plpgsql;
 
