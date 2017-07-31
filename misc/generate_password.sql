@@ -1,6 +1,6 @@
 with init(len, arr) as (
   -- edit password length and possible characters here
-  select 32, string_to_array('123456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ~!@#$%^&*()_+[]{}_-\/?', null)
+  select 16, string_to_array('123456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ', null)
 ), arrlen(l) as (
   select count(*)
   from (select unnest(arr) from init) _
@@ -11,7 +11,7 @@ with init(len, arr) as (
   select array_to_string(array_agg(arr[i]), '') as password
   from init, indexes
 )
-select password, 'md5' || md5(password) as password_md5
+select password--, 'md5' || md5(password) as password_md5 || {{username}}
 from res
 ;
 
