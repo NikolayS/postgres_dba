@@ -7,8 +7,11 @@ with init(len, arr) as (
 ), indexes(i) as (
   select 1 + int4(random() * (l - 1))
   from arrlen, (select generate_series(1, len) from init) _
+), res as (
+  select array_to_string(array_agg(arr[i]), '') as password
+  from init, indexes
 )
-select array_to_string(array_agg(arr[i]), '') as password
-from init, indexes
+select password, 'md5' || md5(password) as password_md5
+from res
 ;
 
