@@ -3,10 +3,9 @@
 -- it might perform multiple iterations and eventually refreshes
 -- all matviews (either all w/o data or absolutely all -- it's up to you).
 
--- You can set 'postgres_dba.refresh_matviews_with_data_forced' to TRUE or FALSE in advance, outside of this script.
--- If set to TRUE, it will cause ALL matviews to be refreshed, including those that already
--- contain some data (were initialized / successfully refreshed somewhen in the past).
+-- set thos to TRUE here if you need ALL matviews to be refrehsed, not only those that already have been refreshed
 set postgres_dba.refresh_matviews_with_data = FALSE;
+-- alternatively, you can set 'postgres_dba.refresh_matviews_with_data_forced' to TRUE or FALSE in advance, outside of this script.
 
 set statement_timeout to 0;
 set client_min_messages to info;
@@ -58,14 +57,13 @@ begin
     end loop;
 
     iter := iter + 1;
-    exit when iter > 10 or 0 = (select count(*) from pg_matviews where not ispopulated);
+    exit when iter > 5 or 0 = (select count(*) from pg_matviews where not ispopulated);
   end loop;
 
-  raise notice 'Finished! % matview(s) refreshed in % iteration(s). It took %', done_cnt, iter, (clock_timestamp() - now())::text;
+  raise notice 'Finished! % matviews refreshed in % iteration(s). It took %', done_cnt, (iter - 1), (clock_timestamp() - now())::text;
 end;
 $$ language plpgsql;
 
 reset postgres_dba.refresh_matviews_with_data;
 reset client_min_messages;
 reset statement_timeout;
-
