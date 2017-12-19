@@ -1,0 +1,32 @@
+\echo Menu:
+\echo '  1 – Database object sizes'
+\echo '  2 – Bloat'
+\echo '  3 – pg_stat_statementis'
+\echo '  q – Quit from this tool'
+\echo
+\echo 'Type your choice (1-3) and press <Enter>:'
+\prompt d_step_unq
+\set d_stp '\'' :d_step_unq '\''
+select
+  :d_stp::text = '1' as d_step_is_1,
+  :d_stp::text = '2' as d_step_is_2,
+  :d_stp::text = '3' as d_step_is_3,
+  :d_stp::text = 'q' as d_step_is_q \gset
+\if :d_step_is_1
+  \echo '      1 is chosen!'
+  \prompt 'Press any key…' d_dummy
+  \i index.sql
+\elif :d_step_is_2
+  \echo '      2 is chosen!'
+  \prompt 'Press any key…' d_dummy
+  \i index.sql
+\elif :d_step_is_3
+  \echo '      3 is chosen!'
+  \prompt 'Press any key…' d_dummy
+  \i index.sql
+\elif :d_step_is_q
+  \echo '...bye!'
+\else
+  \echo 'ERROR: Unkown option!'
+  \i index.sql
+\endif
