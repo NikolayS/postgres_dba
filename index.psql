@@ -1,5 +1,5 @@
 \echo Menu:
-\echo '  1 – Database object sizes'
+\echo '  1 – Master / replica info (with lag)'
 \echo '  2 – Bloat'
 \echo '  3 – pg_stat_statementis'
 \echo '  q – Quit from this tool'
@@ -13,20 +13,21 @@ select
   :d_stp::text = '3' as d_step_is_3,
   :d_stp::text = 'q' as d_step_is_q \gset
 \if :d_step_is_1
-  \echo '      1 is chosen!'
+  \i ./general/basic.sql
   \prompt 'Press any key…' d_dummy
-  \i index.sql
+  \i ./index.psql
 \elif :d_step_is_2
   \echo '      2 is chosen!'
   \prompt 'Press any key…' d_dummy
-  \i index.sql
+  \i ./index.psql
 \elif :d_step_is_3
   \echo '      3 is chosen!'
   \prompt 'Press any key…' d_dummy
-  \i index.sql
+  \i ./index.psql
 \elif :d_step_is_q
   \echo '...bye!'
 \else
   \echo 'ERROR: Unkown option!'
-  \i index.sql
+  \i ./index.psql
 \endif
+
