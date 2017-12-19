@@ -11,7 +11,7 @@ psql
 
 In psql, type:
 ```
-\i index.psql
+\i start.psql
 ```
 
 – it will open interactive menu.
