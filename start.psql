@@ -1,10 +1,10 @@
 \echo Menu:
-\echo '  1 – Basic Node Information (master/replica, lag, DB size, tmp files)'
-\echo '  2 – '
-\echo '  3 - Slowest Queries'
-\echo '  i1 - Unused/Redundant Indexes'
-\echo '  i2 - Rarely Used Indexes'
-\echo '  q – Quit from this tool'
+\echo '   1  – Basic Node Information (master/replica, lag, DB size, tmp files)'
+\echo '   2  – ....'
+\echo '   3  - Slowest Queries'
+\echo '  i1  - Unused/Redundant Indexes'
+\echo '  i2  - Rarely Used Indexes'
+\echo '   q  – Quit from this tool'
 \echo
 \echo 'Type your choice and press <Enter>:'
 \prompt d_step_unq
