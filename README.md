@@ -1,5 +1,6 @@
 # PostgresDBA
-Useful tools for Postgres DBA
+
+The missing set of useful tools for Postgres DBA.
 
 ## Requirements
 
@@ -14,7 +15,7 @@ That's it. Nothing is really needed to be installed.
 
 ## Usage
 
-### Locally
+### Local Postgres Server
 If you are running psql and Postgres server on the same machine, just launch psql:
 ```bash
 psql -U <username> <dbname>
@@ -27,7 +28,7 @@ And type (assuming that you are sitting in the `PostgresDBA` directory):
 
 – it will open interactive menu.
 
-### Remotely
+### Remote Postgres Server
 What to do if you need to connect to a remote Postgres server? Usually, Postgres is behind firewall and/or doesn't listen to a public netowork interface. So you need to be able to connect to the sever using SSH. If you can do it, then just create SSH tunnel (assuming that Postgres listens to default port 5432 on that server:
 
 ```bash
@@ -44,7 +45,7 @@ Then you are ready to use it (again, assuming you were sitting in the project di
 \i ./start.psql
 ```
 
-### Heroku
+### Heroku Postgres
 Sitting in the `PostgresDBA` directory on your local machine, run, as usual:
 ```bash
 heroku pg:psql -a <your_project_name>
