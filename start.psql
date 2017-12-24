@@ -1,13 +1,13 @@
 \echo Menu:
 \echo '   1  – Basic Node Information (master/replica, lag, DB size, tmp files)'
 \echo '   2  – Sizes of tables'
-\echo '  b1  – Table bloat, rough estimation'
+\echo '  b1  – Tables bloat, rough estimation'
 \echo '  b2  – B-tree indexes bloat, rough estimation'
-\echo '  b3  – Table bloat, more precise (requires pgstattuple extension; expensive)'
-\echo '  b4  – Index bloat, more precise (requires pgstattuple extension; expensive)'
-\echo '   3  - Slowest Queries'
+\echo '  b3  – Tables bloat, more precise (requires pgstattuple extension; expensive)'
+\echo '  b4  – B-tree indexes bloat, more precise (requires pgstattuple extension; expensive)'
 \echo '  i1  - Unused/Redundant Indexes'
 \echo '  i2  - Rarely Used Indexes'
+\echo '  s1  - Slowest Queries, by Total Time (requires pg_stat_statements extension)'
 \echo '   q  – Quit'
 \echo
 \echo 'Type your choice and press <Enter>:'
@@ -20,9 +20,9 @@ select
   :d_stp::text = 'b2' as d_step_is_b2,
   :d_stp::text = 'b3' as d_step_is_b3,
   :d_stp::text = 'b4' as d_step_is_b4,
-  :d_stp::text = '3' as d_step_is_3,
   :d_stp::text = 'i1' as d_step_is_i1,
   :d_stp::text = 'i2' as d_step_is_i2,
+  :d_stp::text = 's1' as d_step_is_s1,
   :d_stp::text = 'q' as d_step_is_q \gset
 \if :d_step_is_1
   \i ./general/basic.sql
@@ -45,11 +45,7 @@ select
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \elif :d_step_is_b4
-  \i ./bloat/index_pgstattuple.sql
-  \prompt 'Press <Enter> to continue…' d_dummy
-  \i ./start.psql
-\elif :d_step_is_3
-  \echo '      3 is chosen!'
+  \i ./bloat/btree_pgstattuple.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \elif :d_step_is_i1
@@ -58,6 +54,10 @@ select
   \i ./start.psql
 \elif :d_step_is_i2
   \i ./indexes/rare.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \i ./start.psql
+\elif :d_step_is_s1
+  \i ./slow/pg_stat_statements_top_total.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \elif :d_step_is_q
