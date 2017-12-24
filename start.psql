@@ -1,10 +1,14 @@
 \echo Menu:
 \echo '   1  – Basic Node Information (master/replica, lag, DB size, tmp files)'
-\echo '   2  – ....'
+\echo '   2  – Sizes of tables'
+\echo '  b1  – Table bloat, rough estimation'
+\echo '  b2  – B-tree indexes bloat, rough estimation'
+\echo '  b3  – Table bloat, more precise (requires pgstattuple extension; expensive)'
+\echo '  b4  – Index bloat, more precise (requires pgstattuple extension; expensive)'
 \echo '   3  - Slowest Queries'
 \echo '  i1  - Unused/Redundant Indexes'
 \echo '  i2  - Rarely Used Indexes'
-\echo '   q  – Quit from this tool'
+\echo '   q  – Quit'
 \echo
 \echo 'Type your choice and press <Enter>:'
 \prompt d_step_unq
@@ -12,6 +16,10 @@
 select
   :d_stp::text = '1' as d_step_is_1,
   :d_stp::text = '2' as d_step_is_2,
+  :d_stp::text = 'b1' as d_step_is_b1,
+  :d_stp::text = 'b2' as d_step_is_b2,
+  :d_stp::text = 'b3' as d_step_is_b3,
+  :d_stp::text = 'b4' as d_step_is_b4,
   :d_stp::text = '3' as d_step_is_3,
   :d_stp::text = 'i1' as d_step_is_i1,
   :d_stp::text = 'i2' as d_step_is_i2,
@@ -22,6 +30,22 @@ select
   \i ./start.psql
 \elif :d_step_is_2
   \echo '      2 is chosen!'
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \i ./start.psql
+\elif :d_step_is_b1
+  \i ./bloat/table_estimation.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \i ./start.psql
+\elif :d_step_is_b2
+  \i ./bloat/btree_estimation.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \i ./start.psql
+\elif :d_step_is_b3
+  \i ./bloat/table_pgstattuple.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \i ./start.psql
+\elif :d_step_is_b4
+  \i ./bloat/index_pgstattuple.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \elif :d_step_is_3
