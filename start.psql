@@ -1,6 +1,6 @@
 \echo Menu:
 \echo '   1  – Basic Node Information (master/replica, lag, DB size, tmp files)'
-\echo '   2  – Sizes of tables'
+\echo '   2  – Sizes of tables (not yet implemented)'
 \echo '  b1  – Tables bloat, rough estimation'
 \echo '  b2  – B-tree indexes bloat, rough estimation'
 \echo '  b3  – Tables bloat, more precise (requires pgstattuple extension; expensive)'
