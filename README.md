@@ -9,7 +9,7 @@ You need to have psql version 10, but the Postgres server itself can be older â€
 ## Installation
 Clone, go to the directory and run psql (version 10 is required):
 ```bash
-git clone git@github.com:NikolayS/PostgresDBA.git
+git clone https://github.com/NikolayS/PostgresDBA.git
 cd PostgresDBA
 ```
 
