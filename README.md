@@ -4,7 +4,7 @@ The missing set of useful tools for Postgres DBA.
 
 ## Requirements
 
-You need to have psql version 10, but the Postgres server itself can be older – most tools work with it (if not, it's mentioned in description of such a tool).
+You need to have psql version 10, but the Postgres server itself can be older – most tools work with it.
 
 ## Installation
 Clone, go to the directory and run psql (version 10 is required):
