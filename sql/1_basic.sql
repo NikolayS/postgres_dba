@@ -1,6 +1,6 @@
 --Basic Node Information (master/replica, lag, DB size, tmp files)
 with data as (
-  select * from pg_stat_database where datname not in ('postgres', 'template0', 'template1') order by tup_returned desc limit 1
+  select * from pg_stat_database where datname = current_database()
 )
 select 'Database Name' as metric, datname as value from data
 union all
