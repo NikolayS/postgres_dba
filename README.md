@@ -36,7 +36,7 @@ And type (assuming that you are sitting in the `PostgresDBA` directory):
 <img width="789" alt="screen shot 2017-12-30 at 21 34 57" src="https://user-images.githubusercontent.com/1345402/34459596-546d5cb6-eda9-11e7-8bae-2ae649d9cff5.png">
 
 ### Remote Postgres Server
-What to do if you need to connect to a remote Postgres server? Usually, Postgres is behind firewall and/or doesn't listen to a public netowork interface. So you need to be able to connect to the sever using SSH. If you can do it, then just create SSH tunnel (assuming that Postgres listens to default port 5432 on that server:
+What to do if you need to connect to a remote Postgres server? Usually, Postgres is behind a firewall and/or doesn't listen to a public network interface. So you need to be able to connect to the server using SSH. If you can do it, then just create SSH tunnel (assuming that Postgres listens to default port 5432 on that server:
 
 ```bash
 ssh -rNTML 9432:localhost:5432 you-server.com
@@ -47,7 +47,7 @@ Then, just launch psql, connecting to port 9432 at localhost:
 psql -h localhost -p 9432 -U <username> <dbname>
 ```
 
-Then you are ready to use it (again, assuming you were sitting in the project directory when launching psql; otherwise, use absolute path):
+Then you are ready to use it (again, you must be in the project directory when launching psql):
 ```
 \i ./start.psql
 ```
@@ -63,7 +63,7 @@ And then, in psql:
 \i ./start.psql
 ```
 
-### Hot to Extend
+### How to Extend (Add More Queries)
 You can add your own useful SQL queries and use them from the main menu. Just add your SQL code to `./sql` directory. The filename should start with some 1 or 2-letter code, followed by underscore and some additional arbitrary words. Extension should be `.sql`. Example:
 ```
   sql/f1_funny_query.sql
@@ -76,6 +76,8 @@ Once you added your queries, regenerate `start.psql` file:
 ```
 
 Now your have the new `start.psql` and can use it as described above.
+
+‼️ If your new queries are good consider sharing them with public. The best way to do it is to open a Pull Request (https://help.github.com/articles/creating-a-pull-request/).
 
 ## Uninstallation
 No steps are needed, just delete PostgresDBA directory.
