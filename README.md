@@ -33,7 +33,7 @@ And type (assuming that you are sitting in the `PostgresDBA` directory):
 
 – it will open interactive menu.
 
-<img width="783" alt="screen shot 2017-12-30 at 23 16 31" src="https://user-images.githubusercontent.com/1345402/34460039-7ed27af0-edb7-11e7-9f6a-1455055ba0dc.png">
+<img width="782" alt="screen shot 2017-12-30 at 23 51 38" src="https://user-images.githubusercontent.com/1345402/34460181-67ba7ae8-edbc-11e7-92b2-2464cbcd36b7.png">
 
 ### Remote Postgres Server
 What to do if you need to connect to a remote Postgres server? Usually, Postgres is behind a firewall and/or doesn't listen to a public network interface. So you need to be able to connect to the server using SSH. If you can do it, then just create SSH tunnel (assuming that Postgres listens to default port 5432 on that server:
