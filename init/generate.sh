@@ -38,7 +38,9 @@ do
   echo "  \\i ./$OUT" >> "$OUT"
 done
 echo "\\else" >> "$OUT"
-echo "  \\echo 'ERROR: Unkown option!'" >> "$OUT"
+echo "  \\echo" >> "$OUT"
+echo "  \\echo 'ERROR: Unknown option!'" >> "$OUT"
+echo "  \\echo" >> "$OUT"
 echo "  \\i ./$OUT" >> "$OUT"
 echo "\\endif" >> "$OUT"
 

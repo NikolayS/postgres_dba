@@ -82,6 +82,8 @@ select
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \else
-  \echo 'ERROR: Unkown option!'
+  \echo
+  \echo 'ERROR: Unknown option!'
+  \echo
   \i ./start.psql
 \endif
