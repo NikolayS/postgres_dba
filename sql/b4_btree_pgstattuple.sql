@@ -1,3 +1,5 @@
+--B-tree Indexes Bloat, more precise (requires pgstattuple extension; expensive)
+
 --https://github.com/dataegret/pg-utils/tree/master/sql
 --pgstattuple extension required
 --WARNING: without index name/mask query will read all available indexes which could cause I/O spikes

@@ -1,3 +1,5 @@
+--B-tree Indexes Bloat, rough estimation
+
 -- enhanced version of https://github.com/ioguix/pgsql-bloat-estimation/blob/master/btree/btree_bloat.sql
 
 -- WARNING: executed with a non-superuser role, the query inspect only index on tables you are granted to read.

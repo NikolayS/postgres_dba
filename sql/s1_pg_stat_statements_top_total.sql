@@ -1,3 +1,5 @@
+--Slowest Queries, by Total Time (requires pg_stat_statements extension)
+
 -- In pg_stat_statements, there is a problem: sometimes (quite often), it registers the same query twice (or even more).
 -- It's easy to check in your DB: 
 --

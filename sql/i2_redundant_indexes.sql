@@ -1,3 +1,5 @@
+--Unused/Redundant Indexes
+
 -- Use it to generate a database migration (e.g. RoR's db:migrate or Sqitch)
 -- to drop unused and redundant indexes.
 

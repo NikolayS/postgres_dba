@@ -1,3 +1,5 @@
+--Rarely Used Indexes
+
 --https://github.com/dataegret/pg-utils/tree/master/sql
 
 SELECT

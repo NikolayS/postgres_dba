@@ -1,3 +1,5 @@
+--Tables Bloat, more precise (requires pgstattuple extension; expensive)
+
 --https://github.com/dataegret/pg-utils/tree/master/sql
 --pgstattuple extension required
 --WARNING: without table name/mask query will read all available tables which could cause I/O spikes

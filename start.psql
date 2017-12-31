@@ -1,70 +1,69 @@
 \echo Menu:
-\echo '   1  – Basic Node Information (master/replica, lag, DB size, tmp files)'
-\echo '   2  – Sizes of tables (WIP)'
-\echo '  b1  – Tables bloat, rough estimation'
-\echo '  b2  – B-tree indexes bloat, rough estimation'
-\echo '  b3  – Tables bloat, more precise (requires pgstattuple extension; expensive)'
-\echo '  b4  – B-tree indexes bloat, more precise (requires pgstattuple extension; expensive)'
-\echo '  i1  - Unused/Redundant Indexes'
-\echo '  i2  - Rarely Used Indexes'
-\echo '  s1  - Slowest Queries, by Total Time (requires pg_stat_statements extension)'
-\echo '   q  – Quit'
+\echo '   1 – Basic Node Information (master/replica, lag, DB size, tmp files)'
+\echo '   2 – General Table Size Information'
+\echo '  b1 – Tables Bloat, rough estimation'
+\echo '  b2 – B-tree Indexes Bloat, rough estimation'
+\echo '  b3 – Tables Bloat, more precise (requires pgstattuple extension; expensive)'
+\echo '  b4 – B-tree Indexes Bloat, more precise (requires pgstattuple extension; expensive)'
+\echo '  i1 – Rarely Used Indexes'
+\echo '  i2 – Unused/Redundant Indexes'
+\echo '  s1 – Slowest Queries, by Total Time (requires pg_stat_statements extension)'
+\echo '   q – Quit'
 \echo
-\echo 'Type your choice and press <Enter>:'
+\echo Type your choice and press <Enter>:
 \prompt d_step_unq
 \set d_stp '\'' :d_step_unq '\''
 select
-  :d_stp::text = '1' as d_step_is_1,
-  :d_stp::text = '2' as d_step_is_2,
-  :d_stp::text = 'b1' as d_step_is_b1,
-  :d_stp::text = 'b2' as d_step_is_b2,
-  :d_stp::text = 'b3' as d_step_is_b3,
-  :d_stp::text = 'b4' as d_step_is_b4,
-  :d_stp::text = 'i1' as d_step_is_i1,
-  :d_stp::text = 'i2' as d_step_is_i2,
-  :d_stp::text = 's1' as d_step_is_s1,
-  :d_stp::text = 'q' as d_step_is_q \gset
-\if :d_step_is_1
-  \i ./general/basic.sql
+:d_stp::text = '1' as d_step_is_1,
+:d_stp::text = '2' as d_step_is_2,
+:d_stp::text = 'b1' as d_step_is_b1,
+:d_stp::text = 'b2' as d_step_is_b2,
+:d_stp::text = 'b3' as d_step_is_b3,
+:d_stp::text = 'b4' as d_step_is_b4,
+:d_stp::text = 'i1' as d_step_is_i1,
+:d_stp::text = 'i2' as d_step_is_i2,
+:d_stp::text = 's1' as d_step_is_s1,
+:d_stp::text = 'q' as d_step_is_q \gset
+\if :d_step_is_q
+  \echo 'Bye!'
+  \echo
+\elif :d_step_is_1
+  \i ./sql/1_basic.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \elif :d_step_is_2
-  \echo '      WIP! Not implemented yet! Stay tuned and do git pull!'
+  \i ./sql/2_table_sizes.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \elif :d_step_is_b1
-  \i ./bloat/table_estimation.sql
+  \i ./sql/b1_table_estimation.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \elif :d_step_is_b2
-  \i ./bloat/btree_estimation.sql
+  \i ./sql/b2_btree_estimation.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \elif :d_step_is_b3
-  \i ./bloat/table_pgstattuple.sql
+  \i ./sql/b3_table_pgstattuple.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \elif :d_step_is_b4
-  \i ./bloat/btree_pgstattuple.sql
+  \i ./sql/b4_btree_pgstattuple.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \elif :d_step_is_i1
-  \i ./indexes/redundant.sql
+  \i ./sql/i1_rare_indexes.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \elif :d_step_is_i2
-  \i ./indexes/rare.sql
+  \i ./sql/i2_redundant_indexes.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \elif :d_step_is_s1
-  \i ./slow/pg_stat_statements_top_total.sql
+  \i ./sql/s1_pg_stat_statements_top_total.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
-\elif :d_step_is_q
-  \echo 'Bye!'
-  \echo
 \else
   \echo 'ERROR: Unkown option!'
   \i ./start.psql
 \endif
-

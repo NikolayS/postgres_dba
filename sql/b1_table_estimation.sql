@@ -1,4 +1,6 @@
--- enhanced version of https://github.com/ioguix/pgsql-bloat-estimation/blob/master/table/table_bloat.sql
+--Tables Bloat, rough estimation
+
+--enhanced version of https://github.com/ioguix/pgsql-bloat-estimation/blob/master/table/table_bloat.sql
 
 /* WARNING: executed with a non-superuser role, the query inspect only tables you are granted to read.
 * This query is compatible with PostgreSQL 9.0 and more
