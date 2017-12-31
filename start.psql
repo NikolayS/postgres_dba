@@ -7,7 +7,7 @@
 \echo '  b4 – B-tree Indexes Bloat, more precise (requires pgstattuple extension; expensive)'
 \echo '  b5 – Tables and Columns Without Stats (so bloat cannot be estimated)'
 \echo '  i1 – Unused/Rarely Used Indexes'
-\echo '  i2 – Unused/Redundant Indexes'
+\echo '  i2 – Unused/Redundant Indexes Do & Undo Migration DDL'
 \echo '  i3 – FKs with Missing/Bad Indexes'
 \echo '  s1 – Slowest Queries, by Total Time (requires pg_stat_statements extension)'
 \echo '  s2 – Slowest Queries Report (requires pg_stat_statements)'
