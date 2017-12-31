@@ -64,7 +64,7 @@ And then, in psql:
 ```
 
 ### Hot to Extend
-You can add your own useful SQL queries and use them from the main menu. Just add your SQL code to `./sql` directory. The filename should start with some 1 or 2-letter code, followed by underscore and some filename. Extension should be `.sql`. Example:
+You can add your own useful SQL queries and use them from the main menu. Just add your SQL code to `./sql` directory. The filename should start with some 1 or 2-letter code, followed by underscore and some additional arbitrary words. Extension should be `.sql`. Example:
 ```
   ./sql/f1_funny_query.sql
 ```
