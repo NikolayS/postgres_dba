@@ -66,13 +66,13 @@ And then, in psql:
 ### Hot to Extend
 You can add your own useful SQL queries and use them from the main menu. Just add your SQL code to `./sql` directory. The filename should start with some 1 or 2-letter code, followed by underscore and some additional arbitrary words. Extension should be `.sql`. Example:
 ```
-  ./sql/f1_funny_query.sql
+  sql/f1_funny_query.sql
 ```
 – this will give you an option "f1" in the main menu. The very first line in the file should be an SQL comment (starts with `--`) with the query description. It will automatically appear in the menu.
 
 Once you added your queries, regenerate `start.psql` file:
 ```bash
-./init/generate.sh
+/bin/bash ./init/generate.sh
 ```
 
 Now your have the new `start.psql` and can use it as described above.
