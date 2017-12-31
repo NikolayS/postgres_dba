@@ -47,7 +47,7 @@ Then, just launch psql, connecting to port 9432 at localhost:
 psql -h localhost -p 9432 -U <username> <dbname>
 ```
 
-Then you are ready to use it (again, assuming you were sitting in the project directory when launching psql; otherwise, use absolute path):
+Then you are ready to use it (again, you must be in the project directory when launching psql):
 ```
 \i ./start.psql
 ```
