@@ -2,6 +2,8 @@
 
 The missing set of useful tools for Postgres DBA.
 
+:warning: The project is in its very early stage. If you have great ideas, feel free to create a pull request or open an issue.
+
 ## Requirements
 
 You need to have psql version 10, but the Postgres server itself can be older – most tools work with it.
