@@ -5,8 +5,10 @@
 \echo '  b2 – B-tree Indexes Bloat, rough estimation'
 \echo '  b3 – Tables Bloat, more precise (requires pgstattuple extension; expensive)'
 \echo '  b4 – B-tree Indexes Bloat, more precise (requires pgstattuple extension; expensive)'
-\echo '  i1 – Rarely Used Indexes'
+\echo '  b5 – Tables and Columns Without Stats (so bloat cannot be estimated)'
+\echo '  i1 – Unused/Rarely Used Indexes'
 \echo '  i2 – Unused/Redundant Indexes'
+\echo '  i3 – FKs with Missing/Bad Indexes'
 \echo '  s1 – Slowest Queries, by Total Time (requires pg_stat_statements extension)'
 \echo '  s2 – Slowest Queries Report (requires pg_stat_statements)'
 \echo '   q – Quit'
@@ -21,8 +23,10 @@ select
 :d_stp::text = 'b2' as d_step_is_b2,
 :d_stp::text = 'b3' as d_step_is_b3,
 :d_stp::text = 'b4' as d_step_is_b4,
+:d_stp::text = 'b5' as d_step_is_b5,
 :d_stp::text = 'i1' as d_step_is_i1,
 :d_stp::text = 'i2' as d_step_is_i2,
+:d_stp::text = 'i3' as d_step_is_i3,
 :d_stp::text = 's1' as d_step_is_s1,
 :d_stp::text = 's2' as d_step_is_s2,
 :d_stp::text = 'q' as d_step_is_q \gset
@@ -53,12 +57,20 @@ select
   \i ./sql/b4_btree_pgstattuple.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
+\elif :d_step_is_b5
+  \i ./sql/b5_tables_no_stats.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \i ./start.psql
 \elif :d_step_is_i1
   \i ./sql/i1_rare_indexes.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \elif :d_step_is_i2
   \i ./sql/i2_redundant_indexes.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \i ./start.psql
+\elif :d_step_is_i3
+  \i ./sql/i3_non_indexed_fks.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \elif :d_step_is_s1
