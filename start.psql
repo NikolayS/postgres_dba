@@ -8,6 +8,9 @@
 \echo '  i1 – Rarely Used Indexes'
 \echo '  i2 – Unused/Redundant Indexes'
 \echo '  s1 – Slowest Queries, by Total Time (requires pg_stat_statements extension)'
+\echo '  s2 – Slowest Queries Report (requires pg_stat_statements)'
+\echo '  s3 – Top Queries by IO (requires pg_stat_statements)'
+\echo '  s4 – Top Queries by CPU'
 \echo '   q – Quit'
 \echo
 \echo Type your choice and press <Enter>:
@@ -23,6 +26,9 @@ select
 :d_stp::text = 'i1' as d_step_is_i1,
 :d_stp::text = 'i2' as d_step_is_i2,
 :d_stp::text = 's1' as d_step_is_s1,
+:d_stp::text = 's2' as d_step_is_s2,
+:d_stp::text = 's3' as d_step_is_s3,
+:d_stp::text = 's4' as d_step_is_s4,
 :d_stp::text = 'q' as d_step_is_q \gset
 \if :d_step_is_q
   \echo 'Bye!'
@@ -61,6 +67,18 @@ select
   \i ./start.psql
 \elif :d_step_is_s1
   \i ./sql/s1_pg_stat_statements_top_total.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \i ./start.psql
+\elif :d_step_is_s2
+  \i ./sql/s2_pg_stat_statements_report.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \i ./start.psql
+\elif :d_step_is_s3
+  \i ./sql/s3_pg_stat_statements_by_io.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \i ./start.psql
+\elif :d_step_is_s4
+  \i ./sql/s4_pg_stat_statements_by_cpu.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \i ./start.psql
 \else
