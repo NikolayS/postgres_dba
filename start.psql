@@ -10,7 +10,7 @@
 \echo '  s1 – Slowest Queries, by Total Time (requires pg_stat_statements extension)'
 \echo '  s2 – Slowest Queries Report (requires pg_stat_statements)'
 \echo '  s3 – Top Queries by IO (requires pg_stat_statements)'
-\echo '  s4 – Top Queries by CPU'
+\echo '  s4 – Top Queries by CPU (requires pg_stat_statements)'
 \echo '   q – Quit'
 \echo
 \echo Type your choice and press <Enter>:

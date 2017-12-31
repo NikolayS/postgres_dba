@@ -1,4 +1,4 @@
---Top Queries by CPU
+--Top Queries by CPU (requires pg_stat_statements)
 
 --Created by Data Egret https://github.com/dataegret/pg-utils/blob/master/sql/global_reports/query_stat_cpu_time.sql
 
