@@ -3,7 +3,7 @@
 with data as (
   select
     c.oid,
-    nspname as table_schema,
+    nspname as schema_name,
     relname as table_name,
     c.reltuples as row_estimate,
     pg_total_relation_size(c.oid) as total_bytes,
@@ -15,8 +15,7 @@ with data as (
   where relkind = 'r'
 )
 select
-  table_schema,
-  table_name,
+  coalesce(nullif(schema_name, 'public') || '.', '') || table_name as table,
   '~' || case
     when row_estimate > 10^12 then round(row_estimate::numeric / 10^12::numeric, 0)::text || 'T'
     when row_estimate > 10^9 then round(row_estimate::numeric / 10^9::numeric, 0)::text || 'B'
@@ -32,7 +31,10 @@ select
   total_bytes,
   table_bytes,
   index_bytes,
-  toast_bytes
+  toast_bytes,
+  schema_name,
+  table_name,
   oid
 from data
+where schema_name <> 'information_schema'
 order by total_bytes desc nulls last;
