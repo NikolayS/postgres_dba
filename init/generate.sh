@@ -5,7 +5,9 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 OUT="start.psql"
 
 cd "$DIR/.."
-echo "\\echo '\\033[1;35mMenu:\\033[0m'" > "$OUT"
+echo "" > "$OUT"
+echo "select coalesce(current_setting('postgresdba.extended', true), 'off') = 'on' as postgresdba_extended \\gset" >> "$OUT"
+echo "\\echo '\\033[1;35mMenu:\\033[0m'" >> "$OUT"
 for f in ./sql/*.sql
 do
   prefix=$(echo $f | sed -e 's/_.*$//g' -e 's/^.*\///g')
@@ -33,15 +35,15 @@ for f in ./sql/*.sql
 do
   prefix=$(echo $f | sed -e 's/_.*$//g' -e 's/^.*\///g')
   echo "\\elif :d_step_is_$prefix" >> "$OUT"
-  echo "  \\i $f" >> "$OUT"
+  echo "  \\ir $f" >> "$OUT"
   echo "  \\prompt 'Press <Enter> to continue…' d_dummy" >> "$OUT"
-  echo "  \\i ./$OUT" >> "$OUT"
+  echo "  \\ir ./$OUT" >> "$OUT"
 done
 echo "\\else" >> "$OUT"
 echo "  \\echo" >> "$OUT"
 echo "  \\echo '\\033[1;31mError:\\033[0m Unknown option! Try again.'" >> "$OUT"
 echo "  \\echo" >> "$OUT"
-echo "  \\i ./$OUT" >> "$OUT"
+echo "  \\ir ./$OUT" >> "$OUT"
 echo "\\endif" >> "$OUT"
 
 echo "Done."
