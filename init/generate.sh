@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 OUT="start.psql"
 
 cd "$DIR/.."
-echo "\\echo Menu:" > "$OUT"
+echo "\\echo '\\033[1;35mMenu:\\033[0m'" > "$OUT"
 for f in ./sql/*.sql
 do
   prefix=$(echo $f | sed -e 's/_.*$//g' -e 's/^.*\///g')
@@ -39,7 +39,7 @@ do
 done
 echo "\\else" >> "$OUT"
 echo "  \\echo" >> "$OUT"
-echo "  \\echo 'ERROR: Unknown option!'" >> "$OUT"
+echo "  \\echo '\\033[1;31mError:\\033[0m Unknown option!'" >> "$OUT"
 echo "  \\echo" >> "$OUT"
 echo "  \\i ./$OUT" >> "$OUT"
 echo "\\endif" >> "$OUT"

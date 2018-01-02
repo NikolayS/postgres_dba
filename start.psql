@@ -1,4 +1,4 @@
-\echo Menu:
+\echo '\033[1;35mMenu:\033[0m'
 \echo '   1 – Basic Node Information (master/replica, lag, DB size, tmp files)'
 \echo '   2 – General Table Size Information'
 \echo '  b1 – Tables Bloat, rough estimation'
@@ -83,7 +83,7 @@ select
   \i ./start.psql
 \else
   \echo
-  \echo 'ERROR: Unknown option!'
+  \echo '\033[1;31mError:\033[0m Unknown option!'
   \echo
   \i ./start.psql
 \endif
