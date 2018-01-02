@@ -13,6 +13,21 @@ with data as (
   from pg_class c
   left join pg_namespace n on n.oid = c.relnamespace
   where relkind = 'r'
+), data2 as (
+  select
+    null::oid as oid,
+    null as schema_name,
+    '*** TOTAL ***' as table_name,
+    sum(row_estimate) as row_estimate,
+    sum(total_bytes) as total_bytes,
+    sum(index_bytes) as index_bytes,
+    sum(toast_bytes) as toast_bytes,
+    sum(table_bytes) as table_bytes
+  from data
+  union all
+  select null::oid, null, null, null, null, null, null, null
+  union all
+  select * from data
 )
 select
   coalesce(nullif(schema_name, 'public') || '.', '') || table_name as table,
@@ -26,7 +41,8 @@ select
   pg_size_pretty(total_bytes) || ' (' || round(100 * total_bytes::numeric / sum(total_bytes) over (), 2)::text || '%)' as "total (% of all)",
   pg_size_pretty(table_bytes) || ' (' || round(100 * table_bytes::numeric / sum(table_bytes) over (), 2)::text || '%)' as "table (% of all tables)",
   pg_size_pretty(index_bytes) || ' (' || round(100 * index_bytes::numeric / sum(index_bytes) over (), 2)::text || '%)' as "index (% of all indexes)",
-  pg_size_pretty(toast_bytes) || ' (' || round(100 * toast_bytes::numeric / sum(toast_bytes) over (), 2)::text || '%)' as "toast (% of all toast data)",
+  pg_size_pretty(toast_bytes) || ' (' || round(100 * toast_bytes::numeric / sum(toast_bytes) over (), 2)::text || '%)' as "toast (% of all toast data)"
+  /*,
   row_estimate,
   total_bytes,
   table_bytes,
@@ -34,7 +50,7 @@ select
   toast_bytes,
   schema_name,
   table_name,
-  oid
-from data
-where schema_name <> 'information_schema'
-order by total_bytes desc nulls last;
+  oid*/
+from data2
+where schema_name is distinct from 'information_schema'
+order by oid is null desc, total_bytes desc nulls last;

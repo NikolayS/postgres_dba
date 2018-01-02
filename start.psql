@@ -83,7 +83,7 @@ select
   \i ./start.psql
 \else
   \echo
-  \echo '\033[1;31mError:\033[0m Unknown option!'
+  \echo '\033[1;31mError:\033[0m Unknown option! Try again.'
   \echo
   \i ./start.psql
 \endif

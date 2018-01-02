@@ -39,7 +39,7 @@ do
 done
 echo "\\else" >> "$OUT"
 echo "  \\echo" >> "$OUT"
-echo "  \\echo '\\033[1;31mError:\\033[0m Unknown option!'" >> "$OUT"
+echo "  \\echo '\\033[1;31mError:\\033[0m Unknown option! Try again.'" >> "$OUT"
 echo "  \\echo" >> "$OUT"
 echo "  \\i ./$OUT" >> "$OUT"
 echo "\\endif" >> "$OUT"
