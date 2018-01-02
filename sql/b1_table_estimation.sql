@@ -65,13 +65,13 @@ with step1 as (
   --   AND tblpages*((pst).free_percent + (pst).dead_tuple_percent)::float4/100 >= 1
 )
 select
-  case is_na when true then 'TRUE' else '' end as is_na,
-  coalesce(nullif(schema_name, 'public') || '.', '') || table_name as table,
-  pg_size_pretty(real_size::numeric) as size,
-  pg_size_pretty(extra_size::numeric)::text || ' (' || round(extra_ratio::numeric, 2)::text || '%)' as extra_estimated,
-  pg_size_pretty(bloat_size::numeric)::text || ' (' || round(bloat_ratio::numeric, 2)::text || '%)' as bloat_estimated,
-  fillfactor,
-  pg_size_pretty((real_size - bloat_size)::numeric) as live
+  case is_na when true then 'TRUE' else '' end as "Is N/A",
+  coalesce(nullif(schema_name, 'public') || '.', '') || table_name as "Table",
+  pg_size_pretty(real_size::numeric) as "Size",
+  '~' || pg_size_pretty(extra_size::numeric)::text || ' (' || round(extra_ratio::numeric, 2)::text || '%)' as "Extra",
+  '~' || pg_size_pretty(bloat_size::numeric)::text || ' (' || round(bloat_ratio::numeric, 2)::text || '%)' as "Bloat_estimated",
+  '~' || pg_size_pretty((real_size - bloat_size)::numeric) as "Live",
+  fillfactor
 \if :postgresdba_extended
   ,
   real_size as real_size_raw,
