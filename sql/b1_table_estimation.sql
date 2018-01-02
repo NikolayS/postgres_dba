@@ -69,7 +69,7 @@ select
   coalesce(nullif(schema_name, 'public') || '.', '') || table_name as "Table",
   pg_size_pretty(real_size::numeric) as "Size",
   '~' || pg_size_pretty(extra_size::numeric)::text || ' (' || round(extra_ratio::numeric, 2)::text || '%)' as "Extra",
-  '~' || pg_size_pretty(bloat_size::numeric)::text || ' (' || round(bloat_ratio::numeric, 2)::text || '%)' as "Bloat_estimated",
+  '~' || pg_size_pretty(bloat_size::numeric)::text || ' (' || round(bloat_ratio::numeric, 2)::text || '%)' as "Bloat",
   '~' || pg_size_pretty((real_size - bloat_size)::numeric) as "Live",
   fillfactor
 \if :postgresdba_extended
