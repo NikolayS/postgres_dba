@@ -46,7 +46,7 @@ And type `:dba <Enter>` in psql. (Or `\i /path/to/PostgresDBA/start.psql` if you
 
 – it will open interactive menu.
 
-<img width="782" alt="screen shot 2017-12-30 at 23 51 38" src="https://user-images.githubusercontent.com/1345402/34460181-67ba7ae8-edbc-11e7-92b2-2464cbcd36b7.png">
+<img width="779" alt="screen shot 2018-01-05 at 13 14 30" src="https://user-images.githubusercontent.com/1345402/34628761-6b98b988-f21a-11e7-8e5c-ab2580389a5c.png">
 
 ### Connect to Remote Postgres Server
 What to do if you need to connect to a remote Postgres server? Usually, Postgres is behind a firewall and/or doesn't listen to a public network interface. So you need to be able to connect to the server using SSH. If you can do it, then just create SSH tunnel (assuming that Postgres listens to default port 5432 on that server:
@@ -90,4 +90,4 @@ Now your have the new `start.psql` and can use it as described above.
 ‼️ If your new queries are good consider sharing them with public. The best way to do it is to open a Pull Request (https://help.github.com/articles/creating-a-pull-request/).
 
 ## Uninstallation
-No steps are needed, just delete PostgresDBA directory.
+No steps are needed, just delete PostgresDBA directory and remove `\set dba ...` in your `~/.psqlrc` if you added it.
