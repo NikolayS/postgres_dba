@@ -27,6 +27,11 @@ git clone https://github.com/NikolayS/PostgresDBA.git
 cd PostgresDBA
 ```
 
+For convenience, add this shortcut to your `~/.psqlrc` file:
+```
+\set dba '\\i /path/to/PostgresDBA/start.psql'
+```
+
 That's it. Nothing is really needed to be installed.
 
 ## Usage
@@ -37,10 +42,7 @@ If you are running psql and Postgres server on the same machine, just launch psq
 psql -U <username> <dbname>
 ```
 
-And type (assuming that you are sitting in the `PostgresDBA` directory):
-```
-\i ./start.psql
-```
+And type `:dba <Enter>` in psql. (Or `\i /path/to/PostgresDBA/start.psql` if you haven't added shortcut to your `~/.psqlrc` file).
 
 – it will open interactive menu.
 
@@ -58,10 +60,7 @@ Then, just launch psql, connecting to port 9432 at localhost:
 psql -h localhost -p 9432 -U <username> <dbname>
 ```
 
-Then you are ready to use it (again, you must be in the project directory when launching psql):
-```
-\i ./start.psql
-```
+And type `:dba <Enter>` in psql to launch PostgresDBA.
 
 ### Connect to Heroku Postgres
 Sitting in the `PostgresDBA` directory on your local machine, run, as usual:
@@ -71,7 +70,7 @@ heroku pg:psql -a <your_project_name>
 
 And then, in psql:
 ```
-\i ./start.psql
+:dba
 ```
 
 ## How to Extend (Add More Queries)
