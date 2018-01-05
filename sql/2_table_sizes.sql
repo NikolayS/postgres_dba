@@ -42,7 +42,7 @@ select
   pg_size_pretty(table_bytes) || ' (' || round(100 * table_bytes::numeric / sum(table_bytes) over (partition by (schema_name is null)), 2)::text || '%)' as "Table Size",
   pg_size_pretty(index_bytes) || ' (' || round(100 * index_bytes::numeric / sum(index_bytes) over (partition by (schema_name is null)), 2)::text || '%)' as "Index(es) Size",
   pg_size_pretty(toast_bytes) || ' (' || round(100 * toast_bytes::numeric / sum(toast_bytes) over (partition by (schema_name is null)), 2)::text || '%)' as "TOAST Size"
-\if :postgresdba_extended
+\if :postgres_dba_xon
   ,
   row_estimate,
   total_bytes,

@@ -6,7 +6,7 @@ OUT="start.psql"
 
 cd "$DIR/.."
 echo "" > "$OUT"
-echo "select coalesce(current_setting('postgresdba.extended', true), 'off') = 'on' as postgresdba_extended \\gset" >> "$OUT"
+echo "select coalesce(current_setting('postgres_dba.wide', true), 'off') = 'on' as postgres_dba_xon \\gset" >> "$OUT"
 echo "\\echo '\\033[1;35mMenu:\\033[0m'" >> "$OUT"
 for f in ./sql/*.sql
 do

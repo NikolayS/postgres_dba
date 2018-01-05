@@ -72,7 +72,7 @@ select
   '~' || pg_size_pretty(bloat_size::numeric)::text || ' (' || round(bloat_ratio::numeric, 2)::text || '%)' as "Bloat",
   '~' || pg_size_pretty((real_size - bloat_size)::numeric) as "Live",
   fillfactor
-\if :postgresdba_extended
+\if :postgres_dba_xon
   ,
   real_size as real_size_raw,
   extra_size as extra_size_raw,
