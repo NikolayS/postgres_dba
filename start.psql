@@ -13,6 +13,11 @@ select coalesce(current_setting('postgres_dba.wide', true), 'off') = 'on' as pos
 \echo '  i3 – FKs with Missing/Bad Indexes'
 \echo '  s1 – Slowest Queries, by Total Time (requires pg_stat_statements extension)'
 \echo '  s2 – Slowest Queries Report (requires pg_stat_statements)'
+\if :postgres_dba_xon
+  \echo '   x – Turn Wide Mode OFF (currently ON): show less details, less columns'
+\else
+  \echo '   x – Turn Wide Mode ON (currently OFF): show more details, more columns'
+\endif
 \echo '   q – Quit'
 \echo
 \echo Type your choice and press <Enter>:
@@ -31,10 +36,22 @@ select
 :d_stp::text = 'i3' as d_step_is_i3,
 :d_stp::text = 's1' as d_step_is_s1,
 :d_stp::text = 's2' as d_step_is_s2,
+:d_stp::text = 'x' as d_step_is_x,
 :d_stp::text = 'q' as d_step_is_q \gset
 \if :d_step_is_q
   \echo 'Bye!'
   \echo
+\elif :d_step_is_x
+\if :postgres_dba_xon
+set postgres_dba.wide = 'off';
+  \echo 'Wide mode turned OFF!'
+  \echo
+\else
+set postgres_dba.wide = 'on';
+  \echo 'Wide mode turned ON!'
+  \echo
+\endif
+  \ir ./start.psql
 \elif :d_step_is_1
   \ir ./sql/1_basic.sql
   \prompt 'Press <Enter> to continue…' d_dummy
