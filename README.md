@@ -90,4 +90,4 @@ Now your have the new `start.psql` and can use it as described above.
 ‼️ If your new queries are good consider sharing them with public. The best way to do it is to open a Pull Request (https://help.github.com/articles/creating-a-pull-request/).
 
 ## Uninstallation
-No steps are needed, just delete PostgresDBA directory.
+No steps are needed, just delete PostgresDBA directory and remove `\set dba ...` in your `~/.psqlrc` if you added it.
