@@ -4,6 +4,15 @@ The missing set of useful tools for Postgres DBA.
 
 :warning: The project is in its very early stage. If you have great ideas, feel free to create a pull request or open an issue.
 
+Have any questions? Write me: samokhvalov@gmail.com, Nikolay Samokhvalov.
+
+## Credits
+
+PostgresDBA is based on useful queries created and improved by many developers. Here is incomplete list of them:
+ * Jehan-Guillaume (ioguix) de Rorthais https://github.com/ioguix/pgsql-bloat-estimation
+ * Alexey Lesovsky, Alexey Ermakov and others from Data Egret (aka PostgreSQL-Consulting) https://github.com/dataegret/pg-utils
+ * Josh Berkus, Quinn Weaver and others from PostgreSQL Experts, Inc. https://github.com/pgexperts/pgx_scripts
+
 ## Requirements
 
 You need to have psql version 10, but the Postgres server itself can be older – most tools work with it.
