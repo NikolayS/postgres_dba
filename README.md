@@ -4,7 +4,9 @@ The missing set of useful tools for Postgres DBA.
 
 :warning: The project is in its very early stage. If you have great ideas, feel free to create a pull request or open an issue.
 
-Have any questions? Write me: samokhvalov@gmail.com, Nikolay Samokhvalov.
+## Questions?
+
+Questions? Ideas? Write me: samokhvalov@gmail.com, Nikolay Samokhvalov.
 
 ## Credits
 
