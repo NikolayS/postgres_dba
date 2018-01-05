@@ -1,6 +1,8 @@
 --Basic Node Information (master/replica, lag, DB size, tmp files)
 with data as (
-  select * from pg_stat_database where datname = current_database()
+  select s.*
+  from pg_stat_database s
+  where s.datname = current_database()
 )
 select 'Database Name' as metric, datname as value from data
 union all
@@ -18,7 +20,7 @@ select
     else 'Master'
   end as value
 union all
-select 'Database Size', (select pg_catalog.pg_size_pretty(pg_catalog.pg_database_size(d.datname)) from pg_catalog.pg_database d where pg_catalog.has_database_privilege(d.datname, 'CONNECT') order by pg_catalog.pg_database_size(d.datname) desc limit 1)
+select 'Database Size', pg_catalog.pg_size_pretty(pg_catalog.pg_database_size(current_database()))
 union all
 select 'Cache Effectiveness', (round(blks_hit * 100::numeric / (blks_hit + blks_read), 2))::text || '%' from data
 union all
