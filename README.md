@@ -1,4 +1,4 @@
-# PostgresDBA
+# postgres_dba (PostgresDBA)
 
 The missing set of useful tools for Postgres DBA.
 
@@ -10,7 +10,7 @@ Questions? Ideas? Write me: samokhvalov@gmail.com, Nikolay Samokhvalov.
 
 ## Credits
 
-PostgresDBA is based on useful queries created and improved by many developers. Here is incomplete list of them:
+**postgres_dba** is based on useful queries created and improved by many developers. Here is incomplete list of them:
  * Jehan-Guillaume (ioguix) de Rorthais https://github.com/ioguix/pgsql-bloat-estimation
  * Alexey Lesovsky, Alexey Ermakov and others from Data Egret (aka PostgreSQL-Consulting) https://github.com/dataegret/pg-utils
  * Josh Berkus, Quinn Weaver and others from PostgreSQL Experts, Inc. https://github.com/pgexperts/pgx_scripts
@@ -23,13 +23,13 @@ Using alternative psql pager called "pspg" is highly recommended (but not requir
 ## Installation
 Clone, go to the directory and run psql (version 10 is required):
 ```bash
-git clone https://github.com/NikolayS/PostgresDBA.git
-cd PostgresDBA
+git clone https://github.com/NikolayS/postgres_dba.git
+cd postgres_dba
 ```
 
 For convenience, add this shortcut to your `~/.psqlrc` file:
 ```
-\set dba '\\i /path/to/PostgresDBA/start.psql'
+\set dba '\\i /path/to/postgres_dba/start.psql'
 ```
 
 That's it. Nothing is really needed to be installed.
@@ -42,7 +42,7 @@ If you are running psql and Postgres server on the same machine, just launch psq
 psql -U <username> <dbname>
 ```
 
-And type `:dba <Enter>` in psql. (Or `\i /path/to/PostgresDBA/start.psql` if you haven't added shortcut to your `~/.psqlrc` file).
+And type `:dba <Enter>` in psql. (Or `\i /path/to/postgres_dba/start.psql` if you haven't added shortcut to your `~/.psqlrc` file).
 
 – it will open interactive menu.
 
@@ -60,15 +60,15 @@ Then, just launch psql, connecting to port 9432 at localhost:
 psql -h localhost -p 9432 -U <username> <dbname>
 ```
 
-And type `:dba <Enter>` in psql to launch PostgresDBA.
+And type `:dba <Enter>` in psql to launch **postgres_dba**.
 
 ### Connect to Heroku Postgres
-Sitting in the `PostgresDBA` directory on your local machine, run, as usual:
+Just open psql as you usually do with Heroku:
 ```bash
 heroku pg:psql -a <your_project_name>
 ```
 
-And then, in psql:
+And then:
 ```
 :dba
 ```
@@ -90,4 +90,4 @@ Now your have the new `start.psql` and can use it as described above.
 ‼️ If your new queries are good consider sharing them with public. The best way to do it is to open a Pull Request (https://help.github.com/articles/creating-a-pull-request/).
 
 ## Uninstallation
-No steps are needed, just delete PostgresDBA directory and remove `\set dba ...` in your `~/.psqlrc` if you added it.
+No steps are needed, just delete **postgres_dba** directory and remove `\set dba ...` in your `~/.psqlrc` if you added it.
