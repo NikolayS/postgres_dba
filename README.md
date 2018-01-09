@@ -12,8 +12,8 @@ Questions? Ideas? Write me: samokhvalov@gmail.com, Nikolay Samokhvalov.
 
 **postgres_dba** is based on useful queries created and improved by many developers. Here is incomplete list of them:
  * Jehan-Guillaume (ioguix) de Rorthais https://github.com/ioguix/pgsql-bloat-estimation
- * Alexey Lesovsky, Alexey Ermakov and others from Data Egret (aka PostgreSQL-Consulting) https://github.com/dataegret/pg-utils
- * Josh Berkus, Quinn Weaver and others from PostgreSQL Experts, Inc. https://github.com/pgexperts/pgx_scripts
+ * Alexey Lesovsky, Alexey Ermakov, Maxim Boguk, Ilya Kosmodemiansky et al. from Data Egret (aka PostgreSQL-Consulting) https://github.com/dataegret/pg-utils
+ * Josh Berkus, Quinn Weaver et al. from PostgreSQL Experts, Inc. https://github.com/pgexperts/pgx_scripts
 
 ## Requirements
 
