@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 OUT="start.psql"
 
 cd "$DIR/.."
-echo "" > "$OUT"
+echo "-- This file is auto-generated! Do not edit it. See ./init/generate.sh instead." > "$OUT"
 echo "\\echo '\\033[1;35mMenu:\\033[0m'" >> "$OUT"
 for f in ./sql/*.sql
 do
