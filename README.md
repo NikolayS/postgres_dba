@@ -24,7 +24,6 @@ Using alternative psql pager called "pspg" is highly recommended (but not requir
 Clone, go to the directory and run psql (version 10 is required):
 ```bash
 git clone https://github.com/NikolayS/postgres_dba.git
-cd postgres_dba
 ```
 
 For convenience, add this shortcut to your `~/.psqlrc` file:
