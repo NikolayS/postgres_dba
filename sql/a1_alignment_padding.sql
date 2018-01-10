@@ -142,13 +142,13 @@ select
   coalesce(nullif(schema_name, 'public') || '.', '') || table_name as "Table",
   pg_size_pretty(table_bytes) "Table Size",
   padding_sum as "Bytes Wasted in a Row",
+  case
+    when padding_total_est > 0 then '~' || pg_size_pretty(padding_total_est) || ' (' || wasted_percent::text || '%)'
+    else ''
+  end as "Wasted",
   padding_total_est,
   n_live_tup,
-  n_dead_tup,
-  case
-    when padding_total_est > 0 then '~' || /*pg_size_pretty(*/padding_total_est/*)*/ || ' (' || wasted_percent::text || '%)'
-    else ''
-  end as "Wasted"
+  n_dead_tup
 \if :postgres_dba_wide
   ,
   *
