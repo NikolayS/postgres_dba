@@ -1,3 +1,10 @@
+\if :postgres_dba_wide
+-- TODO: fix warning
+\set postgres_dba_wide true
+\else
+\set postgres_dba_wide false
+\endif
+
 
 \echo '\033[1;35mMenu:\033[0m'
 \echo '   1 – Basic Node Information (master/replica, lag, DB size, tmp files)'
