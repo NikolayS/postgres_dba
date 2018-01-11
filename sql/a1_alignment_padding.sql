@@ -14,7 +14,8 @@ with recursive constants as (
     udt_name,
     typalign,
     case typalign -- see https://www.postgresql.org/docs/current/static/catalog-pg-type.html
-      when 'c' then 0
+      when 'c' then
+        case when typlen > 0 then typlen % chunk_size else 0 end
       when 's' then 2
       when 'i' then 4
       when 'd' then 8
@@ -24,9 +25,12 @@ with recursive constants as (
       when 's' then 1
       when 'i' then 2
       when 'd' then 3
-      else 4
+      when 'c' then
+        case when typlen > 0 then typlen % chunk_size else 9 end
+      else 9
     end as alt_order_group
   from information_schema.columns
+  join constants on true
   join pg_type on udt_name = typname
   where table_schema not in ('information_schema', 'pg_catalog')
 ), alt_columns as (
@@ -55,7 +59,7 @@ with recursive constants as (
     (select max(ordinal_position) from columns c where c.table_name = _.table_name and c.table_schema = _.table_schema) as col_cnt,
     array_agg(_.column_name::text) as cols,
     array_agg(_.udt_name::text) as types
-  from 
+  from
     combined_columns _
   group by is_orig, table_schema, table_name
   union all
@@ -130,6 +134,8 @@ with recursive constants as (
     r1.n_dead_tup,
     r1.padding_total_est - coalesce(r2.padding_total_est, 0) as padding_total_est,
     r1.padding_sum - coalesce(r2.padding_sum, 0) as padding_sum,
+    r1.padding_sum as r1_padding_sum,
+    r1.padding_total_est as r1_padding_total_est,
     case
       when r1.table_bytes > 0 then
         round(100 * (r1.padding_sum - coalesce(r2.padding_sum, 0))::numeric * (r1.n_live_tup + r1.n_dead_tup)::numeric / r1.table_bytes, 2)
@@ -145,10 +151,7 @@ select
   case
     when padding_total_est > 0 then '~' || pg_size_pretty(padding_total_est) || ' (' || wasted_percent::text || '%)'
     else ''
-  end as "Wasted",
-  padding_total_est,
-  n_live_tup,
-  n_dead_tup
+  end as "Wasted"
 \if :postgres_dba_wide
   ,
   *
