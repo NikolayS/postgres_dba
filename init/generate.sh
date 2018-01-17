@@ -5,7 +5,23 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 OUT="start.psql"
 
 cd "$DIR/.."
-echo "" > "$OUT"
+cat > "$OUT" <<- VersCheck
+-- check if "\if" is supported (psql 10+)
+\if false
+  \echo cannot work, you need psql version 10+ (Postgres server can be older)
+  select 1/0;
+\endif
+
+-- TODO: improve work with custom GUCs for Postgres 9.5 and older
+select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\\\1')::numeric >= 9.6 as postgres_dba_pgvers_96plus \gset
+\if :postgres_dba_pgvers_96plus
+  select coalesce(current_setting('postgres_dba.wide', true), 'off') = 'on' as postgres_dba_wide \gset
+\else
+  set client_min_messages to 'fatal';
+  select :postgres_dba_wide as postgres_dba_wide \gset
+  reset client_min_messages;
+\endif
+VersCheck
 echo "\\echo '\\033[1;35mMenu:\\033[0m'" >> "$OUT"
 for f in ./sql/*.sql
 do
