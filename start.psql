@@ -27,9 +27,7 @@ select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\1')::numeric >
 \echo '  i3 – FKs with Missing/Bad Indexes'
 \echo '  s1 – Slowest Queries, by Total Time (requires pg_stat_statements extension)'
 \echo '  s2 – Slowest Queries Report (requires pg_stat_statements)'
-\set QUIET 1
 \if :postgres_dba_wide
-\unset QUIET
   \echo '   x – Turn Wide Mode OFF (currently ON): show less details, less columns'
 \else
   \echo '   x – Turn Wide Mode ON (currently OFF): show more details, more columns'
@@ -59,14 +57,12 @@ select
   \echo 'Bye!'
   \echo
 \elif :d_step_is_x
-\set QUIET 1
 \if :postgres_dba_wide
-\unset QUIET
-  \set postgres_dba_wide false
+set postgres_dba.wide = 'off';
   \echo 'Wide mode turned OFF!'
   \echo
 \else
-  \set postgres_dba_wide true
+set postgres_dba.wide = 'on';
   \echo 'Wide mode turned ON!'
   \echo
 \endif
