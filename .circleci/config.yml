@@ -3,17 +3,17 @@ jobs:
   build:
     working_directory: ~/postgres_dba
     docker:
-      - image: postgres:9.6
+      - image: circleci/postgres:9.6
     steps:
       - checkout
       - run:
           name: "Prepare DB"
-          command: sudo -u postgres psql -c "create database test;"
+          command: psql -c "create database test;"
   test:
     docker:
-      - image: postgres:9.6
+      - image: circleci/postgres:9.6
     steps:
       - checkout
       - run:
           name: Test
-          command: sudo -u postgres psql test -c "select 1;"
+          command: psql test -c "select 1;"
