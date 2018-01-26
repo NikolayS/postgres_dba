@@ -20,6 +20,8 @@ jobs:
             wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
             sudo apt-get update
             sudo apt install postgresql-client
+            psql test 'create extension pg_stat_statements;'
+            psql test 'create extension pgstattuple;'
             echo "\set postgres_dba_wide false" > ~/.psqlrc
       - run:
           name: Prepare DB
