@@ -1,0 +1,20 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/postgres_dba
+    docker:
+      postgres:9.6
+    steps:
+      - checkout
+      - run:
+        name: "Prepare DB"
+        command: |
+          sudo -u postgres psql -c "create database test;"
+  test:
+    docker:
+      postgres:9.6
+    steps:
+      - checkout
+      - run:
+        name: Test
+        command: sudo -u postgres psql test -c "select 1;"
