@@ -8,8 +8,7 @@ jobs:
       - checkout
       - run:
           name: "Prepare DB"
-          command: |
-            sudo -u postgres psql -c "create database test;"
+          command: sudo -u postgres psql -c "create database test;"
   test:
     docker:
       postgres:9.6
