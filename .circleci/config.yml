@@ -13,7 +13,13 @@ jobs:
           - POSTGRES_DB: test
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt install postgresql-client
+      - run:
+          name: Install psql
+          command: |
+            sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list'
+            wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+            sudo apt-get update
+            sudo apt install postgresql-client
       - run:
           name: Prepare DB
           command: psql test -c "create table aaa as select i from generate_series(1, 1000) _(i);"
