@@ -1,4 +1,4 @@
---Alignment Padding Analysis: how many bytes can be saved if columns are ordered better?
+--Alignmet Padding Analysis: how many bytes can be saved if columns are ordered better?
 
 -- TODO: not-yet-analyzed tables – show a warning (cannot get n_live_tup -> cannot get total bytes)
 -- TODO: NULLs!!
@@ -168,7 +168,8 @@ select
   case
     when padding_total_est > 0 then '~' || pg_size_pretty(padding_total_est) || ' (' || wasted_percent::text || '%)'
     else ''
-  end as "Wasted"
+  end as "Wasted",
+  case when padding_total_est > 0 then array_to_string(alt_cols, ', ') else null end as "Suggested Columns Reorder"
 \if :postgres_dba_wide
   ,
   padding_sum as "Bytes Wasted in a Row",
