@@ -20,9 +20,12 @@ jobs:
             wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
             sudo apt-get update
             sudo apt install postgresql-client
+            echo "\set postgres_dba_wide false" > ~/.psqlrc
       - run:
           name: Prepare DB
-          command: psql test -c "create table aaa as select i from generate_series(1, 1000) _(i);"
+          command: |
+            psql test -c "create table align1 as select 1::int4, 2::int8, 3::int4 as more from generate_series(1, 100000) _(i);"
+            psql test -c "create table align2 as select 1::int4, 3::int4 as more, 2::int8 from generate_series(1, 100000) _(i);"
       - run:
           name: Test
-          command: psql test -c "select i from aaa limit 1;"
+          command: diff test/regression/a1_alignment_padding.out <(psql test -f ~/postgres_dba/sql/a1_alignment_padding.sql | grep align)
