@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/postgres_dba
     docker:
-      postgres:9.6
+      - image: postgres:9.6
     steps:
       - checkout
       - run:
@@ -11,7 +11,7 @@ jobs:
           command: sudo -u postgres psql -c "create database test;"
   test:
     docker:
-      postgres:9.6
+      - image: postgres:9.6
     steps:
       - checkout
       - run:
