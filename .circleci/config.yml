@@ -13,7 +13,7 @@ jobs:
           - POSTGRES_DB: test
     steps:
       - checkout
-      - run: sudo apt install postgresql-client
+      - run: sudo apt-get update && sudo apt install postgresql-client
       - run:
           name: Prepare DB
           command: psql -c "create database test;"
