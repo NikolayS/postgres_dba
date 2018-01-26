@@ -29,5 +29,5 @@ jobs:
       - run:
           name: Tests
           command: |
-            diff test/regression/1_basic.out <(psql test -f ~/postgres_dba/sql/1_basic.sql)
+            diff test/regression/1_basic.out <(psql test -f ~/postgres_dba/sql/1_basic.sql | grep Role)
             diff test/regression/a1_alignment_padding.out <(psql test -f ~/postgres_dba/sql/a1_alignment_padding.sql | grep align)
