@@ -16,7 +16,7 @@ jobs:
       - run: sudo apt-get update && sudo apt install postgresql-client
       - run:
           name: Prepare DB
-          command: psql -c "create table aaa as select i from generate_series(1, 1000) _(i);"
+          command: psql test -c "create table aaa as select i from generate_series(1, 1000) _(i);"
       - run:
           name: Test
           command: psql test -c "select i from aaa limit 1;"
