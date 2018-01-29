@@ -16,6 +16,7 @@ select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\1')::numeric >
 \echo '\033[1;35mMenu:\033[0m'
 \echo '   1 – Basic Node Information (master/replica, lag, DB size, tmp files)'
 \echo '   2 – General Table Size Information'
+\echo '   3 – Current Activity: count of current connections grouped by database, user name, state'
 \echo '  b1 – Tables Bloat, rough estimation'
 \echo '  b2 – B-tree Indexes Bloat, rough estimation'
 \echo '  b3 – Tables Bloat, more precise (requires pgstattuple extension; expensive)'
@@ -39,6 +40,7 @@ select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\1')::numeric >
 select
 :d_stp::text = '1' as d_step_is_1,
 :d_stp::text = '2' as d_step_is_2,
+:d_stp::text = '3' as d_step_is_3,
 :d_stp::text = 'b1' as d_step_is_b1,
 :d_stp::text = 'b2' as d_step_is_b2,
 :d_stp::text = 'b3' as d_step_is_b3,
@@ -71,6 +73,10 @@ set postgres_dba.wide = 'on';
   \ir ./start.psql
 \elif :d_step_is_2
   \ir ./sql/2_table_sizes.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_3
+  \ir ./sql/3_activity.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_b1
