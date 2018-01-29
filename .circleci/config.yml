@@ -30,5 +30,4 @@ jobs:
       - run:
           name: Tests
           command: |
-            diff test/regression/1_basic.out <(psql test -f ~/postgres_dba/sql/1_basic.sql | grep Role)
             diff test/regression/3_activity.out <(psql test -f ~/postgres_dba/sql/3_activity.sql | grep User)
