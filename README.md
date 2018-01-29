@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/NikolayS/postgres_dba/tree/master.svg?style=svg)](https://circleci.com/gh/NikolayS/postgres_dba/tree/master)
+
 # postgres_dba (PostgresDBA)
 
 The missing set of useful tools for Postgres DBA and non-Postgres developers.
