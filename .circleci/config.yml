@@ -30,4 +30,4 @@ jobs:
       - run:
           name: Tests
           command: |
-            diff test/regression/3_activity.out <(psql test -f ~/postgres_dba/sql/3_activity.sql | grep User)
+            diff -b test/regression/3_activity.out <(psql test -f ~/postgres_dba/sql/3_activity.sql | grep User)
