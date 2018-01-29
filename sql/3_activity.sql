@@ -4,8 +4,8 @@ select
   coalesce(datname, '** ALL databases **') as "DB",
   coalesce(state, '** ALL states **') as "Current State",
   count(*) as "Count",
-  count(*) filter (where query_start < now() - interval '1 minute') as "Started >1 minute ago",
-  count(*) filter (where query_start < now() - interval '1 hour') as "Started >1 hour ago"
+  count(*) filter (where state_change < now() - interval '1 minute') as "Started >1 minute ago",
+  count(*) filter (where state_change < now() - interval '1 hour') as "Started >1 hour ago"
 from pg_stat_activity
 group by grouping sets ((datname, usename, state), (usename, state), ())
 order by
