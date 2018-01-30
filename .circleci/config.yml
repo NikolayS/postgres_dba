@@ -30,9 +30,9 @@ jobs:
       - run:
           name: Tests
           command: |
-            echo "\set postgres_dba_wide true" > ~/.psqlrc
-            for f in ~/postgres_dba/sql/*; do psql test -f "$f">/dev/null; done
-            echo "\set postgres_dba_wide false" > ~/.psqlrc
-            for f in ~/postgres_dba/sql/*; do psql test -f "$f">/dev/null; done
+            #  echo "\set postgres_dba_wide true" > ~/.psqlrc
+            #for f in ~/postgres_dba/sql/*; do psql test -f "$f">/dev/null; done
+            #echo "\set postgres_dba_wide false" > ~/.psqlrc
+            #for f in ~/postgres_dba/sql/*; do psql test -f "$f">/dev/null; done
             diff test/regression/1_basic.out <(psql test -f ~/postgres_dba/sql/1_basic.sql | grep Role)
             diff test/regression/a1_alignment_padding.out <(psql test -f ~/postgres_dba/sql/a1_alignment_padding.sql | grep align)
