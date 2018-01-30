@@ -1,0 +1,38 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/postgres_dba
+    docker:
+      - image: circleci/ruby:2.4.1-node
+        environment:
+          - PGHOST: 127.0.0.1
+          - PGUSER: root
+      - image: circleci/postgres:9.6
+        environment:
+          - POSTGRES_USER: root
+          - POSTGRES_DB: test
+    steps:
+      - checkout
+      - run:
+          name: Install psql
+          command: |
+            sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" >> /etc/apt/sources.list.d/pgdg.list'
+            wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+            sudo apt-get update
+            sudo apt install postgresql-client
+            psql test -c 'create extension pg_stat_statements;'
+            psql test -c 'create extension pgstattuple;'
+      - run:
+          name: Prepare DB
+          command: |
+            psql test -c "create table align1 as select 1::int4, 2::int8, 3::int4 as more from generate_series(1, 100000) _(i);"
+            psql test -c "create table align2 as select 1::int4, 3::int4 as more, 2::int8 from generate_series(1, 100000) _(i);"
+      - run:
+          name: Tests
+          command: |
+            #  echo "\set postgres_dba_wide true" > ~/.psqlrc
+            #for f in ~/postgres_dba/sql/*; do psql test -f "$f">/dev/null; done
+            #echo "\set postgres_dba_wide false" > ~/.psqlrc
+            #for f in ~/postgres_dba/sql/*; do psql test -f "$f">/dev/null; done
+            diff -b test/regression/1_basic.out <(psql test -f ~/postgres_dba/sql/1_basic.sql | grep Role)
+            diff -b test/regression/a1_alignment_padding.out <(psql test -f ~/postgres_dba/sql/a1_alignment_padding.sql | grep align)
