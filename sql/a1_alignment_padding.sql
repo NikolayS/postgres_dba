@@ -178,7 +178,7 @@ select
   case
     when padding_total_est > 0 then '~' || pg_size_pretty(padding_total_est) || ' (' || wasted_percent::text || '%)'
     else ''
-  end as "Wasted",
+  end as "Wasted *",
   case
     when padding_total_est > 0 then (
       with cols1(c) as (
