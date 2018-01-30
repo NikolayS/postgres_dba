@@ -1,7 +1,9 @@
 --Alignmet Padding Analysis: how many bytes can be saved if columns are ordered better?
 
 -- TODO: not-yet-analyzed tables – show a warning (cannot get n_live_tup -> cannot get total bytes)
--- TODO: NULLs!!
+-- TODO: NULLs
+-- TODO: simplify, cleanup
+-- TODO: chunk_size 4 or 8
 with recursive constants as (
   select 8 as chunk_size
 ), columns as (
@@ -13,6 +15,7 @@ with recursive constants as (
     column_name,
     udt_name,
     typalign,
+    typlen,
     case typalign -- see https://www.postgresql.org/docs/current/static/catalog-pg-type.html
       when 'c' then
         case when typlen > 0 then typlen % chunk_size else 0 end
@@ -43,6 +46,7 @@ with recursive constants as (
     column_name,
     udt_name,
     typalign,
+    typlen,
     _shift,
     alt_order_group,
     character_maximum_length
@@ -169,7 +173,19 @@ select
     when padding_total_est > 0 then '~' || pg_size_pretty(padding_total_est) || ' (' || wasted_percent::text || '%)'
     else ''
   end as "Wasted",
-  case when padding_total_est > 0 then array_to_string(alt_cols, ', ') else null end as "Suggested Columns Reorder"
+  case
+    when padding_total_est > 0 then (
+      with cols1(c) as (
+        select array_to_string(array_agg(elem::text), ', ')
+        from (select * from unnest(alt_cols) with ordinality as __(elem, i)) _
+        group by i / 3
+        order by i / 3
+      )
+      select array_to_string(array_agg(c), e'\n') from cols1
+    )
+    else null
+  end as "Suggested Columns Reorder"
+  --case when padding_total_est > 0 then array_to_string(alt_cols, ', ') else null end as "Suggested Columns Reorder"
 \if :postgres_dba_wide
   ,
   padding_sum as "Bytes Wasted in a Row",
