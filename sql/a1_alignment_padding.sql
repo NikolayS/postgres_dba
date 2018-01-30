@@ -71,7 +71,8 @@ with recursive constants as (
     array_agg(_.udt_name::text order by ordinal_position) as types,
     array_agg(shift order by ordinal_position) as shifts,
     null::int as curleft,
-    null::text as prev_column_name
+    null::text as prev_column_name,
+    false as has_varlena
   from
     combined_columns _
   group by is_orig, table_schema, table_name
@@ -89,19 +90,21 @@ with recursive constants as (
     types,
     shifts,
     cur_left_in_chunk,
-    ext.column_name as prev_column_name
+    ext.column_name as prev_column_name,
+    a.has_varlena or (ext.typlen = -1) -- see https://www.postgresql.org/docs/current/static/catalog-pg-type.html
   from analyze_alignment a, constants, lateral (
     select
       shift,
       case when left_in_chunk < shift then left_in_chunk else 0 end as padding_occured,
       case when left_in_chunk < shift then chunk_size - shift % chunk_size else left_in_chunk - shift end as cur_left_in_chunk,
-      column_name
+      column_name,
+      typlen
     from combined_columns c, constants
     where
       ordinal_position = a.analyzed + 1
       and c.is_orig = a.is_orig
       and c.table_name = a.table_name
-      and c.table_schema = a.          table_schema
+      and c.table_schema = a.table_schema
   ) as ext
   where
     analyzed < col_cnt and analyzed < 1000/*sanity*/
@@ -121,7 +124,8 @@ with recursive constants as (
     cols,
     types,
     shifts,
-    analyzed
+    analyzed,
+    a1.has_varlena
   from analyze_alignment a1
   join pg_namespace n on n.nspname = table_schema
   join pg_class c on n.oid = c.relnamespace and c.relname = table_name
@@ -158,6 +162,7 @@ with recursive constants as (
     r2.curleft as alt_curleft,
     r1.padded_columns,
     r1.analyzed,
+    r1.has_varlena,
     case
       when r1.table_bytes > 0 then
         round(100 * (r1.padding_sum - coalesce(r2.padding_sum, 0))::numeric * (r1.n_live_tup + r1.n_dead_tup)::numeric / r1.table_bytes, 2)
@@ -169,6 +174,7 @@ with recursive constants as (
 select
   coalesce(nullif(schema_name, 'public') || '.', '') || table_name as "Table",
   pg_size_pretty(table_bytes) "Table Size",
+  case when has_varlena then 'Includes VARLENA' else null end as "Comment",
   case
     when padding_total_est > 0 then '~' || pg_size_pretty(padding_total_est) || ' (' || wasted_percent::text || '%)'
     else ''
@@ -178,8 +184,8 @@ select
       with cols1(c) as (
         select array_to_string(array_agg(elem::text), ', ')
         from (select * from unnest(alt_cols) with ordinality as __(elem, i)) _
-        group by i / 3
-        order by i / 3
+        group by (i - 1) / 3
+        order by (i - 1) / 3
       )
       select array_to_string(array_agg(c), e'\n') from cols1
     )
