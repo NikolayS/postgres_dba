@@ -1,6 +1,6 @@
 # postgres_dba (PostgresDBA)
 
-The missing set of useful tools for Postgres DBA and non-Postgres developers.
+The missing set of useful tools for Postgres DBA and mere mortals.
 
 :warning: The project is in its very early stage. If you have great ideas, feel free to create a pull request or open an issue.
 
