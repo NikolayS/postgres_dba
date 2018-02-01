@@ -1,2 +1,2 @@
- align1 | 5096 kB    | ~781 kB (15.33%)
- align2 | 4328 kB    | 
+ align1 | 5096 kB    |                  | ~781 kB (15.33%)  | int4, more, int8
+ align2 | 4328 kB    |                  |                   | 

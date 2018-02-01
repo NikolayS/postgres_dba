@@ -42,7 +42,7 @@ with recursive constants as (
     false as is_orig,
     table_schema,
     table_name,
-    row_number() over (partition by table_schema, table_name order by alt_order_group) as ordinal_position,
+    row_number() over (partition by table_schema, table_name order by alt_order_group, column_name) as ordinal_position,
     column_name,
     udt_name,
     typalign,
