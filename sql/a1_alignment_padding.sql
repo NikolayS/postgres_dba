@@ -114,7 +114,7 @@ with recursive constants as (
     table_schema as schema_name,
     table_name,
     padded_columns,
-    pads,
+    case when curleft % chunk_size > 0 then pads || array[curleft] else pads end as pads,
     curleft,
     coalesce((select sum(p) from unnest(pads) _(p)), 0) + (chunk_size + a1.curleft) % chunk_size as padding_sum,
     n_live_tup,
