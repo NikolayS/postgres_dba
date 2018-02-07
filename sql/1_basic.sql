@@ -4,9 +4,7 @@ with data as (
   from pg_stat_database s
   where s.datname = current_database()
 )
-select 'Database Name' as metric, datname as value from data
-union all
-select 'Database Version' as metric, version() as value
+select 'Postgres Version' as metric, version() as value
 union all
 select
   'Role' as metric,
@@ -20,7 +18,18 @@ select
     else 'Master'
   end as value
 union all
+select 'Database Name' as metric, datname as value from data
+union all
 select 'Database Size', pg_catalog.pg_size_pretty(pg_catalog.pg_database_size(current_database()))
+union all
+select 'Installed Extensions', (
+  with exts as (
+    select extname || ' (' || extversion || ')' e, (-1 + row_number() over (order by extname)) / 5 i from pg_extension
+  ), lines(l) as (
+    select string_agg(e, ', ' order by i) l from exts group by i
+  )
+  select string_agg(l, e'\n') from lines
+)
 union all
 select 'Cache Effectiveness', (round(blks_hit * 100::numeric / (blks_hit + blks_read), 2))::text || '%' from data
 union all
@@ -28,9 +37,13 @@ select 'Successful Commits', (round(xact_commit * 100::numeric / (xact_commit + 
 union all
 select 'Conflicts', conflicts::text from data
 union all
-select 'Temp Files: total size (total number of files)', (pg_size_pretty(temp_bytes)::text || ' (' || temp_files::text || ')') from data
+select 'Temp Files: total size', pg_size_pretty(temp_bytes)::text from data
+union all
+select 'Temp Files: total number of files', temp_files::text from data
 union all
 select 'Deadlocks', deadlocks::text from data
 union all
-select 'Stat Since', stats_reset::text from data
+select 'Stats Since', stats_reset::timestamptz(0)::text from data
+union all
+select 'Stats Age', (now() - stats_reset)::interval(0)::text from data
 ;
