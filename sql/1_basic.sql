@@ -18,6 +18,10 @@ select
     else 'Master'
   end as value
 union all
+select 'Started At', pg_postmaster_start_time()::timestamptz(0)::text
+union all
+select 'Uptime', (now() - pg_postmaster_start_time())::interval(0)::text
+union all
 select 'Database Name' as metric, datname as value from data
 union all
 select 'Database Size', pg_catalog.pg_size_pretty(pg_catalog.pg_database_size(current_database()))
