@@ -21,7 +21,7 @@ select
   -- stddev_time, -- https://stats.stackexchange.com/questions/55999/is-it-possible-to-find-the-combined-standard-deviation
   sum(rows) as rows,
   userid,
-  dbid,
+  (select datname from pg_database where oid = dbid) as db,
   query,
   sum(shared_blks_hit) as shared_blks_hit,
   sum(shared_blks_read) as shared_blks_read,
