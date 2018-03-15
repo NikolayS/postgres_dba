@@ -55,7 +55,7 @@ select
   coalesce(nullif(schema_name, 'public') || '.', '') || table_name || coalesce(' [' || tblspace || ']', '') as "Table",
   (
     with ops as (
-      select * from data where data.schema_name is not distinct from data2.schema_name and data.table_name = data2.table_name
+      select * from data2 d2 where d2.schema_name is not distinct from data2.schema_name and d2.table_name = data2.table_name
     ), ops_ratios(opname, ratio) as (
       select
         'select',
