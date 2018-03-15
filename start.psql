@@ -17,7 +17,7 @@ select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\1')::numeric >
 \echo '   1 – Node Information: master/replica, lag, DB size, tmp files, etc'
 \echo '   2 – Table Size'
 \echo '   3 – Load Profile'
-\echo '  a1 – [EXPERIMENTAL] Alignmet Padding. How many bytes can be saved if columns are ordered better?'
+\echo '  a1 – [EXPERIMENTAL] Alignment Padding. How many bytes can be saved if columns are ordered better?'
 \echo '  b1 – Tables Bloat, rough estimation'
 \echo '  b2 – B-tree Indexes Bloat, rough estimation'
 \echo '  b3 – Tables Bloat, more precise (requires pgstattuple extension; expensive)'
