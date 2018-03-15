@@ -77,7 +77,14 @@ select
         case when processed_tup_total > 0 then n_tup_upd::numeric / processed_tup_total else 0 end
       from ops
     )
-    select upper(opname) || ' ~' || round(100 * ratio, 2)::text || '%' as zz
+    select
+      case
+        when ratio > .7 then upper(opname) || ' ~' || round(100 * ratio, 2)::text || '%'
+        else 'Mixed: ' || (
+          select string_agg(upper(opname) || ' ~' || round(100 * ratio, 2)::text || '%', ', ' order by ratio desc)
+          from (select * from ops_ratios where ratio > .2) _
+        )
+      end
     from ops_ratios
     order by ratio desc
     limit 1
