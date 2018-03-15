@@ -77,7 +77,7 @@ select
         case when processed_tup_total > 0 then n_tup_upd::numeric / processed_tup_total else 0 end
       from ops
     )
-    select upper(opname) || ' ~' || round(100 * ratio, 2)::text as zz
+    select upper(opname) || ' ~' || round(100 * ratio, 2)::text || '%' as zz
     from ops_ratios
     order by ratio desc
     limit 1
