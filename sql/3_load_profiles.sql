@@ -87,6 +87,7 @@ select
   n_tup_ins as "INSERTed",
   n_tup_del as "DELETEd",
   n_tup_upd as "UPDATEd",
-  round(100 * upd_hot_ratio, 2) as "HOT-updated, %"
+  round(100 * upd_hot_ratio, 2) as "HOT-updated, %",
+  case when seq_tup_read + coalesce(idx_tup_fetch, 0) > 0 then round(100 * seq_tup_read::numeric / (seq_tup_read + coalesce(idx_tup_fetch, 0)), 2) else 0 end as "SeqScan, %"
 from data2
 order by ord, processed_tup_total desc;
