@@ -1,4 +1,4 @@
---Alignmet Padding Analysis: how many bytes can be saved if columns are ordered better?
+--[EXPERIMENTAL] Alignmet Padding. How many bytes can be saved if columns are ordered better?
 
 -- TODO: not-yet-analyzed tables – show a warning (cannot get n_live_tup -> cannot get total bytes)
 -- TODO: NULLs

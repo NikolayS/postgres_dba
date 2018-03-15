@@ -1,4 +1,4 @@
---Load Profiles for Tables
+--Load Profile
 
 with data as (
   select
@@ -7,7 +7,7 @@ with data as (
     (select spcname from pg_tablespace where oid = reltablespace) as tblspace,
     *,
     case when n_tup_upd = 0 then null else n_tup_hot_upd::numeric / n_tup_upd end as upd_hot_ratio,
-    seq_scan + coalesce(idx_scan, 0) + n_tup_ins + n_tup_del + n_tup_upd as ops_total
+    seq_tup_read + coalesce(idx_tup_fetch, 0) + n_tup_ins + n_tup_del + n_tup_upd as ops_total
   from pg_stat_user_tables s
   join pg_class c on c.oid = relid
 ), data2 as (
@@ -16,8 +16,8 @@ with data as (
     '*** TOTAL ***' as table_name,
     null as schema_name,
     null as tblspace,
-    sum(seq_scan) as seq_scan,
-    sum(idx_scan) as idx_scan,
+    sum(seq_tup_read) as seq_tup_read,
+    sum(idx_tup_fetch) as idx_tup_fetch,
     sum(n_tup_ins) as n_tup_ins,
     sum(n_tup_del) as n_tup_del,
     sum(n_tup_upd) as n_tup_upd,
@@ -31,8 +31,8 @@ with data as (
     '    tablespace: [' || coalesce(tblspace, 'pg_default') || ']' as table_name,
     null as schema_name,
     null, -- we don't need to pass real tblspace value for this aggregated record further
-    sum(seq_scan) as seq_scan,
-    sum(idx_scan) as idx_scan,
+    sum(seq_tup_read) as seq_tup_read,
+    sum(idx_tup_fetch) as idx_tup_fetch,
     sum(n_tup_ins) as n_tup_ins,
     sum(n_tup_del) as n_tup_del,
     sum(n_tup_upd) as n_tup_upd,
@@ -45,7 +45,7 @@ with data as (
   union all
   select 3, null, null, null, null, null, null, null, null, null, null, null
   union all
-  select 4, table_name, schema_name, tblspace, seq_scan, idx_scan, n_tup_ins, n_tup_del, n_tup_upd, n_tup_hot_upd, upd_hot_ratio, ops_total
+  select 4, table_name, schema_name, tblspace, seq_tup_read, idx_tup_fetch, n_tup_ins, n_tup_del, n_tup_upd, n_tup_hot_upd, upd_hot_ratio, ops_total
   from data
 )
 select
@@ -53,7 +53,7 @@ select
   /*(
     with op_ratios as (
       select
-        (seq_scan + coalesce(idx_scan, 0))::numeric / ops_total as reads_ratio,
+        (seq_tup_read + coalesce(idx_tup_fetch, 0))::numeric / ops_total as reads_ratio,
         n_tup_ins::numeric / ops_total as inserts_ratio,
         n_tup_del::numeric / ops_total as deletes_ratio,
         n_tup_upd::numeric / ops_total as updates_ratio
@@ -62,10 +62,10 @@ select
     select
   )*/
   ops_total as "Total (S+I+D+U)",
-  seq_scan + coalesce(idx_scan, 0) as "SELECTs",
-  n_tup_ins as "INSERTs",
-  n_tup_del as "DELETEs",
-  n_tup_upd as "UPDATEs",
-  round(100 * upd_hot_ratio, 2) as "HOT Updates, %"
+  seq_tup_read + coalesce(idx_tup_fetch, 0) as "SELECTed",
+  n_tup_ins as "INSERTed",
+  n_tup_del as "DELETEd",
+  n_tup_upd as "UPDATEd",
+  round(100 * upd_hot_ratio, 2) as "HOT-updated, %"
 from data2
 order by ord, ops_total desc;

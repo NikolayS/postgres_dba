@@ -1,4 +1,4 @@
---General Table Size Information
+--Table Size
 
 with data as (
   select
