@@ -6,7 +6,7 @@ The missing set of useful tools for Postgres DBA and mere mortals.
 
 ## Questions?
 
-Questions? Ideas? Write me: samokhvalov@gmail.com, Nikolay Samokhvalov.
+Questions? Ideas? Contact me: samokhvalov@gmail.com, Nikolay Samokhvalov.
 
 ## Credits
 
