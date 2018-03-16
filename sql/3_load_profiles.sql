@@ -81,7 +81,7 @@ select
       case
         when ratio > .7 then upper(opname) || ' ~' || round(100 * ratio, 2)::text || '%'
         else 'Mixed: ' || (
-          select string_agg(upper(opname) || ' ~' || round(100 * ratio, 2)::text || '%', ', ' order by ratio desc)
+          select string_agg(upper(left(opname, 1)) || ' ~' || round(100 * ratio, 2)::text || '%', ', ' order by ratio desc)
           from (select * from ops_ratios where ratio > .2) _
         )
       end
