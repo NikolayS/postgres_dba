@@ -38,7 +38,7 @@ select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\\\1')::numeric
 \endif
 VersCheck
 
-echo "\\i $WARMUP" >> "$OUT"
+echo "\\ir $WARMUP" >> "$OUT"
 
 echo "\\echo '\\033[1;35mMenu:\\033[0m'" >> "$OUT"
 for f in ./sql/*.sql
