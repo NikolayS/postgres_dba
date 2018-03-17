@@ -14,9 +14,10 @@ select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\1')::numeric >
   reset client_min_messages;
 \endif
 \echo '\033[1;35mMenu:\033[0m'
-\echo '   1 – Basic Node Information (master/replica, lag, DB size, tmp files)'
-\echo '   2 – General Table Size Information'
-\echo '  a1 – Alignment Padding Analysis: how many bytes can be saved if columns are ordered better?'
+\echo '   1 – Node Information: master/replica, lag, DB size, tmp files, etc'
+\echo '   2 – Table Size'
+\echo '   3 – Load Profile'
+\echo '  a1 – [EXPERIMENTAL] Alignment Padding. How many bytes can be saved if columns are ordered better?'
 \echo '  b1 – Tables Bloat, rough estimation'
 \echo '  b2 – B-tree Indexes Bloat, rough estimation'
 \echo '  b3 – Tables Bloat, more precise (requires pgstattuple extension; expensive)'
@@ -40,6 +41,7 @@ select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\1')::numeric >
 select
 :d_stp::text = '1' as d_step_is_1,
 :d_stp::text = '2' as d_step_is_2,
+:d_stp::text = '3' as d_step_is_3,
 :d_stp::text = 'a1' as d_step_is_a1,
 :d_stp::text = 'b1' as d_step_is_b1,
 :d_stp::text = 'b2' as d_step_is_b2,
@@ -73,6 +75,10 @@ set postgres_dba.wide = 'on';
   \ir ./start.psql
 \elif :d_step_is_2
   \ir ./sql/2_table_sizes.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_3
+  \ir ./sql/3_load_profiles.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_a1

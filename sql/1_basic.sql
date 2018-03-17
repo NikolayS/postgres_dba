@@ -1,4 +1,4 @@
---Basic Node Information (master/replica, lag, DB size, tmp files)
+--Node Information: master/replica, lag, DB size, tmp files, etc
 with data as (
   select s.*
   from pg_stat_database s
