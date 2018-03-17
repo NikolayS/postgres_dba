@@ -2,14 +2,29 @@
 # Generate start.psql based on the contents of "sql" directory
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+WARMUP="warmup.psql"
 OUT="start.psql"
 
+echo "" > "$WARMUP"
+echo "" > "$OUT"
+
 cd "$DIR/.."
-cat > "$OUT" <<- VersCheck
+cat > "$WARMUP" <<- VersCheck
 -- check if "\if" is supported (psql 10+)
 \if false
   \echo cannot work, you need psql version 10+ (Postgres server can be older)
   select 1/0;
+\endif
+
+select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\\\1')::numeric >= 10 as postgres_dba_pgvers_10plus \gset
+\if :postgres_dba_pgvers_10plus
+  \set postgres_dba_last_wal_receive_lsn pg_last_wal_receive_lsn
+  \set postgres_dba_last_wal_replay_lsn pg_last_wal_replay_lsn
+  \set postgres_dba_is_wal_replay_paused pg_is_wal_replay_paused
+\else
+  \set postgres_dba_last_wal_receive_lsn pg_last_xlog_receive_location
+  \set postgres_dba_last_wal_replay_lsn pg_last_xlog_replay_location
+  \set postgres_dba_is_wal_replay_paused pg_is_xlog_replay_paused
 \endif
 
 -- TODO: improve work with custom GUCs for Postgres 9.5 and older
@@ -22,6 +37,9 @@ select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\\\1')::numeric
   reset client_min_messages;
 \endif
 VersCheck
+
+echo "\\i $WARMUP" >> "$OUT"
+
 echo "\\echo '\\033[1;35mMenu:\\033[0m'" >> "$OUT"
 for f in ./sql/*.sql
 do
