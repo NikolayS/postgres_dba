@@ -11,10 +11,10 @@ select
   case
     when pg_is_in_recovery()  then 'Replica' || ' (delay: '
       || ((((case
-          when :funcname_last_xlog_receive_location() = :funcname_last_xlog_replay_location() then 0
+          when :postgres_dba_last_wal_receive_lsn() = :postgres_dba_last_wal_replay_lsn() then 0
           else extract (epoch from now() - pg_last_xact_replay_timestamp())
         end)::int)::text || ' second')::interval)::text
-      || '; paused: ' || :funcname_is_xlog_replay_paused()::text || ')'
+      || '; paused: ' || :postgres_dba_is_wal_replay_paused()::text || ')'
     else 'Master'
   end as value
 union all
