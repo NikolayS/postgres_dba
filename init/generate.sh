@@ -2,10 +2,14 @@
 # Generate start.psql based on the contents of "sql" directory
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+WARMUP="warmup.psql"
 OUT="start.psql"
 
+echo "" > "$WARMUP"
+echo "" > "$OUT"
+
 cd "$DIR/.."
-cat > "$OUT" <<- VersCheck
+cat > "$WARMUP" <<- VersCheck
 -- check if "\if" is supported (psql 10+)
 \if false
   \echo cannot work, you need psql version 10+ (Postgres server can be older)
@@ -33,6 +37,9 @@ select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\\\1')::numeric
   reset client_min_messages;
 \endif
 VersCheck
+
+echo "\\i $WARMUP" >> "$OUT"
+
 echo "\\echo '\\033[1;35mMenu:\\033[0m'" >> "$OUT"
 for f in ./sql/*.sql
 do
