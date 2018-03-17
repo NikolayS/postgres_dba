@@ -30,7 +30,7 @@ with step1 as (
   join pg_namespace as ns on ns.oid = tbl.relnamespace
   join pg_stats as s on s.schemaname = ns.nspname and s.tablename = tbl.relname and not s.inherited and s.attname = att.attname
   left join pg_class as toast on tbl.reltoastrelid = toast.oid
-  where att.attnum > 0 and not att.attisdropped
+  where att.attnum > 0 and not att.attisdropped and s.schemaname not in ('pg_catalog', 'information_schema')
   group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, tbl.relhasoids
   order by 2, 3
 ), step2 as (

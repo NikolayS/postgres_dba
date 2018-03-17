@@ -1,13 +1,15 @@
-[![CircleCI](https://circleci.com/gh/NikolayS/postgres_dba/tree/master.svg?style=svg)](https://circleci.com/gh/NikolayS/postgres_dba/tree/master)
+[![CircleCI](https://circleci.com/gh/NikolayS/postgres_dba.svg?style=svg)](https://circleci.com/gh/NikolayS/postgres_dba)
 # postgres_dba (PostgresDBA)
 
-The missing set of useful tools for Postgres DBA and non-Postgres developers.
+The missing set of useful tools for Postgres DBA and mere mortals.
 
 :warning: The project is in its very early stage. If you have great ideas, feel free to create a pull request or open an issue.
 
+<img width="709" alt="screen shot 2018-03-17 at 14 34 04" src="https://user-images.githubusercontent.com/1345402/37560150-78b4b24e-29f0-11e8-9b3f-7d68b13631e1.png">
+
 ## Questions?
 
-Questions? Ideas? Write me: samokhvalov@gmail.com, Nikolay Samokhvalov.
+Questions? Ideas? Contact me: samokhvalov@gmail.com, Nikolay Samokhvalov.
 
 ## Credits
 
@@ -46,13 +48,11 @@ And type `:dba <Enter>` in psql. (Or `\i /path/to/postgres_dba/start.psql` if yo
 
 – it will open interactive menu.
 
-<img width="779" alt="screen shot 2018-01-05 at 13 14 30" src="https://user-images.githubusercontent.com/1345402/34628761-6b98b988-f21a-11e7-8e5c-ab2580389a5c.png">
-
 ### Connect to Remote Postgres Server
 What to do if you need to connect to a remote Postgres server? Usually, Postgres is behind a firewall and/or doesn't listen to a public network interface. So you need to be able to connect to the server using SSH. If you can do it, then just create SSH tunnel (assuming that Postgres listens to default port 5432 on that server:
 
 ```bash
-ssh -fNTML 9432:localhost:5432 you-server.com
+ssh -fNTML 9432:localhost:5432 sshusername@you-server.com
 ```
 
 Then, just launch psql, connecting to port 9432 at localhost:
@@ -76,7 +76,7 @@ And then:
 ## How to Extend (Add More Queries)
 You can add your own useful SQL queries and use them from the main menu. Just add your SQL code to `./sql` directory. The filename should start with some 1 or 2-letter code, followed by underscore and some additional arbitrary words. Extension should be `.sql`. Example:
 ```
-  sql/f1_funny_query.sql
+  sql/f1_cool_query.sql
 ```
 – this will give you an option "f1" in the main menu. The very first line in the file should be an SQL comment (starts with `--`) with the query description. It will automatically appear in the menu.
 
