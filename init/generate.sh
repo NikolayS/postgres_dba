@@ -12,6 +12,19 @@ cat > "$OUT" <<- VersCheck
   select 1/0;
 \endif
 
+select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\\\1')::numeric >= 10 as postgres_dba_pgvers_10plus \gset
+\if :postgres_dba_pgvers_10plus
+  \set funcname_last_wal_receive_lsn pg_last_wal_receive_lsn
+  \set funcname_last_wal_replay_lsn pg_last_wal_replay_lsn
+  \set funcname_is_wal_replay_paused pg_is_wal_replay_paused
+  \echo VERSION 10+++
+\else
+  \set funcname_last_wal_receive_lsn pg_last_xlog_receive_location
+  \set funcname_last_wal_replay_lsn pg_last_xlog_replay_location
+  \set funcname_is_wal_replay_paused pg_is_xlog_replay_paused
+  \echo VERS < 10 !!
+\endif
+
 -- TODO: improve work with custom GUCs for Postgres 9.5 and older
 select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\\\1')::numeric >= 9.6 as postgres_dba_pgvers_96plus \gset
 \if :postgres_dba_pgvers_96plus
