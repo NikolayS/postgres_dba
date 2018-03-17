@@ -35,4 +35,5 @@ jobs:
             #echo "\set postgres_dba_wide false" > ~/.psqlrc
             #for f in ~/postgres_dba/sql/*; do psql test -f "$f">/dev/null; done
             diff -b test/regression/1_basic.out <(psql test -f warmup.psql -f ~/postgres_dba/sql/1_basic.sql | grep Role)
-            diff -b test/regression/a1_alignment_padding.out <(psql test -f warmup.psql -f ~/postgres_dba/sql/a1_alignment_padding.sql | grep align)
+            diff -b test/regression/p1_alignment_padding.out <(psql test -f warmup.psql -f ~/postgres_dba/sql/p1_alignment_padding.sql | grep align)
+            diff -b test/regression/a1_activity.out <(psql test -f warmup.psql -f ~/postgres_dba/sql/a1_activity.sql | grep User)
