@@ -1,4 +1,4 @@
---General Table Size Information
+--Table Size
 
 with data as (
   select
@@ -38,6 +38,7 @@ with data as (
     sum(toast_bytes) as toast_bytes,
     sum(table_bytes) as table_bytes
   from data
+  where (select count(distinct coalesce(tblspace, 'pg_default')) from data) > 1 -- don't show this part if there are no custom tablespaces
   group by tblspace
   union all
   select null::oid, null, null, null, null, null, null, null, null
