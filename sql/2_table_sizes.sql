@@ -54,10 +54,22 @@ select
     when row_estimate > 10^3 then round(row_estimate::numeric / 10^3::numeric, 0)::text || 'k'
     else row_estimate::text
   end as "Rows",
-  pg_size_pretty(total_bytes) || ' (' || round(100 * total_bytes::numeric / sum(total_bytes) over (partition by (schema_name is null), left(table_name, 3) = '***'), 2)::text || '%)' as "Total Size",
-  pg_size_pretty(table_bytes) || ' (' || round(100 * table_bytes::numeric / sum(table_bytes) over (partition by (schema_name is null), left(table_name, 3) = '***'), 2)::text || '%)' as "Table Size",
-  pg_size_pretty(index_bytes) || ' (' || round(100 * index_bytes::numeric / sum(index_bytes) over (partition by (schema_name is null), left(table_name, 3) = '***'), 2)::text || '%)' as "Index(es) Size",
-  pg_size_pretty(toast_bytes) || ' (' || round(100 * toast_bytes::numeric / sum(toast_bytes) over (partition by (schema_name is null), left(table_name, 3) = '***'), 2)::text || '%)' as "TOAST Size"
+  pg_size_pretty(total_bytes) || ' (' || round(
+    100 * total_bytes::numeric / nullif(sum(total_bytes) over (partition by (schema_name is null), left(table_name, 3) = '***'), 0),
+    2
+  )::text || '%)' as "Total Size",
+  pg_size_pretty(table_bytes) || ' (' || round(
+    100 * table_bytes::numeric / nullif(sum(table_bytes) over (partition by (schema_name is null), left(table_name, 3) = '***'), 0),
+    2
+  )::text || '%)' as "Table Size",
+  pg_size_pretty(index_bytes) || ' (' || round(
+    100 * index_bytes::numeric / nullif(sum(index_bytes) over (partition by (schema_name is null), left(table_name, 3) = '***'), 0),
+    2
+  )::text || '%)' as "Index(es) Size",
+  pg_size_pretty(toast_bytes) || ' (' || round(
+    100 * toast_bytes::numeric / nullif(sum(toast_bytes) over (partition by (schema_name is null), left(table_name, 3) = '***'), 0),
+    2
+  )::text || '%)' as "TOAST Size"
 \if :postgres_dba_wide
   ,
   row_estimate,
