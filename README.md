@@ -5,7 +5,7 @@ The missing set of useful tools for Postgres DBA and mere mortals.
 
 :warning: The project is in its very early stage. If you have great ideas, feel free to create a pull request or open an issue.
 
-<img width="705" alt="screen shot 2018-03-17 at 15 47 27" src="https://user-images.githubusercontent.com/1345402/37560700-846fef18-29fa-11e8-9c8f-31833dcf3a9e.png">
+<img width="810" alt="screen shot 2018-03-19 at 11 49 39" src="https://user-images.githubusercontent.com/1345402/37615952-b77a5bf6-2b6b-11e8-9843-e0716a3eb880.png">
 
 ## Questions?
 
