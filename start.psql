@@ -2,7 +2,7 @@
 \ir warmup.psql
 \echo '\033[1;35mMenu:\033[0m'
 \echo '   1 – Node Information: master/replica, lag, DB size, tmp files, etc'
-\echo '   2 – Table Size'
+\echo '   2 – Table Sizes'
 \echo '   3 – Load Profile'
 \echo '  a1 – Current Activity: count of current connections grouped by database, user name, state'
 \echo '  b1 – Tables Bloat, rough estimation'

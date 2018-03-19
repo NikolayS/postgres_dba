@@ -1,4 +1,4 @@
---Table Size
+--Table Sizes
 
 with data as (
   select
