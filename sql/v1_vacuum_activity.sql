@@ -16,8 +16,9 @@ with data as (
       else 'auto'
     end as mode,
     p.phase,
-    pg_size_pretty(p.heap_blks_total * current_setting('block_size')::int) as heap_size,
     pg_size_pretty(pg_total_relation_size(relid)) as total_size,
+    pg_size_pretty(pg_total_relation_size(relid) - pg_indexes_size(relid)) as table_size,
+    pg_size_pretty(pg_indexes_size(relid)) as index_size,
     pg_size_pretty(p.heap_blks_scanned * current_setting('block_size')::int) as scanned,
     pg_size_pretty(p.heap_blks_vacuumed * current_setting('block_size')::int) as vacuumed,
     round(100.0 * p.heap_blks_scanned / p.heap_blks_total, 2) as scanned_pct,
@@ -39,8 +40,8 @@ select
     e'\n' || coalesce(nullif(schema_name, 'public') || '.', '') || table_name || coalesce(' [' || tblspace || ']', ''),
     ''
   ) as "DB & Table",
-  heap_size as "Heap",
-  total_size as "Total",
+  table_size as "Table",
+  index_size as "Indexes",
   waiting as "Wait",
   phase as "Phase",
   scanned || ' (' || scanned_pct || '%)' || e' scanned\n'
