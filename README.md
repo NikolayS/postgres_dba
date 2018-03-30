@@ -23,6 +23,14 @@ Questions? Ideas? Contact me: samokhvalov@gmail.com, Nikolay Samokhvalov.
 **You need to have psql version 10**, but the Postgres server itself can be older – most tools work with it.
 You can install postgresql-client library version 10 on your machine and use it to work with Postgres server version 9.6 and older – in this case postgres_dba will work. But you do need to have psql from the latest (version 10) Postgres release.
 
+On clean Ubuntu, this is how you can get postgresql-client and have the most recent psql:
+```
+echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+sudo apt-get update
+sudo apt-get install -y postgresql-10
+```
+
 Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg.
 
 ## Installation
