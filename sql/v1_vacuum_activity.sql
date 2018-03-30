@@ -1,4 +1,6 @@
 --Vacuum: Current Activity
+
+-- Based on: https://github.com/lesovsky/uber-scripts/blob/master/postgresql/sql/vacuum_activity.sql
 with data as (
   select
     p.pid as pid,
