@@ -47,7 +47,7 @@ select 'Database Size', pg_catalog.pg_size_pretty(pg_catalog.pg_database_size(cu
 union all
 select 'Installed Extensions', (
   with exts as (
-    select extname || ' (' || extversion || ')' e, (-1 + row_number() over (order by extname)) / 5 i from pg_extension
+    select extname || ' ' || extversion e, (-1 + row_number() over (order by extname)) / 5 i from pg_extension
   ), lines(l) as (
     select string_agg(e, ', ' order by i) l from exts group by i
   )

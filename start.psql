@@ -16,6 +16,7 @@
 \echo '  p1 – [EXPERIMENTAL] Alignment Padding. How many bytes can be saved if columns are ordered better?'
 \echo '  s1 – Slowest Queries, by Total Time (requires pg_stat_statements extension)'
 \echo '  s2 – Slowest Queries Report (requires pg_stat_statements)'
+\echo '  v1 – Vacuum: Current Activity'
 \if :postgres_dba_wide
   \echo '   x – Turn Wide Mode OFF (currently ON): show less details, less columns'
 \else
@@ -42,6 +43,7 @@ select
 :d_stp::text = 'p1' as d_step_is_p1,
 :d_stp::text = 's1' as d_step_is_s1,
 :d_stp::text = 's2' as d_step_is_s2,
+:d_stp::text = 'v1' as d_step_is_v1,
 :d_stp::text = 'x' as d_step_is_x,
 :d_stp::text = 'q' as d_step_is_q \gset
 \if :d_step_is_q
@@ -116,6 +118,10 @@ set postgres_dba.wide = 'on';
   \ir ./start.psql
 \elif :d_step_is_s2
   \ir ./sql/s2_pg_stat_statements_report.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_v1
+  \ir ./sql/v1_vacuum_activity.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \else
