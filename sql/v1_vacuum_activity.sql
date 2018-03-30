@@ -24,6 +24,7 @@ with data as (
     round(100.0 * p.heap_blks_vacuumed / p.heap_blks_total, 2) as vacuumed_pct,
     p.index_vacuum_count,
     round(100.0 * p.num_dead_tuples / p.max_dead_tuples, 2) as dead_pct,
+    p.num_dead_tuples,
     p.max_dead_tuples
   from pg_stat_progress_vacuum p
   left join pg_stat_activity a using (pid)
@@ -42,10 +43,18 @@ select
   total_size as "Total",
   waiting as "Wait",
   phase as "Phase",
-  scanned || ' (' || scanned_pct || '%)' as "Heap Scanned",
-  vacuumed || ' (' || vacuumed_pct || '%)' as "Heap Vacuumed",
+  scanned || ' (' || scanned_pct || '%)' || e' scanned\n'
+    || vacuumed || ' (' || vacuumed_pct || '%) vacuumed' as "Heap Vacuuming",
   index_vacuum_count || ' completed cycles,'
-    || e'\n' || dead_pct || e'% dead tuples\nof max ~'
+    || e'\n'
+    || case
+      when num_dead_tuples > 10^12 then round(num_dead_tuples::numeric / 10^12::numeric, 0)::text || 'T'
+      when num_dead_tuples > 10^9 then round(num_dead_tuples::numeric / 10^9::numeric, 0)::text || 'B'
+      when num_dead_tuples > 10^6 then round(num_dead_tuples::numeric / 10^6::numeric, 0)::text || 'M'
+      when num_dead_tuples > 10^3 then round(num_dead_tuples::numeric / 10^3::numeric, 0)::text || 'k'
+      else num_dead_tuples::text
+    end
+    || ' (' || dead_pct || e'%) dead tuples\nof max ~'
     || case
       when max_dead_tuples > 10^12 then round(max_dead_tuples::numeric / 10^12::numeric, 0)::text || 'T'
       when max_dead_tuples > 10^9 then round(max_dead_tuples::numeric / 10^9::numeric, 0)::text || 'B'
