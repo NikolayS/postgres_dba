@@ -21,7 +21,8 @@ with data as (
     round(100.0 * p.heap_blks_scanned / p.heap_blks_total, 2) as scanned_pct,
     round(100.0 * p.heap_blks_vacuumed / p.heap_blks_total, 2) as vacuumed_pct,
     p.index_vacuum_count,
-    round(100.0 * p.num_dead_tuples / p.max_dead_tuples, 2) as dead_pct
+    round(100.0 * p.num_dead_tuples / p.max_dead_tuples, 2) as dead_pct,
+    p.max_dead_tuples
   from pg_stat_progress_vacuum p
   left join pg_stat_activity a using (pid)
   left join pg_class c on c.oid = p.relid
@@ -42,6 +43,14 @@ select
   scanned || ' (' || scanned_pct || '%)' as "Heap Scanned",
   vacuumed || ' (' || vacuumed_pct || '%)' as "Heap Vacuumed",
   index_vacuum_count || ' completed cycles,'
-    || e'\n' || dead_pct || '% dead tuples collected now' as "Index Vacuuming"
+    || e'\n' || dead_pct || e'% dead tuples\nof max ~'
+    || case
+      when max_dead_tuples > 10^12 then round(max_dead_tuples::numeric / 10^12::numeric, 0)::text || 'T'
+      when max_dead_tuples > 10^9 then round(max_dead_tuples::numeric / 10^9::numeric, 0)::text || 'B'
+      when max_dead_tuples > 10^6 then round(max_dead_tuples::numeric / 10^6::numeric, 0)::text || 'M'
+      when max_dead_tuples > 10^3 then round(max_dead_tuples::numeric / 10^3::numeric, 0)::text || 'k'
+      else max_dead_tuples::text
+    end
+    || ' collected now' as "Index Vacuuming"
 from data
 order by duration desc;
