@@ -28,7 +28,7 @@ On clean Ubuntu, this is how you can get postgresql-client and have the most rec
 echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 sudo apt-get update
-sudo apt-get install -y postgresql-10
+sudo apt-get install -y postgresql-client-10
 ```
 
 Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg.
