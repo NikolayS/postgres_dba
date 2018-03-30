@@ -9,8 +9,8 @@ with data as (
     (now() - a.xact_start) as duration,
     coalesce(wait_event_type ||'.'|| wait_event, null) as waiting,
     case
-      when a.query ~ '^autovacuum.*to prevent wraparound' then 'wraparound'
-      when a.query ~ '^vacuum' then 'user'
+      when a.query ~* '^autovacuum.*to prevent wraparound' then 'wraparound'
+      when a.query ~* '^vacuum' then 'user'
       else 'auto'
     end as mode,
     p.phase,
