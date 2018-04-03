@@ -107,4 +107,4 @@ select
   round(100 * upd_hot_ratio, 2) as "HOT-updated, %",
   case when seq_tup_read + coalesce(idx_tup_fetch, 0) > 0 then round(100 * seq_tup_read::numeric / (seq_tup_read + coalesce(idx_tup_fetch, 0)), 2) else 0 end as "SeqScan, %"
 from data2
-order by ord, 2 desc;
+order by ord, row_estimate desc;
