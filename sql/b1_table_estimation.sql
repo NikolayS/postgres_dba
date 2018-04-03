@@ -61,6 +61,7 @@ with step1 as (
     case when tblpages - est_tblpages_ff > 0 then 100 * (tblpages - est_tblpages_ff) / tblpages::float else 0 end as bloat_ratio
     -- , (pst).free_percent + (pst).dead_tuple_percent as real_frag
   from step3
+  left join pg_stat_user_tables su on su.relid = tblid
   -- WHERE NOT is_na
   --   AND tblpages*((pst).free_percent + (pst).dead_tuple_percent)::float4/100 >= 1
 )
@@ -71,7 +72,8 @@ select
   '~' || pg_size_pretty(extra_size::numeric)::text || ' (' || round(extra_ratio::numeric, 2)::text || '%)' as "Extra",
   '~' || pg_size_pretty(bloat_size::numeric)::text || ' (' || round(bloat_ratio::numeric, 2)::text || '%)' as "Bloat",
   '~' || pg_size_pretty((real_size - bloat_size)::numeric) as "Live",
-  fillfactor
+  fillfactor,
+  greatest(last_autovacuum, last_vacuum)::timestamp(0)::text || ' (' || case when last_autovacuum > last_vacuum then 'auto' else 'user)' end as "Last Vaccuum"
 \if :postgres_dba_wide
   ,
   real_size as real_size_raw,
