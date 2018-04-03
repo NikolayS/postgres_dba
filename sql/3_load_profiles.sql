@@ -5,6 +5,7 @@ with data as (
     s.relname as table_name,
     s.schemaname as schema_name,
     (select spcname from pg_tablespace where oid = reltablespace) as tblspace,
+    c.reltuples as row_estimate,
     *,
     case when n_tup_upd = 0 then null else n_tup_hot_upd::numeric / n_tup_upd end as upd_hot_ratio,
     seq_tup_read + coalesce(idx_tup_fetch, 0) - n_tup_del - n_tup_upd as tuples_selected,
@@ -17,6 +18,7 @@ with data as (
     '*** TOTAL ***' as table_name,
     null as schema_name,
     null as tblspace,
+    sum(row_estimate) as row_estimate,
     sum(seq_tup_read) as seq_tup_read,
     sum(idx_tup_fetch) as idx_tup_fetch,
     sum(tuples_selected) as tuples_selected,
@@ -33,6 +35,7 @@ with data as (
     '    tablespace: [' || coalesce(tblspace, 'pg_default') || ']' as table_name,
     null as schema_name,
     null, -- we don't need to pass real tblspace value for this aggregated record further
+    sum(row_estimate) as row_estimate,
     sum(seq_tup_read) as seq_tup_read,
     sum(idx_tup_fetch) as idx_tup_fetch,
     sum(tuples_selected) as tuples_selected,
@@ -46,13 +49,20 @@ with data as (
   where (select count(distinct coalesce(tblspace, 'pg_default')) from data) > 1 -- don't show this part if there are no custom tablespaces
   group by tblspace
   union all
-  select 3, null, null, null, null, null, null, null, null, null, null, null, null
+  select 3, null, null, null, null, null, null, null, null, null, null, null, null, null
   union all
-  select 4, table_name, schema_name, tblspace, seq_tup_read, idx_tup_fetch, tuples_selected, n_tup_ins, n_tup_del, n_tup_upd, n_tup_hot_upd, upd_hot_ratio, processed_tup_total
+  select 4, table_name, schema_name, tblspace, row_estimate, seq_tup_read, idx_tup_fetch, tuples_selected, n_tup_ins, n_tup_del, n_tup_upd, n_tup_hot_upd, upd_hot_ratio, processed_tup_total
   from data
 )
 select
   coalesce(nullif(schema_name, 'public') || '.', '') || table_name || coalesce(' [' || tblspace || ']', '') as "Table",
+  '~' || case
+    when row_estimate > 10^12 then round(row_estimate::numeric / 10^12::numeric, 0)::text || 'T'
+    when row_estimate > 10^9 then round(row_estimate::numeric / 10^9::numeric, 0)::text || 'B'
+    when row_estimate > 10^6 then round(row_estimate::numeric / 10^6::numeric, 0)::text || 'M'
+    when row_estimate > 10^3 then round(row_estimate::numeric / 10^3::numeric, 0)::text || 'k'
+    else row_estimate::text
+  end as "Rows",
   (
     with ops as (
       select * from data2 d2 where d2.schema_name is not distinct from data2.schema_name and d2.table_name = data2.table_name
@@ -97,4 +107,4 @@ select
   round(100 * upd_hot_ratio, 2) as "HOT-updated, %",
   case when seq_tup_read + coalesce(idx_tup_fetch, 0) > 0 then round(100 * seq_tup_read::numeric / (seq_tup_read + coalesce(idx_tup_fetch, 0)), 2) else 0 end as "SeqScan, %"
 from data2
-order by ord, processed_tup_total desc;
+order by ord, 2 desc;
