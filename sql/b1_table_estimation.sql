@@ -72,14 +72,13 @@ select
   '~' || pg_size_pretty(extra_size::numeric)::text || ' (' || round(extra_ratio::numeric, 2)::text || '%)' as "Extra",
   '~' || pg_size_pretty(bloat_size::numeric)::text || ' (' || round(bloat_ratio::numeric, 2)::text || '%)' as "Bloat",
   '~' || pg_size_pretty((real_size - bloat_size)::numeric) as "Live",
-  fillfactor,
   greatest(last_autovacuum, last_vacuum)::timestamp(0)::text 
     || case greatest(last_autovacuum, last_vacuum)
       when last_autovacuum then ' (auto)'
-      when last_vacuum then ' (user)'
     else '' end as "Last Vaccuum"
 \if :postgres_dba_wide
   ,
+  fillfactor,
   real_size as real_size_raw,
   extra_size as extra_size_raw,
   bloat_size as bloat_size_raw,
