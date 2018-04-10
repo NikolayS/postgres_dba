@@ -47,7 +47,7 @@ where
     'random_page_cost',
     'seq_page_cost'
   )
-\if :postgres_dba_wide
-  or true
-\endif
+--\if :postgres_dba_wide
+--  or true
+--\endif
 order by category, name;
