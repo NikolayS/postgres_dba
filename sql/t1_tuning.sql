@@ -1,17 +1,21 @@
 --Postgres parameters tuning
 select
   name as "Parameter",
-  case unit
-    when '8kB' then case when setting::numeric <= 0 then setting else pg_size_pretty(setting::numeric * 8 * 1024) end
-    when '16MB' then case when setting::numeric <= 0 then setting else pg_size_pretty(setting::numeric * 16 * 1024 * 1024) end
-    when 'kB' then case when setting::numeric <= 0 then setting else pg_size_pretty(setting::numeric * 1024) end
-    else case when setting::numeric <= 0 then setting else setting || coalesce ('', ' ' || unit) end
+  case when setting in ('-1', '0', 'off', 'on') then setting else
+    case unit
+      when '8kB' then pg_size_pretty(setting::int8 * 8 * 1024)
+      when '16MB' then pg_size_pretty(setting::int8 * 16 * 1024 * 1024)
+      when 'kB' then pg_size_pretty(setting::int8 * 1024)
+      else setting || coalesce ('', ' ' || unit)
+    end
   end as "Value",
-  case unit
-    when '8kB' then case when boot_val::numeric <= 0 then setting else pg_size_pretty(boot_val::numeric * 8 * 1024) end
-    when '16MB' then case when boot_val::numeric <= 0 then setting else pg_size_pretty(boot_val::numeric * 16 * 1024 * 1024) end
-    when 'kB' then case when boot_val::numeric <= 0 then setting else pg_size_pretty(boot_val::numeric * 1024) end
-    else case when boot_val::numeric <= 0 then setting else boot_val || coalesce ('', ' ' || unit) end
+  case when boot_val in ('-1', '0', 'off', 'on') then boot_val else
+    case unit
+      when '8kB' then pg_size_pretty(boot_val::int8 * 8 * 1024)
+      when '16MB' then pg_size_pretty(boot_val::int8 * 16 * 1024 * 1024)
+      when 'kB' then pg_size_pretty(boot_val::int8 * 1024)
+      else boot_val || coalesce ('', ' ' || unit)
+    end
   end as "Default",
   category as "Category"
 \if :postgres_dba_wide
