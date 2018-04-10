@@ -1,8 +1,18 @@
 --Postgres parameters tuning
 select
   name as "Parameter",
-  setting as "Value",
-  boot_val as "Default",
+  case unit
+    when '8kB' then pg_size_pretty(setting::int8 * 8 * 1024)
+    when '16MB' then pg_size_pretty(setting::int8 * 16 * 1024 * 1024)
+    when 'kB' then pg_size_pretty(setting::int8 * 1024)
+    else setting || coalesce ('', ' ' || unit)
+  end as "Value",
+  case unit
+    when '8kB' then pg_size_pretty(boot_val::int8 * 8 * 1024)
+    when '16MB' then pg_size_pretty(boot_val::int8 * 16 * 1024 * 1024)
+    when 'kB' then pg_size_pretty(boot_val::int8 * 1024)
+    else boot_val || coalesce ('', ' ' || unit)
+  end as "Default",
   category as "Category"
 \if :postgres_dba_wide
   , *
