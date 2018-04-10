@@ -29,7 +29,9 @@ where
     'autovacuum_max_workers',
     'autovacuum_vacuum_scale_factor',
     'autovacuum_work_mem',
-    'autovacuum_naptime'
+    'autovacuum_naptime',
+    'random_page_cost',
+    'seq_page_cost'
   )
 \if :postgres_dba_wide
   or true
