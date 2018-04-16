@@ -1,4 +1,4 @@
---Node Information: master/replica, lag, DB size, tmp files, etc
+--Node & Current DB Information: master/replica, lag, DB size, tmp files, etc
 with data as (
   select s.*
   from pg_stat_database s
@@ -54,7 +54,7 @@ select 'Installed Extensions', (
   select string_agg(l, e'\n') from lines
 )
 union all
-select 'Cache Effectiveness', (round(blks_hit * 100::numeric / (blks_hit + blks_read), 2))::text || '%' from data
+select 'Cache Effectiveness', (round(blks_hit * 100::numeric / (blks_hit + blks_read), 2))::text || '%' from data -- no "/0" because we already work!
 union all
 select 'Successful Commits', (round(xact_commit * 100::numeric / (xact_commit + xact_rollback), 2))::text || '%' from data
 union all

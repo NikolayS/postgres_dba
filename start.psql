@@ -1,7 +1,8 @@
 
 \ir warmup.psql
 \echo '\033[1;35mMenu:\033[0m'
-\echo '   1 – Node Information: master/replica, lag, DB size, tmp files, etc'
+\echo '   0 – Node & Current DB Information: master/replica, lag, DB size, tmp files, etc'
+\echo '   1 – Databases: size, stats'
 \echo '   2 – Table Sizes'
 \echo '   3 – Load Profile'
 \echo '  a1 – Current Activity: count of current connections grouped by database, user name, state'
@@ -29,6 +30,7 @@
 \prompt d_step_unq
 \set d_stp '\'' :d_step_unq '\''
 select
+:d_stp::text = '0' as d_step_is_0,
 :d_stp::text = '1' as d_step_is_1,
 :d_stp::text = '2' as d_step_is_2,
 :d_stp::text = '3' as d_step_is_3,
@@ -62,8 +64,12 @@ set postgres_dba.wide = 'on';
   \echo
 \endif
   \ir ./start.psql
+\elif :d_step_is_0
+  \ir ./sql/0_node.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
 \elif :d_step_is_1
-  \ir ./sql/1_basic.sql
+  \ir ./sql/1_databases.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_2
