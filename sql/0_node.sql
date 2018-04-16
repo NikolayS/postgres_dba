@@ -39,7 +39,7 @@ select 'Checkpoints', (select (checkpoints_timed + checkpoints_req)::text from p
 union all
 select 'Forced Checkpoints', (select round(100.0 * checkpoints_req::numeric / (checkpoints_timed + checkpoints_req), 1)::text || '%' from pg_stat_bgwriter)
 union all
-select 'Checkpoint MB/sec', (select round((buffers_checkpoint::numeric / ((1024.0 * 1024 / (current_setting('block_size')::numeric))  * extract('epoch' from now() - stats_reset)))::numeric, 2)::text from pg_stat_bgwriter)
+select 'Checkpoint MB/sec', (select round((buffers_checkpoint::numeric / ((1024.0 * 1024 / (current_setting('block_size')::numeric))  * extract('epoch' from now() - stats_reset)))::numeric, 6)::text from pg_stat_bgwriter)
 union all
 select repeat('-', 33), repeat('-', 88)
 union all
