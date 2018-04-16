@@ -8,8 +8,8 @@ with data as (
     c.reltuples as row_estimate,
     *,
     case when n_tup_upd = 0 then null else n_tup_hot_upd::numeric / n_tup_upd end as upd_hot_ratio,
-    seq_tup_read + coalesce(idx_tup_fetch, 0) - n_tup_del - n_tup_upd as tuples_selected,
-    seq_tup_read + coalesce(idx_tup_fetch, 0) + n_tup_ins as processed_tup_total -- we don't add _del and _upd here (already counted via seq_ & idx_)
+    -- wrong! seq_tup_read + coalesce(idx_tup_fetch, 0) - n_tup_del - n_tup_upd as tuples_selected,
+    n_tup_upd + n_tup_del + n_tup_ins as mod_tup_total -- we don't add _del and _upd here (already counted via seq_ & idx_)
   from pg_stat_user_tables s
   join pg_class c on c.oid = relid
 ), data2 as (
@@ -21,13 +21,13 @@ with data as (
     sum(row_estimate) as row_estimate,
     sum(seq_tup_read) as seq_tup_read,
     sum(idx_tup_fetch) as idx_tup_fetch,
-    sum(tuples_selected) as tuples_selected,
+    -- wrong! sum(tuples_selected) as tuples_selected,
     sum(n_tup_ins) as n_tup_ins,
     sum(n_tup_del) as n_tup_del,
     sum(n_tup_upd) as n_tup_upd,
     sum(n_tup_hot_upd) as n_tup_hot_upd,
     avg(upd_hot_ratio) as upd_hot_ratio,
-    sum(processed_tup_total) as processed_tup_total
+    sum(mod_tup_total) as mod_tup_total
   from data
   union all
   select
@@ -38,20 +38,22 @@ with data as (
     sum(row_estimate) as row_estimate,
     sum(seq_tup_read) as seq_tup_read,
     sum(idx_tup_fetch) as idx_tup_fetch,
-    sum(tuples_selected) as tuples_selected,
+    -- wrong! sum(tuples_selected) as tuples_selected,
     sum(n_tup_ins) as n_tup_ins,
     sum(n_tup_del) as n_tup_del,
     sum(n_tup_upd) as n_tup_upd,
     sum(n_tup_hot_upd) as n_tup_hot_upd,
     avg(upd_hot_ratio) as upd_hot_ratio,
-    sum(processed_tup_total) as processed_tup_total
+    sum(mod_tup_total) as mod_tup_total
   from data
   where (select count(distinct coalesce(tblspace, 'pg_default')) from data) > 1 -- don't show this part if there are no custom tablespaces
   group by tblspace
   union all
-  select 3, null, null, null, null, null, null, null, null, null, null, null, null, null
+  select 3, null, null, null, null, null, null, null, null, null, null, null, null
   union all
-  select 4, table_name, schema_name, tblspace, row_estimate, seq_tup_read, idx_tup_fetch, tuples_selected, n_tup_ins, n_tup_del, n_tup_upd, n_tup_hot_upd, upd_hot_ratio, processed_tup_total
+  select 4, table_name, schema_name, tblspace, row_estimate, seq_tup_read, idx_tup_fetch,
+    -- wrong! tuples_selected,
+    n_tup_ins, n_tup_del, n_tup_upd, n_tup_hot_upd, upd_hot_ratio, mod_tup_total
   from data
 )
 select
@@ -67,24 +69,24 @@ select
     with ops as (
       select * from data2 d2 where d2.schema_name is not distinct from data2.schema_name and d2.table_name = data2.table_name
     ), ops_ratios(opname, ratio) as (
-      select
+      /* wrong!! select
         'select',
-        case when processed_tup_total > 0 then tuples_selected::numeric / processed_tup_total else 0 end
+        case when mod_tup_total > 0 then tuples_selected::numeric / mod_tup_total else 0 end
       from ops
-      union all
+      union all*/
       select
         'insert',
-        case when processed_tup_total > 0 then n_tup_ins::numeric / processed_tup_total else 0 end
+        case when mod_tup_total > 0 then n_tup_ins::numeric / mod_tup_total else 0 end
       from ops
       union all
       select
         'delete',
-        case when processed_tup_total > 0 then n_tup_del::numeric / processed_tup_total else 0 end
+        case when mod_tup_total > 0 then n_tup_del::numeric / mod_tup_total else 0 end
       from ops
       union all
       select
         'update',
-        case when processed_tup_total > 0 then n_tup_upd::numeric / processed_tup_total else 0 end
+        case when mod_tup_total > 0 then n_tup_upd::numeric / mod_tup_total else 0 end
       from ops
     )
     select
@@ -98,9 +100,9 @@ select
     from ops_ratios
     order by ratio desc
     limit 1
-  ) as "Load Type",
-  processed_tup_total as "Total (S+I+D+U)",
-  tuples_selected as "SELECTed",
+  ) as "Write Load Type",
+  mod_tup_total as "Tuples modified (I+U+D)",
+  -- wrong!! tuples_selected as "SELECTed",
   n_tup_ins as "INSERTed",
   n_tup_del as "DELETEd",
   n_tup_upd as "UPDATEd",
