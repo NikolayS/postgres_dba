@@ -1,4 +1,4 @@
---Databases: size, stats
+--Databases: Size, Statistics
 with data as (
   select
     d.oid,

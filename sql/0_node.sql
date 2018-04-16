@@ -35,6 +35,12 @@ select 'Started At', pg_postmaster_start_time()::timestamptz(0)::text
 union all
 select 'Uptime', (now() - pg_postmaster_start_time())::interval(0)::text
 union all
+select 'Checkpoints', (select (checkpoints_timed + checkpoints_req)::text from pg_stat_bgwriter)
+union all
+select 'Forced Checkpoints', (select round(100.0 * checkpoints_req::numeric / (checkpoints_timed + checkpoints_req), 1)::text || '%' from pg_stat_bgwriter)
+union all
+select 'Checkpoint MB/sec', (select round((buffers_checkpoint::numeric / ((1024.0 * 1024 / (current_setting('block_size')::numeric))  * extract('epoch' from now() - stats_reset)))::numeric, 2)::text from pg_stat_bgwriter)
+union all
 select repeat('-', 33), repeat('-', 88)
 union all
 select 'Database Name' as metric, datname as value from data
