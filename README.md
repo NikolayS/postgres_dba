@@ -34,17 +34,13 @@ sudo apt-get install -y postgresql-client-10
 Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg.
 
 ## Installation
-Clone, go to the directory and run psql (version 10 is required):
+The installation is trivial. Clone the repository and put "dba" alias to your `.psqlrc` file:
 ```bash
 git clone https://github.com/NikolayS/postgres_dba.git
+echo "\set dba '\\\\i `pwd`/postgres_dba/start.psql'" >> ~/.psqlrc
 ```
 
-For convenience, add this shortcut to your `~/.psqlrc` file:
-```
-\set dba '\\i /path/to/postgres_dba/start.psql'
-```
-
-That's it. Nothing is really needed to be installed.
+That's it.
 
 ## Usage
 
