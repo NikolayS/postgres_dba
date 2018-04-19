@@ -1,4 +1,71 @@
 --Postgres parameters tuning
+\set postgres_dba_t1_error false
+\if :postgres_dba_interactive_mode
+\echo
+\echo 'What is the type of your database?'
+\echo '  1 – OLTP, Web/Mobile App'
+\echo '  2 – Analytics, Data Warehouse'
+\echo '  3 – Mixed Load'
+\echo '  4 - Desktop / Developer''s Machine'
+\echo 'Type your choice and press <Enter>: '
+\prompt postgres_dba_t1_instance_type
+
+select :postgres_dba_t1_instance_type = 1 as postgres_dba_t1_instance_type_oltp \gset
+select :postgres_dba_t1_instance_type = 2 as postgres_dba_t1_instance_type_analytics \gset
+select :postgres_dba_t1_instance_type = 3 as postgres_dba_t1_instance_type_mixed \gset
+select :postgres_dba_t1_instance_type = 4 as postgres_dba_t1_instance_type_desktop \gset
+
+\echo
+\echo
+\echo 'Where is the instance located?'
+\echo '  1 – On-premise'
+\echo '  2 – Amazon EC2'
+\echo '  3 – Amazon RDS'
+\echo 'Type your choice and press <Enter>: '
+\prompt postgres_dba_t1_location
+
+select :postgres_dba_t1_location = 1 as postgres_dba_t1_location_onpremise \gset
+select :postgres_dba_t1_location = 2 as postgres_dba_t1_location_ec2 \gset
+select :postgres_dba_t1_location = 3 as postgres_dba_t1_location_rds \gset
+
+select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\1')::numeric as postgres_dba_t1_pg_version \gset
+
+\echo
+\echo
+
+\if :postgres_dba_t1_location_onpremise
+-- More questions to get number of CPU cores, RAM, disks
+\echo 'Type number of CPU cores: '
+\prompt postgres_dba_t1_cpu
+
+\echo
+\echo
+\echo 'Type total available memory (in GB): '
+\prompt postgres_dba_t1_memory
+
+\echo
+\echo
+\echo 'Hard drive type?'
+\echo '  1 - HDD storage'
+\echo '  2 - SSD storage'
+\echo 'Type your choice and press <Enter>: '
+\prompt postgres_dba_t1_location
+
+\elif :postgres_dba_t1_location_ec2
+-- CPU/memory/disk is known (AWS EC2)
+\elif :postgres_dba_t1_location_rds
+-- CPU/memory/disk is known (AWS RDS)
+\else
+\echo Error! Impossible option.
+\set postgres_dba_t1_error true
+\endif
+
+\endif
+
+\if :postgres_dba_t1_error
+\echo You put incorrect input, cannot proceed with this report. Press <Enter> to return to the menu
+\prompt
+\else
 select
   name as "Parameter",
   case when setting in ('-1', '0', 'off', 'on') then setting else
@@ -51,3 +118,4 @@ where
 --  or true
 --\endif
 order by category, name;
+\endif
