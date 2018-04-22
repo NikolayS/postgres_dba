@@ -25,4 +25,4 @@ select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\1')::numeric >
   reset client_min_messages;
 \endif
 
-\set postgres_dba_interactive_mode true
+\set postgres_dba_interactive_mode false
