@@ -21,7 +21,15 @@ select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\1')::numeric >
   select coalesce(current_setting('postgres_dba.wide', true), 'off') = 'on' as postgres_dba_wide \gset
 \else
   set client_min_messages to 'fatal';
-  select :postgres_dba_wide as postgres_dba_wide \gset
+  do $$
+  declare
+    val text;
+  begin
+    select into val current_setting('postgres_dba.wide');
+  exception when others then
+    perform set_config('postgres_dba.wide', 'off', false);
+  end; $$ language plpgsql;
+  select current_setting('postgres_dba.wide') as postgres_dba_wide \gset
   reset client_min_messages;
 \endif
 
