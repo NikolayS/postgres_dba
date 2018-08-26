@@ -49,7 +49,6 @@ with unused as (
       pg_stat_user_indexes.idx_scan = 0 /* < 10 or smth */
       and pg_index.indisunique is false
       and pg_stat_user_indexes.idx_scan::float/(coalesce(n_tup_ins,0)+coalesce(n_tup_upd,0)-coalesce(n_tup_hot_upd,0)+coalesce(n_tup_del,0)+1)::float<0.01
-      and (coalesce(n_tup_ins,0)+coalesce(n_tup_upd,0)-coalesce(n_tup_hot_upd,0)+coalesce(n_tup_del,0))>10000
 ), index_data as (
   select *, string_to_array(indkey::text,' ') as key_array,array_length(string_to_array(indkey::text,' '),1) as nkeys
   from pg_index
