@@ -1,4 +1,3 @@
-
 \ir warmup.psql
 \echo '\033[1;35mMenu:\033[0m'
 \echo '   0 – Node & Current DB Information: master/replica, lag, DB size, tmp files, etc'
@@ -11,6 +10,7 @@
 \echo '  b3 – Tables Bloat, more precise (requires pgstattuple extension; expensive)'
 \echo '  b4 – B-tree Indexes Bloat, more precise (requires pgstattuple extension; expensive)'
 \echo '  b5 – Tables and Columns Without Stats (so bloat cannot be estimated)'
+\echo '  e1 – List of extensions installed in the current DB'
 \echo '  i1 – Unused/Rarely Used Indexes'
 \echo '  i2 – Unused/Redundant Indexes Do & Undo Migration DDL'
 \echo '  i3 – FKs with Missing/Bad Indexes'
@@ -19,11 +19,6 @@
 \echo '  s2 – Slowest Queries Report (requires pg_stat_statements)'
 \echo '  t1 – Postgres parameters tuning'
 \echo '  v1 – Vacuum: Current Activity'
-\if :postgres_dba_wide
-  \echo '   x – Turn Wide Mode OFF (currently ON): show less details, less columns'
-\else
-  \echo '   x – Turn Wide Mode ON (currently OFF): show more details, more columns'
-\endif
 \echo '   q – Quit'
 \echo
 \echo Type your choice and press <Enter>:
@@ -40,6 +35,7 @@ select
 :d_stp::text = 'b3' as d_step_is_b3,
 :d_stp::text = 'b4' as d_step_is_b4,
 :d_stp::text = 'b5' as d_step_is_b5,
+:d_stp::text = 'e1' as d_step_is_e1,
 :d_stp::text = 'i1' as d_step_is_i1,
 :d_stp::text = 'i2' as d_step_is_i2,
 :d_stp::text = 'i3' as d_step_is_i3,
@@ -48,22 +44,10 @@ select
 :d_stp::text = 's2' as d_step_is_s2,
 :d_stp::text = 't1' as d_step_is_t1,
 :d_stp::text = 'v1' as d_step_is_v1,
-:d_stp::text = 'x' as d_step_is_x,
 :d_stp::text = 'q' as d_step_is_q \gset
 \if :d_step_is_q
   \echo 'Bye!'
   \echo
-\elif :d_step_is_x
-\if :postgres_dba_wide
-set postgres_dba.wide = 'off';
-  \echo 'Wide mode turned OFF!'
-  \echo
-\else
-set postgres_dba.wide = 'on';
-  \echo 'Wide mode turned ON!'
-  \echo
-\endif
-  \ir ./start.psql
 \elif :d_step_is_0
   \ir ./sql/0_node.sql
   \prompt 'Press <Enter> to continue…' d_dummy
@@ -102,6 +86,10 @@ set postgres_dba.wide = 'on';
   \ir ./start.psql
 \elif :d_step_is_b5
   \ir ./sql/b5_tables_no_stats.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_e1
+  \ir ./sql/e1_extensions.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_i1

@@ -70,18 +70,6 @@ select
     100 * toast_bytes::numeric / nullif(sum(toast_bytes) over (partition by (schema_name is null), left(table_name, 3) = '***'), 0),
     2
   )::text || '%)' as "TOAST Size"
-\if :postgres_dba_wide
-  ,
-  row_estimate,
-  total_bytes,
-  table_bytes,
-  index_bytes,
-  toast_bytes,
-  schema_name,
-  table_name,
-  tblspace,
-  oid
-\endif
 from data2
 where schema_name is distinct from 'information_schema'
 order by oid is null desc, total_bytes desc nulls last;

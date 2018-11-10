@@ -1,4 +1,8 @@
 --Postgres parameters tuning
+
+-- For Postgres versions older than 10, copy/paste the part
+-- below the last "\else" (scroll down)
+
 \set postgres_dba_t1_error false
 \if :postgres_dba_interactive_mode
 \echo
@@ -85,9 +89,6 @@ select
     end
   end as "Default",
   category as "Category"
-\if :postgres_dba_wide
-  , *
-\endif
 from pg_settings
 where
   name in (
@@ -114,8 +115,5 @@ where
     'random_page_cost',
     'seq_page_cost'
   )
---\if :postgres_dba_wide
---  or true
---\endif
 order by category, name;
 \endif
