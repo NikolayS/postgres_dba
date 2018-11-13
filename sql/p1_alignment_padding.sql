@@ -192,11 +192,6 @@ select
     else null
   end as "Suggested Columns Reorder"
   --case when padding_total_est > 0 then array_to_string(alt_cols, ', ') else null end as "Suggested Columns Reorder"
-\if :postgres_dba_wide
-  ,
-  padding_sum as "Bytes Wasted in a Row",
-  *
-\endif
 from result r1
 order by table_bytes desc
 ;

@@ -76,14 +76,6 @@ select
     || case greatest(last_autovacuum, last_vacuum)
       when last_autovacuum then ' (auto)'
     else '' end as "Last Vaccuum"
-\if :postgres_dba_wide
-  ,
-  fillfactor,
-  real_size as real_size_raw,
-  extra_size as extra_size_raw,
-  bloat_size as bloat_size_raw,
-  real_size - bloat_size as live_data_size_raw
-\endif
 from step4
 order by real_size desc nulls last
 ;

@@ -81,9 +81,5 @@ select
   conflicts as "Conflicts",
   deadlocks as "Deadlocks",
   temp_files::text || coalesce(' (' || pg_size_pretty(temp_bytes) || ')', '') as "Temp. Files"
-\if :postgres_dba_wide
-  ,
-  *
-\endif
 from data2
 order by oid is null desc, size desc nulls last;
