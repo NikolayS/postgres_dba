@@ -12,8 +12,9 @@
 \echo '  b5 – Tables and Columns Without Stats (so bloat cannot be estimated)'
 \echo '  e1 – List of extensions installed in the current DB'
 \echo '  i1 – Unused/Rarely Used Indexes'
-\echo '  i2 – Unused/Redundant Indexes Do & Undo Migration DDL'
+\echo '  i2 – Redundant Indexes'
 \echo '  i3 – FKs with Missing/Bad Indexes'
+\echo '  i4 – Unused/Redundant Indexes Do & Undo Migration DDL'
 \echo '  p1 – [EXPERIMENTAL] Alignment Padding. How many bytes can be saved if columns are ordered better?'
 \echo '  s1 – Slowest Queries, by Total Time (requires pg_stat_statements extension)'
 \echo '  s2 – Slowest Queries Report (requires pg_stat_statements)'
@@ -39,6 +40,7 @@ select
 :d_stp::text = 'i1' as d_step_is_i1,
 :d_stp::text = 'i2' as d_step_is_i2,
 :d_stp::text = 'i3' as d_step_is_i3,
+:d_stp::text = 'i4' as d_step_is_i4,
 :d_stp::text = 'p1' as d_step_is_p1,
 :d_stp::text = 's1' as d_step_is_s1,
 :d_stp::text = 's2' as d_step_is_s2,
@@ -102,6 +104,10 @@ select
   \ir ./start.psql
 \elif :d_step_is_i3
   \ir ./sql/i3_non_indexed_fks.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_i4
+  \ir ./sql/i4_indexes_migration.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_p1
