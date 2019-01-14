@@ -1,4 +1,4 @@
--- Lisf of redundant Indexes 
+-- List of redundant Indexes
 
 -- Use it to see redundant indexes list
 

@@ -1,4 +1,4 @@
--- Lisf of invalid Indexes 
+-- List of invalid Indexes
 
 -- Use it to see invalid indexes list
 
