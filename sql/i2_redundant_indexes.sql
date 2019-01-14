@@ -6,9 +6,6 @@
 -- (except plpgsql), and doesn't create anything (like views or smth)
 -- -- so feel free to use it in your clouds (Heroku, AWS RDS, etc)
 
--- It also does't do anything except reading system catalogs and
--- printing NOTICEs, so you can easily run it on your
---  production *master* database.
 -- (Keep in mind, that on replicas, the whole picture of index usage
 -- is usually very different from master).
 
