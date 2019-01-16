@@ -76,7 +76,16 @@ WHERE
     AND NOT idx_is_btree
     AND index_bytes > 100000000
 ORDER BY grp, index_bytes DESC )
-SELECT reason, schemaname, tablename, indexname,
-    index_scan_pct, scans_per_write, index_size, table_size
+SELECT 
+    reason,
+    schemaname as schema_name,
+    tablename as table_name,
+    indexname as index_name,
+    index_scan_pct,
+    scans_per_write,
+    index_size,
+    table_size,
+    idx_scan,
+    all_scans
 FROM index_groups;
 

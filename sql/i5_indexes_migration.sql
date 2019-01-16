@@ -31,14 +31,14 @@
 with unused as (
   select
       format('unused (idx_scan: %s)', pg_stat_user_indexes.idx_scan)::text as reason,
-      pg_stat_user_indexes.relname as tablename,
-      pg_stat_user_indexes.schemaname || '.' || indexrelname::text as indexname,
+      pg_stat_user_indexes.relname as table_name,
+      pg_stat_user_indexes.schemaname || '.' || indexrelname::text as index_name,
       pg_stat_user_indexes.idx_scan,
       (coalesce(n_tup_ins, 0) + coalesce(n_tup_upd, 0) - coalesce(n_tup_hot_upd, 0) + coalesce(n_tup_del, 0)) as write_activity,
       pg_stat_user_tables.seq_scan,
       pg_stat_user_tables.n_live_tup,
-      pg_get_indexdef(pg_index.indexrelid) as indexdef,
-      pg_size_pretty(pg_relation_size(pg_index.indexrelid::regclass)) as size,
+      pg_get_indexdef(pg_index.indexrelid) as index_def,
+      pg_size_pretty(pg_relation_size(pg_index.indexrelid::regclass)) as index_size,
       pg_index.indexrelid
   from pg_stat_user_indexes
   join pg_stat_user_tables
@@ -50,47 +50,75 @@ with unused as (
       and pg_index.indisunique is false
       and pg_stat_user_indexes.idx_scan::float/(coalesce(n_tup_ins,0)+coalesce(n_tup_upd,0)-coalesce(n_tup_hot_upd,0)+coalesce(n_tup_del,0)+1)::float<0.01
 ), index_data as (
-  select *, string_to_array(indkey::text,' ') as key_array,array_length(string_to_array(indkey::text,' '),1) as nkeys
+  select
+    *,
+    indkey::text as columns,
+    array_to_string(indclass, ', ') as opclasses
   from pg_index
 ), redundant as (
   select
+    i2.indrelid::regclass::text as table_name,
+    i2.indexrelid::regclass::text as index_name,
+    am1.amname as access_method,
     format('redundant to index: %I', i1.indexrelid::regclass)::text as reason,
-    i2.indrelid::regclass::text as tablename,
-    i2.indexrelid::regclass::text as indexname,
-    pg_get_indexdef(i1.indexrelid) main_indexdef,
-    pg_get_indexdef(i2.indexrelid) indexdef,
-    pg_size_pretty(pg_relation_size(i2.indexrelid)) size,
+    pg_get_indexdef(i1.indexrelid) main_index_def,
+    pg_get_indexdef(i2.indexrelid) index_def,
+    pg_size_pretty(pg_relation_size(i2.indexrelid)) index_size,
+    s.idx_scan as index_usage,
     i2.indexrelid
   from
     index_data as i1
-    join index_data as i2 on i1.indrelid = i2.indrelid and i1.indexrelid <> i2.indexrelid
+    join index_data as i2 on (
+        i1.indrelid = i2.indrelid /* same table */
+        and i1.indexrelid <> i2.indexrelid /* NOT same index */
+    )
+    inner join pg_opclass op1 on i1.indclass[0] = op1.oid
+    inner join pg_opclass op2 on i2.indclass[0] = op2.oid
+    inner join pg_am am1 on op1.opcmethod = am1.oid
+    inner join pg_am am2 on op2.opcmethod = am2.oid
+    join pg_stat_user_indexes as s on s.indexrelid = i2.indexrelid
   where
-    (regexp_replace(i1.indpred, 'location \d+', 'location', 'g') IS NOT DISTINCT FROM regexp_replace(i2.indpred, 'location \d+', 'location', 'g'))
-    and (regexp_replace(i1.indexprs, 'location \d+', 'location', 'g') IS NOT DISTINCT FROM regexp_replace(i2.indexprs, 'location \d+', 'location', 'g'))
-    and ((i1.nkeys > i2.nkeys and not i2.indisunique) OR (i1.nkeys=i2.nkeys and ((i1.indisunique and i2.indisunique and (i1.indexrelid>i2.indexrelid)) or (not i1.indisunique and not i2.indisunique and (i1.indexrelid>i2.indexrelid)) or (i1.indisunique and not i2.indisunique))))
-    and i1.key_array[1:i2.nkeys]=i2.key_array
+    not i1.indisprimary -- index 1 is not primary
+    and not ( -- skip if index1 is primary or uniq  and  index2 is primary or unique
+        (i1.indisprimary or i1.indisunique)
+        and (not i2.indisprimary or not i2.indisunique)
+    )
+    and  am1.amname = am2.amname -- same access type
+    and (
+      i2.columns like (i1.columns || '%') -- index 2 include all columns from index 1
+      or i1.columns = i2.columns -- index1 and index 2 include same columns
+    )
+    and (
+      i2.opclasses like (i1.opclasses || '%')
+      or i1.opclasses = i2.opclasses
+    )
+    -- index expressions is same
+    and pg_get_expr(i1.indexprs, i1.indrelid) is not distinct from pg_get_expr(i2.indexprs, i2.indrelid)
+    -- index predicates is same
+    and pg_get_expr(i1.indpred, i1.indrelid) is not distinct from pg_get_expr(i2.indpred, i2.indrelid)
 ), together as (
-  select reason, tablename, indexname, size, indexdef, null as main_indexdef, indexrelid
+  select reason, table_name, index_name, index_size, index_def, null as main_index_def, indexrelid
   from unused
   union all
-  select reason, tablename, indexname, size, indexdef, main_indexdef, indexrelid
+  select reason, table_name, index_name, index_size, index_def, main_index_def, indexrelid
   from redundant
-  order by tablename asc, indexname
+  where index_usage = 0
+  order by table_name asc, index_name
 ), droplines as (
-  select format('DROP INDEX CONCURRENTLY %s; -- %s, %s, table %s', max(indexname), max(size), string_agg(reason, ', '), tablename) as line
+  select format('DROP INDEX CONCURRENTLY %s; -- %s, %s, table %s', max(index_name), max(index_size), string_agg(reason, ', '), table_name) as line
   from together t1
-  group by tablename, indexrelid
-  order by tablename, indexrelid
+  group by table_name, indexrelid
+  order by table_name, indexrelid
 ), createlines as (
   select
     replace(
-      format('%s; -- table %s', max(indexdef), tablename),
+      format('%s; -- table %s', max(index_def), table_name),
       'CREATE INDEX',
       'CREATE INDEX CONCURRENTLY'
     )as line
   from together t2
-  group by tablename, indexrelid
-  order by tablename, indexrelid
+  group by table_name, indexrelid
+  order by table_name, indexrelid
 )
 select '-- Do migration: --' as run_in_separate_transactions
 union all
