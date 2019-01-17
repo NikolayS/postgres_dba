@@ -17,8 +17,9 @@ with index_data as (
   from pg_index
 ), redundant as (
   select
-    i2.indrelid::regclass::text as table_name,
-    i2.indexrelid::regclass::text as index_name,
+    tnsp.nspname AS schema_name,
+    trel.relname AS table_name,
+    irel.relname AS index_name,
     am1.amname as access_method,
     format('redundant to index: %I', i1.indexrelid::regclass)::text as reason,
     pg_get_indexdef(i1.indexrelid) main_index_def,
@@ -37,6 +38,9 @@ with index_data as (
     inner join pg_am am1 on op1.opcmethod = am1.oid
     inner join pg_am am2 on op2.opcmethod = am2.oid
     join pg_stat_user_indexes as s on s.indexrelid = i2.indexrelid
+    join pg_class as trel on trel.oid = i2.indrelid
+    join pg_namespace as tnsp on trel.relnamespace = tnsp.oid
+    join pg_class as irel on irel.oid = i2.indexrelid
   where
     not i1.indisprimary -- index 1 is not primary
     and not ( -- skip if index1 is primary or uniq  and  index2 is primary or unique
