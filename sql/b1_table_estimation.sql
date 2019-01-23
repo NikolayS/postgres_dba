@@ -75,7 +75,13 @@ select
   greatest(last_autovacuum, last_vacuum)::timestamp(0)::text 
     || case greatest(last_autovacuum, last_vacuum)
       when last_autovacuum then ' (auto)'
-    else '' end as "Last Vaccuum"
+    else '' end as "Last Vaccuum",
+  (
+    select
+      coalesce(substring(array_to_string(reloptions, ' ') from 'fillfactor=([0-9]+)')::smallint, 100)
+    from pg_class
+    where oid = tblid
+  ) as fillfactor
 from step4
 order by real_size desc nulls last
 ;
