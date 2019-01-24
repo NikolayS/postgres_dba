@@ -81,7 +81,7 @@ select
       coalesce(substring(array_to_string(reloptions, ' ') from 'fillfactor=([0-9]+)')::smallint, 100)
     from pg_class
     where oid = tblid
-  ) as "Fill Factor"
+  ) as "Fillfactor"
 from step4
 order by real_size desc nulls last
 ;
