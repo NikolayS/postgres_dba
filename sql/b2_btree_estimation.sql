@@ -101,9 +101,21 @@ select
     coalesce(nullif(schema_name, 'public') || '.', '') || table_name
   ) as "Index (Table)",
   pg_size_pretty(real_size::numeric) as "Size",
-  '~' || pg_size_pretty(extra_size::numeric)::text || ' (' || round(extra_ratio::numeric, 2)::text || '%)' as "Extra",
-  '~' || pg_size_pretty(bloat_size::numeric)::text || ' (' || round(bloat_ratio::numeric, 2)::text || '%)' as "Bloat",
-  '~' || pg_size_pretty((real_size - bloat_size)::numeric) as "Live",
+  case
+    when extra_size::numeric >= 0
+      then '~' || pg_size_pretty(extra_size::numeric)::text || ' (' || round(extra_ratio::numeric, 2)::text || '%)'
+    else '-'
+  end  as "Extra",
+  case
+    when bloat_size::numeric >= 0
+      then '~' || pg_size_pretty(bloat_size::numeric)::text || ' (' || round(bloat_ratio::numeric, 2)::text || '%)'
+    else '-'
+  end as "Bloat",
+  case
+    when (real_size - bloat_size)::numeric >=0
+      then '~' || pg_size_pretty((real_size - bloat_size)::numeric)
+      else '-'
+   end as "Live",
   fillfactor
 from step4
 order by real_size desc nulls last
