@@ -85,6 +85,7 @@ SELECT
     index_scan_pct,
     scans_per_write,
     index_size,
+    table_size,
     idx_scan,
     all_scans,
     index_bytes,
