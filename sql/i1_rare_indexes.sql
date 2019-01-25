@@ -39,6 +39,7 @@ SELECT schemaname, tablename, indexname,
         as scans_per_write,
     pg_size_pretty(index_bytes) as index_size,
     pg_size_pretty(table_size) as table_size,
+    table_size as table_bytes,
     idx_is_btree, index_bytes
     FROM indexes
     JOIN table_scans
@@ -84,8 +85,10 @@ SELECT
     index_scan_pct,
     scans_per_write,
     index_size,
-    table_size,
     idx_scan,
-    all_scans
-FROM index_groups;
+    all_scans,
+    index_bytes,
+    table_bytes
+FROM index_groups
+;
 
