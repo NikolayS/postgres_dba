@@ -69,15 +69,33 @@ select
   case is_na when true then 'TRUE' else '' end as "Is N/A",
   coalesce(nullif(schema_name, 'public') || '.', '') || table_name as "Table",
   pg_size_pretty(real_size::numeric) as "Size",
-  '~' || pg_size_pretty(extra_size::numeric)::text || ' (' || round(extra_ratio::numeric, 2)::text || '%)' as "Extra",
-  '~' || pg_size_pretty(bloat_size::numeric)::text || ' (' || round(bloat_ratio::numeric, 2)::text || '%)' as "Bloat",
-  '~' || pg_size_pretty((real_size - bloat_size)::numeric) as "Live",
+  case
+    when extra_size::numeric >= 0
+      then '~' || pg_size_pretty(extra_size::numeric)::text || ' (' || round(extra_ratio::numeric, 2)::text || '%)'
+    else null
+  end  as "Extra",
+  case
+    when bloat_size::numeric >= 0
+      then '~' || pg_size_pretty(bloat_size::numeric)::text || ' (' || round(bloat_ratio::numeric, 2)::text || '%)'
+    else null
+  end as "Bloat estimate",
+  case
+    when (real_size - bloat_size)::numeric >=0
+      then '~' || pg_size_pretty((real_size - bloat_size)::numeric)
+      else null
+   end as "Live",
   greatest(last_autovacuum, last_vacuum)::timestamp(0)::text 
     || case greatest(last_autovacuum, last_vacuum)
       when last_autovacuum then ' (auto)'
-    else '' end as "Last Vaccuum"
+    else '' end as "Last Vaccuum",
+  (
+    select
+      coalesce(substring(array_to_string(reloptions, ' ') from 'fillfactor=([0-9]+)')::smallint, 100)
+    from pg_class
+    where oid = tblid
+  ) as "Fillfactor"
 from step4
-order by real_size desc nulls last
+order by bloat_size desc nulls last
 ;
 
 /*
