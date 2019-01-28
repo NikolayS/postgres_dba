@@ -43,14 +43,14 @@ with index_data as (
     join pg_class as irel on irel.oid = i2.indexrelid
   where
     not i1.indisprimary -- index 1 is not primary
-    and not ( -- skip if index1 is primary or uniq  and  index2 is primary or unique
+    and not ( -- skip if index1 is (primary or uniq) and is NOT (primary and uniq)
         (i1.indisprimary or i1.indisunique)
         and (not i2.indisprimary or not i2.indisunique)
     )
     and  am1.amname = am2.amname -- same access type
     and (
-      i2.columns like (i1.columns || '%') -- index 2 include all columns from index 1
-      or i1.columns = i2.columns -- index1 and index 2 include same columns
+      i2.columns like (i1.columns || '%') -- index 2 includes all columns from index 1
+      or i1.columns = i2.columns -- index1 and index 2 includes same columns
     )
     and (
       i2.opclasses like (i1.opclasses || '%')

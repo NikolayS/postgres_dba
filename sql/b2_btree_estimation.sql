@@ -104,17 +104,17 @@ select
   case
     when extra_size::numeric >= 0
       then '~' || pg_size_pretty(extra_size::numeric)::text || ' (' || round(extra_ratio::numeric, 2)::text || '%)'
-    else '-'
+    else null
   end  as "Extra",
   case
     when bloat_size::numeric >= 0
       then '~' || pg_size_pretty(bloat_size::numeric)::text || ' (' || round(bloat_ratio::numeric, 2)::text || '%)'
-    else '-'
+    else null
   end as "Bloat",
   case
     when (real_size - bloat_size)::numeric >=0
       then '~' || pg_size_pretty((real_size - bloat_size)::numeric)
-      else '-'
+      else null
    end as "Live",
   fillfactor
 from step4

@@ -15,7 +15,11 @@ select
     pn.nspname as schema_name,
     pct.relname as table_name,
     pg_size_pretty(pg_relation_size(pidx.indexrelid)) index_size,
-    format('DROP INDEX CONCURRENTLY %s; -- %s, table %s', pidx.indexrelid::regclass::text, 'Invalid index', pct.relname) as drop_code,
+    format(
+      'DROP INDEX CONCURRENTLY %s; -- %s, table %s',
+      pidx.indexrelid::regclass::text,
+      'Invalid index',
+      pct.relname) as drop_code,
     replace(
       format('%s; -- table %s', pg_get_indexdef(pidx.indexrelid), pct.relname),
       'CREATE INDEX',

@@ -79,22 +79,22 @@ with unused as (
     join pg_stat_user_indexes as s on s.indexrelid = i2.indexrelid
   where
     not i1.indisprimary -- index 1 is not primary
-    and not ( -- skip if index1 is primary or uniq  and  index2 is primary or unique
+    and not ( -- skip if index1 is (primary or uniq) and is NOT (primary and uniq)
         (i1.indisprimary or i1.indisunique)
         and (not i2.indisprimary or not i2.indisunique)
     )
     and  am1.amname = am2.amname -- same access type
     and (
-      i2.columns like (i1.columns || '%') -- index 2 include all columns from index 1
-      or i1.columns = i2.columns -- index1 and index 2 include same columns
+      i2.columns like (i1.columns || '%') -- index 2 includes all columns from index 1
+      or i1.columns = i2.columns -- index1 and index 2 includes same columns
     )
     and (
       i2.opclasses like (i1.opclasses || '%')
       or i1.opclasses = i2.opclasses
     )
-    -- index expressions is same
+    -- index expressions are same
     and pg_get_expr(i1.indexprs, i1.indrelid) is not distinct from pg_get_expr(i2.indexprs, i2.indrelid)
-    -- index predicates is same
+    -- index predicates are same
     and pg_get_expr(i1.indpred, i1.indrelid) is not distinct from pg_get_expr(i2.indpred, i2.indrelid)
 ), together as (
   select reason, table_name, index_name, index_size, index_def, null as main_index_def, indexrelid
@@ -103,12 +103,11 @@ with unused as (
   select reason, table_name, index_name, index_size, index_def, main_index_def, indexrelid
   from redundant
   where index_usage = 0
-  order by table_name asc, index_name
 ), droplines as (
   select format('DROP INDEX CONCURRENTLY %s; -- %s, %s, table %s', max(index_name), max(index_size), string_agg(reason, ', '), table_name) as line
   from together t1
-  group by table_name, indexrelid
-  order by table_name, indexrelid
+  group by table_name, index_name
+  order by table_name, index_name
 ), createlines as (
   select
     replace(
@@ -117,8 +116,8 @@ with unused as (
       'CREATE INDEX CONCURRENTLY'
     )as line
   from together t2
-  group by table_name, indexrelid
-  order by table_name, indexrelid
+  group by table_name, index_name
+  order by table_name, index_name
 )
 select '-- Do migration: --' as run_in_separate_transactions
 union all
