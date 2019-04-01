@@ -32,8 +32,6 @@ select :postgres_dba_t1_location = 1 as postgres_dba_t1_location_onpremise \gset
 select :postgres_dba_t1_location = 2 as postgres_dba_t1_location_ec2 \gset
 select :postgres_dba_t1_location = 3 as postgres_dba_t1_location_rds \gset
 
-select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\1')::numeric as postgres_dba_t1_pg_version \gset
-
 \echo
 \echo
 

@@ -16,7 +16,7 @@ cat > "$WARMUP" <<- VersCheck
   select 1/0;
 \endif
 
-select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\\\1')::numeric >= 10 as postgres_dba_pgvers_10plus \gset
+select current_setting('server_version_num')::integer >= 100000 as postgres_dba_pgvers_10plus \gset
 \if :postgres_dba_pgvers_10plus
   \set postgres_dba_last_wal_receive_lsn pg_last_wal_receive_lsn
   \set postgres_dba_last_wal_replay_lsn pg_last_wal_replay_lsn
@@ -28,7 +28,7 @@ select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\\\1')::numeric
 \endif
 
 -- TODO: improve work with custom GUCs for Postgres 9.5 and older
-select regexp_replace(version(), '^PostgreSQL (\d+\.\d+).*$', e'\\\\1')::numeric >= 9.6 as postgres_dba_pgvers_96plus \gset
+select current_setting('server_version_num')::integer >= 90600 as postgres_dba_pgvers_96plus \gset
 \if :postgres_dba_pgvers_96plus
   select coalesce(current_setting('postgres_dba.wide', true), 'off') = 'on' as postgres_dba_wide \gset
 \else
