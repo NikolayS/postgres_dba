@@ -4,10 +4,10 @@ workflows:
   version: 2
   test:
     jobs:
-      - postgres-9.6
-      - postgres-10
-      - postgres-11
-      - postgres-12
+      - test-9.6
+      - test-10
+      - test-11
+      - test-12
 
 jobs:
   test-9.6: &test-template
