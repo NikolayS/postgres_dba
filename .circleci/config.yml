@@ -9,7 +9,7 @@ jobs:
           - POSTGRES_USER: root
     steps:
       - checkout
-      - runL
+      - run:
           name: Init DB
           command: |
             pg_createcluster $POSTGRES_VERSION main
