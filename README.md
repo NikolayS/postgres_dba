@@ -3,13 +3,15 @@
 
 The missing set of useful tools for Postgres DBA and mere mortals.
 
-:warning: The project is in its very early stage. If you have great ideas, feel free to create a pull request or open an issue.
+:warning: If you have great ideas, feel free to create a pull request or open an issue.
 
 <img width="810" alt="screen shot 2018-03-19 at 11 49 39" src="https://user-images.githubusercontent.com/1345402/37615952-b77a5bf6-2b6b-11e8-9843-e0716a3eb880.png">
 
+:point_right: See also [postgres-checkup](https://gitlab.com/postgres-ai/postgres-checkup), a tool for automated health checks and SQL performance analysis.
+
 ## Questions?
 
-Questions? Ideas? Contact me: samokhvalov@gmail.com, Nikolay Samokhvalov.
+Questions? Ideas? Contact me: nik@postgres.ai, Nikolay Samokhvalov.
 
 ## Credits
 
