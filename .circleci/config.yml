@@ -3,25 +3,12 @@ jobs:
   build:
     working_directory: ~/postgres_dba
     docker:
-      - image: circleci/ruby:2.4.1-node
+      - image: circleci/postgres:12
         environment:
           - PGHOST: 127.0.0.1
           - PGUSER: root
-      - image: circleci/postgres:10
-        environment:
-          - POSTGRES_USER: root
-          - POSTGRES_DB: test
     steps:
       - checkout
-      - run:
-          name: Install psql
-          command: |
-            sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" >> /etc/apt/sources.list.d/pgdg.list'
-            wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-            sudo apt-get update
-            sudo apt install postgresql-client
-            psql test -c 'create extension pg_stat_statements;'
-            psql test -c 'create extension pgstattuple;'
       - run:
           name: Prepare DB
           command: |
