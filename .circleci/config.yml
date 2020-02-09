@@ -1,11 +1,21 @@
 version: 2
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - postgres-9.6
+      - postgres-10
+      - postgres-11
+      - postgres-12
+
 jobs:
-  build:
+  test-9.6: &test-template
     working_directory: ~/postgres_dba
     docker:
-      - image: postgres:11
+      - image: postgres:9.6
         environment:
-          - POSTGRES_VERSION: 11
+          - POSTGRES_VERSION: 9.6
     steps:
       - checkout
       - run:
@@ -35,3 +45,21 @@ jobs:
             diff -b test/regression/0_node.out <(psql -U postgres test -f warmup.psql -f ~/postgres_dba/sql/0_node.sql | grep Role)
             diff -b test/regression/p1_alignment_padding.out <(psql -U postgres test -f warmup.psql -f ~/postgres_dba/sql/p1_alignment_padding.sql | grep align)
             diff -b test/regression/a1_activity.out <(psql -U postgres test -f warmup.psql -f ~/postgres_dba/sql/a1_activity.sql | grep User)
+  test-10:
+    <<: *test-template
+    docker:
+      - image: postgres:10
+        environment:
+          - POSTGRES_VERSION: 10
+  test-11:
+    <<: *test-template
+    docker:
+      - image: postgres:11
+        environment:
+          - POSTGRES_VERSION: 11
+  test-12:
+    <<: *test-template
+    docker:
+      - image: postgres:12
+        environment:
+          - POSTGRES_VERSION: 12
