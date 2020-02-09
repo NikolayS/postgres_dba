@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/postgres_dba
     docker:
-      - image: circleci/postgres:12
+      - image: postgres:12
         environment:
           - PGHOST: 127.0.0.1
           - PGUSER: root
