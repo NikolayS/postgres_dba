@@ -5,13 +5,20 @@ jobs:
     docker:
       - image: postgres:12
         environment:
-          - PGHOST: 127.0.0.1
-          - PGUSER: root
+          - POSTGRES_VERSION: 12
+          - POSTGRES_USER: root
     steps:
       - checkout
+      - runL
+          name: Init DB
+          command: |
+            pg_createcluster $POSTGRES_VERSION main
+            echo 'local all all trust' > /etc/postgresql/$POSTGRES_VERSION/main/pg_hba.conf
+            pg_ctlcluster $POSTGRES_VERSION main start
       - run:
           name: Prepare DB
           command: |
+            psql postgres -c 'create database test'
             psql test -c "create table align1 as select 1::int4, 2::int8, 3::int4 as more from generate_series(1, 100000) _(i);"
             psql test -c "create table align2 as select 1::int4, 3::int4 as more, 2::int8 from generate_series(1, 100000) _(i);"
       - run:
