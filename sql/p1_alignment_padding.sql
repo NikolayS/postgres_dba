@@ -64,14 +64,14 @@ with recursive constants as (
     table_name,
     0 as analyzed,
     (select chunk_size from constants) as left_in_chunk,
-    '{}'::text[] as padded_columns,
+    '{}'::text[] collate "C" as padded_columns,
     '{}'::int[] as pads,
     (select max(ordinal_position) from columns c where c.table_name = _.table_name and c.table_schema = _.table_schema) as col_cnt,
     array_agg(_.column_name::text order by ordinal_position) as cols,
     array_agg(_.udt_name::text order by ordinal_position) as types,
     array_agg(shift order by ordinal_position) as shifts,
     null::int as curleft,
-    null::text as prev_column_name,
+    null::text collate "C" as prev_column_name,
     false as has_varlena
   from
     combined_columns _
