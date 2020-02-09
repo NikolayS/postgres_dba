@@ -18,7 +18,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Init DB
+          name: Init Postgres cluster
           command: |
             pg_createcluster $POSTGRES_VERSION main
             echo 'local all all trust' > /etc/postgresql/$POSTGRES_VERSION/main/pg_hba.conf
