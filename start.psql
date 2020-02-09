@@ -1,3 +1,4 @@
+\set postgres_dba_interactive_mode true
 \ir warmup.psql
 \echo '\033[1;35mMenu:\033[0m'
 \echo '   0 – Node & Current DB Information: master/replica, lag, DB size, tmp files, etc'
