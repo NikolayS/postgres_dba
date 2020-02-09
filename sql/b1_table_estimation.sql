@@ -22,16 +22,17 @@ with step1 as (
     case when version() ~ 'mingw32|64-bit|x86_64|ppc64|ia64|amd64' then 8 else 4 end as ma, -- NS: TODO: check it
     24 as page_hdr,
     23 + case when max(coalesce(null_frac, 0)) > 0 then (7 + count(*)) / 8 else 0::int end
-      + case when tbl.relhasoids then 4 else 0 end as tpl_hdr_size,
+      + case when bool_or(att.attname = 'oid' and att.attnum < 0) then 4 else 0 end as tpl_hdr_size,
     sum((1 - coalesce(s.null_frac, 0)) * coalesce(s.avg_width, 1024)) as tpl_data_size,
-    bool_or(att.atttypid = 'pg_catalog.name'::regtype) or count(att.attname) <> count(s.attname) as is_na
+    bool_or(att.atttypid = 'pg_catalog.name'::regtype)
+      or sum(case when att.attnum > 0 then 1 else 0 end) <> count(s.attname) as is_na
   from pg_attribute as att
   join pg_class as tbl on att.attrelid = tbl.oid and tbl.relkind = 'r'
   join pg_namespace as ns on ns.oid = tbl.relnamespace
   join pg_stats as s on s.schemaname = ns.nspname and s.tablename = tbl.relname and not s.inherited and s.attname = att.attname
   left join pg_class as toast on tbl.reltoastrelid = toast.oid
-  where att.attnum > 0 and not att.attisdropped and s.schemaname not in ('pg_catalog', 'information_schema')
-  group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, tbl.relhasoids
+  where not att.attisdropped and s.schemaname not in ('pg_catalog', 'information_schema')
+  group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
   order by 2, 3
 ), step2 as (
   select
