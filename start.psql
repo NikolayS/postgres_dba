@@ -1,4 +1,3 @@
-\set postgres_dba_interactive_mode true
 \ir warmup.psql
 \echo '\033[1;35mMenu:\033[0m'
 \echo '   0 – Node & Current DB Information: master/replica, lag, DB size, tmp files, etc'
@@ -13,15 +12,17 @@
 \echo '  b5 – Tables and Columns Without Stats (so bloat cannot be estimated)'
 \echo '  e1 – List of extensions installed in the current DB'
 \echo '  i1 – Unused/Rarely Used Indexes'
-\echo '  i2 – Redundant Indexes'
+\echo '  i2 – List of redundant indexes'
 \echo '  i3 – FKs with Missing/Bad Indexes'
-\echo '  i4 – Invalid Indexes'
+\echo '  i4 – List of invalid indexes'
 \echo '  i5 – Unused/Redundant Indexes Do & Undo Migration DDL'
+\echo '  l1 – Locks: analysis of "locking trees"'
 \echo '  p1 – [EXPERIMENTAL] Alignment Padding. How many bytes can be saved if columns are ordered better?'
 \echo '  s1 – Slowest Queries, by Total Time (requires pg_stat_statements extension)'
 \echo '  s2 – Slowest Queries Report (requires pg_stat_statements)'
 \echo '  t1 – Postgres parameters tuning'
 \echo '  v1 – Vacuum: Current Activity'
+\echo '  v2 – Vacuum: VACUUM progress and autovacuum queue'
 \echo '   q – Quit'
 \echo
 \echo Type your choice and press <Enter>:
@@ -44,11 +45,13 @@ select
 :d_stp::text = 'i3' as d_step_is_i3,
 :d_stp::text = 'i4' as d_step_is_i4,
 :d_stp::text = 'i5' as d_step_is_i5,
+:d_stp::text = 'l1' as d_step_is_l1,
 :d_stp::text = 'p1' as d_step_is_p1,
 :d_stp::text = 's1' as d_step_is_s1,
 :d_stp::text = 's2' as d_step_is_s2,
 :d_stp::text = 't1' as d_step_is_t1,
 :d_stp::text = 'v1' as d_step_is_v1,
+:d_stp::text = 'v2' as d_step_is_v2,
 :d_stp::text = 'q' as d_step_is_q \gset
 \if :d_step_is_q
   \echo 'Bye!'
@@ -117,6 +120,10 @@ select
   \ir ./sql/i5_indexes_migration.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
+\elif :d_step_is_l1
+  \ir ./sql/l1_lock_trees.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
 \elif :d_step_is_p1
   \ir ./sql/p1_alignment_padding.sql
   \prompt 'Press <Enter> to continue…' d_dummy
@@ -135,6 +142,10 @@ select
   \ir ./start.psql
 \elif :d_step_is_v1
   \ir ./sql/v1_vacuum_activity.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_v2
+  \ir ./sql/v2_autovacuum_progress_and_queue.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \else
