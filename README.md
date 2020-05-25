@@ -37,10 +37,10 @@ sudo apt-get install -y postgresql-client-12
 Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg.
 
 ## Installation
-The installation is trivial. Clone the repository and put "dba" alias to your `.psqlrc` file (note, that this will work only in bash, see https://github.com/NikolayS/postgres_dba/pull/45):
+The installation is trivial. Clone the repository and put "dba" alias to your `.psqlrc` file:
 ```bash
 git clone https://github.com/NikolayS/postgres_dba.git
-echo "\\set dba '\\\\i `pwd`/postgres_dba/start.psql'" >> ~/.psqlrc
+echo "\\set dba '\\\\i `pwd`/postgres_dba/start.psql'" >> ~/.psqlrc  # bash version; won't work in zsh
 ```
 
 That's it.
