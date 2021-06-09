@@ -1,3 +1,7 @@
+-- WARNING: random() that is used here is not cryptographically strong – 
+-- if an attacker knows one value, it's easy to guess the "next" value
+-- TODO: rework to use pgcrypto instead
+
 with init(len, arr) as (
   -- edit password length and possible characters here
   select 16, string_to_array('123456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ', null)
