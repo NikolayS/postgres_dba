@@ -49,7 +49,7 @@ with index_data as (
     )
     and  am1.amname = am2.amname -- same access type
     and (
-      i2.columns like (i1.columns || '%') -- index 2 includes all columns from index 1
+      (i2.columns || ' ') like (i1.columns || ' %') -- index 2 includes all columns from index 1
       or i1.columns = i2.columns -- index1 and index 2 includes same columns
     )
     and (
