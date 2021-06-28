@@ -40,7 +40,8 @@ Using alternative psql pager called "pspg" is highly recommended (but not requir
 The installation is trivial. Clone the repository and put "dba" alias to your `.psqlrc` file:
 ```bash
 git clone https://github.com/NikolayS/postgres_dba.git
-echo "\\set dba '\\\\i `pwd`/postgres_dba/start.psql'" >> ~/.psqlrc  # bash version; won't work in zsh
+echo "# postgres_dba" >> ~/.psqlrc
+echo "\\set dba '"'\''\'"i `pwd`/postgres_dba/start.psql'" >> ~/.psqlrc
 ```
 
 That's it.
