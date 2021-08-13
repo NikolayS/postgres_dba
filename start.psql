@@ -10,19 +10,39 @@
 \echo '  b3 – Tables Bloat, more precise (requires pgstattuple extension; expensive)'
 \echo '  b4 – B-tree Indexes Bloat, more precise (requires pgstattuple extension; expensive)'
 \echo '  b5 – Tables and Columns Without Stats (so bloat cannot be estimated)'
+\echo '  d1 – Duplicate foreign keys'
+\echo '  d2 – Duplicate indexes'
 \echo '  e1 – List of extensions installed in the current DB'
+\echo '  e2 – Empty tables'
 \echo '  i1 – Unused/Rarely Used Indexes'
 \echo '  i2 – List of redundant indexes'
 \echo '  i3 – FKs with Missing/Bad Indexes'
 \echo '  i4 – List of invalid indexes'
 \echo '  i5 – Unused/Redundant Indexes Do & Undo Migration DDL'
 \echo '  l1 – Locks: analysis of "locking trees"'
+\echo '  m1 – Table(s) missing pk'
+\echo '  n1 – Tables with neither pk nor any index '
 \echo '  p1 – [EXPERIMENTAL] Alignment Padding. How many bytes can be saved if columns are ordered better?'
+\echo '  re – Complete report of a to z omitting b3, b4, p1, v1, v2 and pg_stat_statements steps'
 \echo '  s1 – Slowest Queries, by Total Time (requires pg_stat_statements extension)'
 \echo '  s2 – Slowest Queries Report (requires pg_stat_statements)'
+\echo '  sc – Top 5 SQL statements which consume the most time in total and have the most calls.'
+\echo '  si – Top 5 SQL statements which consume the most I/O resources in total.'
+\echo '  sj – Top 5 SQL statements with the most severe response jitter.'
+\echo '  sm – Top 5 SQL statements which consume the most time in total.'
+\echo '  so – Top 5 SQL statements which consume the most time in one call.'
+\echo '  sr – Top 5 SQL statements which consume the most shared memory resources.'
+\echo '  ss – Top5 Report with si, sm, so, sc, st, sj, sr (requires pg_stat_statements + track_io_timing=on)'
+\echo '  st – Top 5 SQL statements which consume the most temporary space.'
 \echo '  t1 – Postgres parameters tuning'
+\echo '  t2 – Tables with a single column (might need a more detailed column if PK, if nonPK relation why bother?)'
+\echo '  u1 – Unlogged tables (not crash safe, not replicated, no PITR)'
+\echo '  u2 – Useless unique constraints on FK or PK'
+\echo '  u3 – Useless columns that have no more than 1 value '
+\echo '  u4 – Unused tables'
 \echo '  v1 – Vacuum: Current Activity'
 \echo '  v2 – Vacuum: VACUUM progress and autovacuum queue'
+\echo '  w1 – Wrap-around approaching: when age is above 85% of freeze_max_age'
 \echo '   q – Quit'
 \echo
 \echo Type your choice and press <Enter>:
@@ -39,19 +59,39 @@ select
 :d_stp::text = 'b3' as d_step_is_b3,
 :d_stp::text = 'b4' as d_step_is_b4,
 :d_stp::text = 'b5' as d_step_is_b5,
+:d_stp::text = 'd1' as d_step_is_d1,
+:d_stp::text = 'd2' as d_step_is_d2,
 :d_stp::text = 'e1' as d_step_is_e1,
+:d_stp::text = 'e2' as d_step_is_e2,
 :d_stp::text = 'i1' as d_step_is_i1,
 :d_stp::text = 'i2' as d_step_is_i2,
 :d_stp::text = 'i3' as d_step_is_i3,
 :d_stp::text = 'i4' as d_step_is_i4,
 :d_stp::text = 'i5' as d_step_is_i5,
 :d_stp::text = 'l1' as d_step_is_l1,
+:d_stp::text = 'm1' as d_step_is_m1,
+:d_stp::text = 'n1' as d_step_is_n1,
 :d_stp::text = 'p1' as d_step_is_p1,
+:d_stp::text = 're' as d_step_is_re,
 :d_stp::text = 's1' as d_step_is_s1,
 :d_stp::text = 's2' as d_step_is_s2,
+:d_stp::text = 'sc' as d_step_is_sc,
+:d_stp::text = 'si' as d_step_is_si,
+:d_stp::text = 'sj' as d_step_is_sj,
+:d_stp::text = 'sm' as d_step_is_sm,
+:d_stp::text = 'so' as d_step_is_so,
+:d_stp::text = 'sr' as d_step_is_sr,
+:d_stp::text = 'ss' as d_step_is_ss,
+:d_stp::text = 'st' as d_step_is_st,
 :d_stp::text = 't1' as d_step_is_t1,
+:d_stp::text = 't2' as d_step_is_t2,
+:d_stp::text = 'u1' as d_step_is_u1,
+:d_stp::text = 'u2' as d_step_is_u2,
+:d_stp::text = 'u3' as d_step_is_u3,
+:d_stp::text = 'u4' as d_step_is_u4,
 :d_stp::text = 'v1' as d_step_is_v1,
 :d_stp::text = 'v2' as d_step_is_v2,
+:d_stp::text = 'w1' as d_step_is_w1,
 :d_stp::text = 'q' as d_step_is_q \gset
 \if :d_step_is_q
   \echo 'Bye!'
@@ -96,8 +136,20 @@ select
   \ir ./sql/b5_tables_no_stats.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
+\elif :d_step_is_d1
+  \ir ./sql/d1_duplicate_fks.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_d2
+  \ir ./sql/d2_duplicate_idxs.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
 \elif :d_step_is_e1
   \ir ./sql/e1_extensions.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_e2
+  \ir ./sql/e2_empty_tables.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_i1
@@ -124,8 +176,20 @@ select
   \ir ./sql/l1_lock_trees.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
+\elif :d_step_is_m1
+  \ir ./sql/m1_missing_pks.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_n1
+  \ir ./sql/n1_noidx_nopk.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
 \elif :d_step_is_p1
   \ir ./sql/p1_alignment_padding.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_re
+  \ir ./sql/re_complete_report.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_s1
@@ -136,8 +200,60 @@ select
   \ir ./sql/s2_pg_stat_statements_report.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
+\elif :d_step_is_sc
+  \ir ./sql/sc_pg_stat_statements_most_called.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_si
+  \ir ./sql/si_pg_stat_statements_io.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_sj
+  \ir ./sql/sj_pg_stat_statements_jitter.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_sm
+  \ir ./sql/sm_pg_stat_statements_time_total.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_so
+  \ir ./sql/so_pg_stat_statements_time1call.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_sr
+  \ir ./sql/sr_pg_stat_statements_most_memory.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_ss
+  \ir ./sql/ss_pg_stat_statements_full_report.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_st
+  \ir ./sql/st_pg_stat_statements_temp_files.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
 \elif :d_step_is_t1
   \ir ./sql/t1_tuning.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_t2
+  \ir ./sql/t2_single_columns.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_u1
+  \ir ./sql/u1_unlogged_tables.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_u2
+  \ir ./sql/u2_useless_unique_fk.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_u3
+  \ir ./sql/u3_useless_columns.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_u4
+  \ir ./sql/u4_unused_tables.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_v1
@@ -146,6 +262,10 @@ select
   \ir ./start.psql
 \elif :d_step_is_v2
   \ir ./sql/v2_autovacuum_progress_and_queue.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_w1
+  \ir ./sql/w1_wraparound_alert.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \else
