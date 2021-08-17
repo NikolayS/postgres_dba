@@ -19,7 +19,7 @@ FROM
     JOIN pg_class pclsp ON pc.confrelid = pclsp.oid
     JOIN pg_attribute pac ON pc.conkey = pac.attnum and pac.attrelid = pclsc.oid
     JOIN pg_attribute pap ON pc.confkey = pap.attnum and pap.attrelid = pclsp.oid
-GROUP BY child_table, child_column, parent_table, parent_column, schema_name HAVING COUNT(*)>0
+GROUP BY child_table, child_column, parent_table, parent_column, schema_name HAVING COUNT(*)>1
 ORDER BY child_table, child_column ;
 
 
