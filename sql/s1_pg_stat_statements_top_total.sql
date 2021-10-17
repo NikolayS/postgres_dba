@@ -10,15 +10,36 @@
 --
 -- This query gives you "full picture", aggregating stats for each query-database-username ternary
 
--- Works with Postgres 9.6
+-- Works with Postgres 9.6+
 
 select
   sum(calls) as calls,
-  sum(total_time) as total_time,
-  sum(mean_time * calls) / sum(calls) as mean_time,
-  max(max_time) as max_time,
-  min(min_time) as min_time,
+\if :postgres_dba_pgvers_13plus
+  round(sum(total_exec_time)::numeric, 2) as total_exec_t,
+  round((sum(mean_exec_time * calls) / sum(calls))::numeric, 2) as mean_exec_t,
+  format(
+    '%s–%s',
+    round(min(min_exec_time)::numeric, 2), 
+    round(max(max_exec_time)::numeric, 2)
+  ) as min_max_exec_t,
+  round(sum(total_plan_time)::numeric, 2) as total_plan_t,
+  round((sum(mean_plan_time * calls) / sum(calls))::numeric, 2) as mean_plan_t,
+  format(
+    '%s–%s',
+    round(min(min_plan_time)::numeric, 2), 
+    round(max(max_plan_time)::numeric, 2)
+  ) as min_max_plan_t,
+\else
+  sum(calls) as calls,
+  round(sum(total_time)::numeric, 2) as total_time,
+  round((sum(mean_time * calls) / sum(calls))::numeric, 2) as mean_time,
+  format(
+    '%s–%s',
+    round(min(min_time)::numeric, 2), 
+    round(max(max_time)::numeric, 2)
+  ) as min_max_t,
   -- stddev_time, -- https://stats.stackexchange.com/questions/55999/is-it-possible-to-find-the-combined-standard-deviation
+\endif
   sum(rows) as rows,
   (select usename from pg_user where usesysid = userid) as usr,
   (select datname from pg_database where oid = dbid) as db,
@@ -38,6 +59,5 @@ select
   array_agg(queryid) as queryids -- 9.4+
 from pg_stat_statements
 group by userid, dbid, query
-order by sum(total_time) desc
+order by sum(total_exec_time) desc
 limit 50;
-
