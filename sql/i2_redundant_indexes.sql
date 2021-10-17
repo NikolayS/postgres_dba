@@ -98,20 +98,25 @@ index_data as (
 ),
 -- Cut recursive links
 redundant_indexes_tmp_num as (
-  select row_number() over () num, rig.*
+  select
+    row_number() over () num,
+    rig.*
   from redundant_indexes_fk rig
-), redundant_indexes_tmp_links as (
-    select
-     ri1.*,
-     ri2.num as r_num
-    from redundant_indexes_tmp_num ri1
-    left join redundant_indexes_tmp_num ri2 on ri2.reason_index_id = ri1.index_id and ri1.reason_index_id = ri2.index_id
+  order by index_id
 ), redundant_indexes_tmp_cut as (
-    select
-     *
-    from redundant_indexes_tmp_links
-    where num < r_num or r_num is null
+  select
+    ri1.*,
+    ri2.num as r_num
+  from redundant_indexes_tmp_num ri1
+  left join redundant_indexes_tmp_num ri2 on ri2.reason_index_id = ri1.index_id and ri1.reason_index_id = ri2.index_id
+  where ri1.num < ri2.num or ri2.num is null
 ), redundant_indexes_cut_grouped as (
+  select
+    distinct(num),
+    *
+  from redundant_indexes_tmp_cut
+  order by index_size_bytes desc
+), redundant_indexes_grouped as (
   select
     distinct(num),
     *
