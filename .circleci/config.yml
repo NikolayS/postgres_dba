@@ -16,6 +16,9 @@ jobs:
         environment:
           - POSTGRES_VERSION: 10
     steps:
+      - run:
+          name: Install Git
+          command: apt update && apt install -y git
       - checkout
       - run:
           name: Init Postgres cluster
