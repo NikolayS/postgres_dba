@@ -119,13 +119,13 @@ with unused as (
   group by table_name, index_name
   order by table_name, index_name
 )
-select '-- Do migration: --' as run_in_separate_transactions
+select '-- DO migration: --' as run_in_separate_transactions
 union all
 select * from droplines
 union all
 select ''
 union all
-select '-- Revert migration: --'
+select '-- UNDO migration: --'
 union all
 select * from createlines;
 
