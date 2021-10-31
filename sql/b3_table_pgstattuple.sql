@@ -1,4 +1,4 @@
---Table bloat (requires pgstattuple extension; expensive)
+--Table bloat (requires pgstattuple; expensive)
 
 --https://github.com/dataegret/pg-utils/tree/master/sql
 --pgstattuple extension required
