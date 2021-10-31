@@ -1,4 +1,4 @@
---Slowest Queries Report (requires pg_stat_statements)
+--Slowest queries report (requires pg_stat_statements)
 
 --Original version – Data Egret: https://github.com/dataegret/pg-utils/blob/master/sql/global_reports/query_stat_total.sql
 \if :postgres_dba_pgvers_13plus
