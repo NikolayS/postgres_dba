@@ -1,4 +1,4 @@
---Table Sizes
+--Tables: table/index/TOAST size, number of rows
 
 with data as (
   select

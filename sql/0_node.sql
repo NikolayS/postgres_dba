@@ -1,4 +1,4 @@
---Node & Current DB Information: master/replica, lag, DB size, tmp files, etc
+--Node & current DB information: master/replica, lag, DB size, tmp files, etc.
 
 /*
 For Postgres versions older than 10, run this first:

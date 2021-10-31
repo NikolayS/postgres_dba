@@ -1,4 +1,4 @@
---List of redundant indexes
+--Redundant indexes
 
 -- Use it to see redundant indexes list
 

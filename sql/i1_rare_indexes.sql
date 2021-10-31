@@ -1,4 +1,4 @@
---Unused/Rarely Used Indexes
+--Unused and rarely used indexes
 
 --PostgreSQL Experts https://github.com/pgexperts/pgx_scripts/blob/master/indexes/unused_indexes.sql
 

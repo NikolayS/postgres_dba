@@ -1,4 +1,4 @@
---Tables and Columns Without Stats (so bloat cannot be estimated)
+--Tables and columns without stats (so bloat cannot be estimated)
 
 --Created by PostgreSQL Experts https://github.com/pgexperts/pgx_scripts/blob/master/bloat/no_stats_table_check.sql
 

@@ -1,4 +1,4 @@
---Vacuum: Current Activity
+--Vacuum: current activity
 
 -- Based on: https://github.com/lesovsky/uber-scripts/blob/master/postgresql/sql/vacuum_activity.sql
 with data as (

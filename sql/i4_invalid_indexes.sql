@@ -1,4 +1,4 @@
---List of invalid indexes
+--Invalid indexes
 
 -- Use it to see invalid indexes list
 

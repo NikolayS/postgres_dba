@@ -1,4 +1,4 @@
---B-tree Indexes Bloat, rough estimation
+--B-tree index bloat (estimated)
 
 -- enhanced version of https://github.com/ioguix/pgsql-bloat-estimation/blob/master/btree/btree_bloat.sql
 
