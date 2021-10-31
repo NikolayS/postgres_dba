@@ -1,4 +1,4 @@
---Tables Bloat, rough estimation
+--Table bloat (estimated)
 
 --This SQL is derived from https://github.com/ioguix/pgsql-bloat-estimation/blob/master/table/table_bloat.sql
 
