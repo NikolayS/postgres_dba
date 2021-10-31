@@ -1,7 +1,7 @@
-#Lock trees, detailed (based on pg_blocking_pids())
+--Lock trees, detailed (based on pg_blocking_pids())
 
-# Based on: https://gitlab.com/-/snippets/1890428
-# See also: https://postgres.ai/blog/20211018-postgresql-lock-trees
+-- Based on: https://gitlab.com/-/snippets/1890428
+-- See also: https://postgres.ai/blog/20211018-postgresql-lock-trees
 
 begin;
 
