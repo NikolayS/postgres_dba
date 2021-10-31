@@ -1,4 +1,4 @@
---List of extensions installed in the current DB
+--Extensions installed in current DB
 
 select
   ae.name,
