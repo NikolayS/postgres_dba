@@ -1,4 +1,4 @@
---Load Profile
+--Load profile
 
 with data as (
   select
