@@ -1,4 +1,4 @@
---B-tree indexes bloat (requires pgstattuple extension; expensive)
+--B-tree indexes bloat (requires pgstattuple; expensive)
 
 --https://github.com/dataegret/pg-utils/tree/master/sql
 --pgstattuple extension required
