@@ -38,7 +38,7 @@ with pg_stat_statements_slice as (
   select
     sum(total_exec_time) as total_exec_time,
     sum(blk_read_time+blk_write_time) as io_time,
-    sum(total_exec_time-blk_read_time-blk_write_time) as cpu_time,
+    sum(total_exec_time-blk_read_time-blk_write_time) as non_io_time,
     sum(calls) as ncalls,
     sum(rows) as total_rows
   from pg_stat_statements_slice
@@ -75,10 +75,10 @@ with pg_stat_statements_slice as (
   select
     (100*total_exec_time/(select total_exec_time from totals)) as time_percent,
     (100*(blk_read_time+blk_write_time)/(select greatest(io_time, 1) from totals)) as io_time_percent,
-    (100*(total_exec_time-blk_read_time-blk_write_time)/(select cpu_time from totals)) as cpu_time_percent,
+    (100*(total_exec_time-blk_read_time-blk_write_time)/(select non_io_time from totals)) as non_io_time_percent,
     to_char(interval '1 millisecond' * total_exec_time, 'HH24:MI:SS') as total_exec_time,
     (total_exec_time::numeric/calls)::numeric(20,2) as avg_time,
-    ((total_exec_time-blk_read_time-blk_write_time)::numeric/calls)::numeric(20, 2) as avg_cpu_time,
+    ((total_exec_time-blk_read_time-blk_write_time)::numeric/calls)::numeric(20, 2) as avg_non_io_time,
     ((blk_read_time+blk_write_time)::numeric/calls)::numeric(20, 2) as avg_io_time,
     to_char(calls, 'FM999,999,999,990') as calls,
     (100*calls/(select ncalls from totals))::numeric(20, 2) as calls_percent,
@@ -89,7 +89,7 @@ with pg_stat_statements_slice as (
     query
   from _pg_stat_statements
   where
-    (total_exec_time-blk_read_time-blk_write_time)/(select cpu_time from totals) >= 0.01
+    (total_exec_time-blk_read_time-blk_write_time)/(select non_io_time from totals) >= 0.01
     or (blk_read_time+blk_write_time)/(
       select greatest(io_time, 1) from totals
     ) >= 0.01
@@ -99,10 +99,10 @@ with pg_stat_statements_slice as (
   select
     (100*sum(total_exec_time)::numeric/(select total_exec_time from totals)) as time_percent,
     (100*sum(blk_read_time+blk_write_time)::numeric/(select greatest(io_time, 1) from totals)) as io_time_percent,
-    (100*sum(total_exec_time-blk_read_time-blk_write_time)::numeric/(select cpu_time from totals)) as cpu_time_percent,
+    (100*sum(total_exec_time-blk_read_time-blk_write_time)::numeric/(select non_io_time from totals)) as non_io_time_percent,
     to_char(interval '1 millisecond' * sum(total_exec_time), 'HH24:MI:SS') as total_exec_time,
     (sum(total_exec_time)::numeric/sum(calls))::numeric(20,2) as avg_time,
-    (sum(total_exec_time-blk_read_time-blk_write_time)::numeric/sum(calls))::numeric(20, 2) as avg_cpu_time,
+    (sum(total_exec_time-blk_read_time-blk_write_time)::numeric/sum(calls))::numeric(20, 2) as avg_non_io_time,
     (sum(blk_read_time+blk_write_time)::numeric/sum(calls))::numeric(20, 2) as avg_io_time,
     to_char(sum(calls), 'FM999,999,999,990') as calls,
     (100*sum(calls)/(select ncalls from totals))::numeric(20, 2) as calls_percent,
@@ -114,7 +114,7 @@ with pg_stat_statements_slice as (
   from _pg_stat_statements
   where
     not (
-      (total_exec_time-blk_read_time-blk_write_time)/(select cpu_time from totals) >= 0.01
+      (total_exec_time-blk_read_time-blk_write_time)/(select non_io_time from totals) >= 0.01
       or (blk_read_time+blk_write_time)/(select greatest(io_time, 1) from totals) >= 0.01
       or calls/(select ncalls from totals)>=0.02 or rows/(select total_rows from totals) >= 0.02
     )
@@ -122,9 +122,9 @@ with pg_stat_statements_slice as (
   select row_number() over (order by s.time_percent desc) as pos,
     to_char(time_percent, 'FM990.0') || '%' as time_percent,
     to_char(io_time_percent, 'FM990.0') || '%' as io_time_percent,
-    to_char(cpu_time_percent, 'FM990.0') || '%' as cpu_time_percent,
+    to_char(non_io_time_percent, 'FM990.0') || '%' as non_io_time_percent,
     to_char(avg_io_time*100/(coalesce(nullif(avg_time, 0), 1)), 'FM990.0') || '%' as avg_io_time_percent,
-    total_exec_time, avg_time, avg_cpu_time, avg_io_time, calls, calls_percent, rows, row_percent,
+    total_exec_time, avg_time, avg_non_io_time, avg_io_time, calls, calls_percent, rows, row_percent,
     database, username, query
   from statements s
   where calls is not null
@@ -151,7 +151,7 @@ union all
 select
   e'=============================================================================================================\n'
   || 'pos:' || pos || E'\t total time: ' || total_exec_time || ' (' || time_percent
-  || ', CPU: ' || cpu_time_percent || ', IO: ' || io_time_percent || E')\t calls: '
+  || ', IO: ' || io_time_percent || ', Non-IO: ' || non_io_time_percent || E')\t calls: '
   || calls || ' (' || calls_percent || E'%)\t avg_time: ' || avg_time
   || 'ms (IO: ' || avg_io_time_percent || E')\n' || 'user: '
   || username || E'\t db: ' || database || E'\t rows: ' || rows
@@ -197,7 +197,7 @@ with pg_stat_statements_slice as (
   select
     sum(total_time) as total_time,
     sum(blk_read_time+blk_write_time) as io_time,
-    sum(total_time-blk_read_time-blk_write_time) as cpu_time,
+    sum(total_time-blk_read_time-blk_write_time) as non_io_time,
     sum(calls) as ncalls,
     sum(rows) as total_rows
   from pg_stat_statements_slice
@@ -234,10 +234,10 @@ with pg_stat_statements_slice as (
   select
     (100*total_time/(select total_time from totals)) as time_percent,
     (100*(blk_read_time+blk_write_time)/(select greatest(io_time, 1) from totals)) as io_time_percent,
-    (100*(total_time-blk_read_time-blk_write_time)/(select cpu_time from totals)) as cpu_time_percent,
+    (100*(total_time-blk_read_time-blk_write_time)/(select non_io_time from totals)) as non_io_time_percent,
     to_char(interval '1 millisecond' * total_time, 'HH24:MI:SS') as total_time,
     (total_time::numeric/calls)::numeric(20,2) as avg_time,
-    ((total_time-blk_read_time-blk_write_time)::numeric/calls)::numeric(20, 2) as avg_cpu_time,
+    ((total_time-blk_read_time-blk_write_time)::numeric/calls)::numeric(20, 2) as avg_non_io_time,
     ((blk_read_time+blk_write_time)::numeric/calls)::numeric(20, 2) as avg_io_time,
     to_char(calls, 'FM999,999,999,990') as calls,
     (100*calls/(select ncalls from totals))::numeric(20, 2) as calls_percent,
@@ -248,7 +248,7 @@ with pg_stat_statements_slice as (
     query
   from _pg_stat_statements
   where
-    (total_time-blk_read_time-blk_write_time)/(select cpu_time from totals) >= 0.01
+    (total_time-blk_read_time-blk_write_time)/(select non_io_time from totals) >= 0.01
     or (blk_read_time+blk_write_time)/(
       select greatest(io_time, 1) from totals
     ) >= 0.01
@@ -258,10 +258,10 @@ with pg_stat_statements_slice as (
   select
     (100*sum(total_time)::numeric/(select total_time from totals)) as time_percent,
     (100*sum(blk_read_time+blk_write_time)::numeric/(select greatest(io_time, 1) from totals)) as io_time_percent,
-    (100*sum(total_time-blk_read_time-blk_write_time)::numeric/(select cpu_time from totals)) as cpu_time_percent,
+    (100*sum(total_time-blk_read_time-blk_write_time)::numeric/(select non_io_time from totals)) as non_io_time_percent,
     to_char(interval '1 millisecond' * sum(total_time), 'HH24:MI:SS') as total_time,
     (sum(total_time)::numeric/sum(calls))::numeric(20,2) as avg_time,
-    (sum(total_time-blk_read_time-blk_write_time)::numeric/sum(calls))::numeric(20, 2) as avg_cpu_time,
+    (sum(total_time-blk_read_time-blk_write_time)::numeric/sum(calls))::numeric(20, 2) as avg_non_io_time,
     (sum(blk_read_time+blk_write_time)::numeric/sum(calls))::numeric(20, 2) as avg_io_time,
     to_char(sum(calls), 'FM999,999,999,990') as calls,
     (100*sum(calls)/(select ncalls from totals))::numeric(20, 2) as calls_percent,
@@ -273,7 +273,7 @@ with pg_stat_statements_slice as (
   from _pg_stat_statements
   where
     not (
-      (total_time-blk_read_time-blk_write_time)/(select cpu_time from totals) >= 0.01
+      (total_time-blk_read_time-blk_write_time)/(select non_io_time from totals) >= 0.01
       or (blk_read_time+blk_write_time)/(select greatest(io_time, 1) from totals) >= 0.01
       or calls/(select ncalls from totals)>=0.02 or rows/(select total_rows from totals) >= 0.02
     )
@@ -281,9 +281,9 @@ with pg_stat_statements_slice as (
   select row_number() over (order by s.time_percent desc) as pos,
     to_char(time_percent, 'FM990.0') || '%' as time_percent,
     to_char(io_time_percent, 'FM990.0') || '%' as io_time_percent,
-    to_char(cpu_time_percent, 'FM990.0') || '%' as cpu_time_percent,
+    to_char(non_io_time_percent, 'FM990.0') || '%' as non_io_time_percent,
     to_char(avg_io_time*100/(coalesce(nullif(avg_time, 0), 1)), 'FM990.0') || '%' as avg_io_time_percent,
-    total_time, avg_time, avg_cpu_time, avg_io_time, calls, calls_percent, rows, row_percent,
+    total_time, avg_time, avg_non_io_time, avg_io_time, calls, calls_percent, rows, row_percent,
     database, username, query
   from statements s
   where calls is not null
@@ -310,7 +310,7 @@ union all
 select
   e'=============================================================================================================\n'
   || 'pos:' || pos || E'\t total time: ' || total_time || ' (' || time_percent
-  || ', CPU: ' || cpu_time_percent || ', IO: ' || io_time_percent || E')\t calls: '
+  || ', IO: ' || io_time_percent || ', Non-IO: ' || non_io_time_percent || E')\t calls: '
   || calls || ' (' || calls_percent || E'%)\t avg_time: ' || avg_time
   || 'ms (IO: ' || avg_io_time_percent || E')\n' || 'user: '
   || username || E'\t db: ' || database || E'\t rows: ' || rows
