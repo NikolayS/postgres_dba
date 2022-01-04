@@ -59,5 +59,9 @@ select
   array_agg(queryid) as queryids -- 9.4+
 from pg_stat_statements
 group by userid, dbid, query
+\if :postgres_dba_pgvers_13plus
 order by sum(total_exec_time) desc
+\else
+order by sum(total_time) desc
+\endif
 limit 50;
