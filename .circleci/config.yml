@@ -8,6 +8,7 @@ workflows:
       - test-11
       - test-12
       - test-13
+      - test-14
 
 jobs:
   test-10: &test-template
@@ -67,3 +68,10 @@ jobs:
       - image: postgres:13
         environment:
           - POSTGRES_VERSION: 13
+
+  test-14:
+    <<: *test-template
+    docker:
+      - image: postgres:14
+        environment:
+          - POSTGRES_VERSION: 14
