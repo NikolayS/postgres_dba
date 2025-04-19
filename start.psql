@@ -11,6 +11,7 @@
 \echo '  b4 – B-tree indexes bloat (requires pgstattuple; expensive)'
 \echo '  b5 – Tables and columns without stats (so bloat cannot be estimated)'
 \echo '  e1 – Extensions installed in current DB'
+\echo '  e2 – Timezone names cache: create/use materialized view for faster timezone lookups'
 \echo '  i1 – Unused and rarely used indexes'
 \echo '  i2 – Redundant indexes'
 \echo '  i3 – FKs with Missing/Bad Indexes'
@@ -41,6 +42,7 @@ select
 :d_stp::text = 'b4' as d_step_is_b4,
 :d_stp::text = 'b5' as d_step_is_b5,
 :d_stp::text = 'e1' as d_step_is_e1,
+:d_stp::text = 'e2' as d_step_is_e2,
 :d_stp::text = 'i1' as d_step_is_i1,
 :d_stp::text = 'i2' as d_step_is_i2,
 :d_stp::text = 'i3' as d_step_is_i3,
@@ -100,6 +102,10 @@ select
   \ir ./start.psql
 \elif :d_step_is_e1
   \ir ./sql/e1_extensions.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_e2
+  \ir ./sql/e2_timezone_names.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_i1
