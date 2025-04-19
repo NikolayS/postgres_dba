@@ -67,3 +67,14 @@ $$ language plpgsql;
 reset postgres_dba.refresh_matviews_with_data;
 reset client_min_messages;
 reset statement_timeout;
+
+-- Ensure timezone_names_cache is refreshed
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_matviews WHERE matviewname = 'timezone_names_cache') THEN
+    RAISE NOTICE 'Refreshing timezone_names_cache materialized view...';
+    EXECUTE 'REFRESH MATERIALIZED VIEW timezone_names_cache';
+    RAISE NOTICE 'timezone_names_cache refreshed successfully.';
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
