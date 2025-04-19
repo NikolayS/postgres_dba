@@ -3,6 +3,9 @@
 -- it might perform multiple iterations and eventually refreshes
 -- all matviews (either all w/o data or absolutely all -- it's up to you).
 
+-- List of known materialized views:
+-- 1. public.cached_timezone_names - fast access to timezone names
+
 -- set thos to TRUE here if you need ALL matviews to be refrehsed, not only those that already have been refreshed
 set postgres_dba.refresh_matviews_with_data = FALSE;
 -- alternatively, you can set 'postgres_dba.refresh_matviews_with_data_forced' to TRUE or FALSE in advance, outside of this script.
