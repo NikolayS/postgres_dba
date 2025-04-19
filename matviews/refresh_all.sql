@@ -3,9 +3,12 @@
 -- it might perform multiple iterations and eventually refreshes
 -- all matviews (either all w/o data or absolutely all -- it's up to you).
 
--- set thos to TRUE here if you need ALL matviews to be refrehsed, not only those that already have been refreshed
+-- set this to TRUE here if you need ALL matviews to be refreshed, not only those that already have been refreshed
 set postgres_dba.refresh_matviews_with_data = FALSE;
 -- alternatively, you can set 'postgres_dba.refresh_matviews_with_data_forced' to TRUE or FALSE in advance, outside of this script.
+
+-- Ensure the postgres_dba.mv_timezone_names matview exists
+\i matviews/mv_timezone_names.sql
 
 set statement_timeout to 0;
 set client_min_messages to info;
