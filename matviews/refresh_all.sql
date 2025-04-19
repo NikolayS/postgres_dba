@@ -3,9 +3,30 @@
 -- it might perform multiple iterations and eventually refreshes
 -- all matviews (either all w/o data or absolutely all -- it's up to you).
 
--- set thos to TRUE here if you need ALL matviews to be refrehsed, not only those that already have been refreshed
+-- set this to TRUE here if you need ALL matviews to be refreshed, not only those that already have been refreshed
 set postgres_dba.refresh_matviews_with_data = FALSE;
 -- alternatively, you can set 'postgres_dba.refresh_matviews_with_data_forced' to TRUE or FALSE in advance, outside of this script.
+
+-- Ensure timezone_names materialized view exists in postgres_dba schema
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'postgres_dba') THEN
+        EXECUTE 'CREATE SCHEMA postgres_dba';
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM pg_matviews 
+        WHERE schemaname = 'postgres_dba' AND matviewname = 'timezone_names'
+    ) THEN
+        EXECUTE 'CREATE MATERIALIZED VIEW postgres_dba.timezone_names AS 
+                 SELECT name FROM pg_timezone_names 
+                 WITH DATA';
+        
+        EXECUTE 'CREATE INDEX idx_timezone_names_name ON postgres_dba.timezone_names(name)';
+    END IF;
+END
+$$;
 
 set statement_timeout to 0;
 set client_min_messages to info;
