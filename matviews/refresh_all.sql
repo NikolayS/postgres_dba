@@ -60,6 +60,21 @@ begin
     exit when iter > 5 or 0 = (select count(*) from pg_matviews where not ispopulated);
   end loop;
 
+  -- Specific handling for timezone_names_cache materialized view if it exists
+  if exists (select 1 from pg_catalog.pg_matviews where matviewname = 'timezone_names_cache') then
+    begin
+      sql := 'refresh materialized view timezone_names_cache';
+      raise notice 'Refreshing timezone_names_cache materialized view';
+      curts := clock_timestamp();
+      execute sql;
+      raise notice 'timezone_names_cache refreshed, it took %', (clock_timestamp() - curts)::text;
+      done_cnt := done_cnt + 1;
+    exception
+      when others then
+        raise warning 'Cannot update timezone_names_cache view, skipping.';
+    end;
+  end if;
+
   raise notice 'Finished! % matviews refreshed in % iteration(s). It took %', done_cnt, (iter - 1), (clock_timestamp() - now())::text;
 end;
 $$ language plpgsql;
