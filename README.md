@@ -45,6 +45,10 @@ printf "%s %s %s %s\n" \\set dba \'\\\\i $(pwd)/start.psql\' >> ~/.psqlrc
 
 That's it.
 
+### Optimizations
+The repository includes performance optimizations for common PostgreSQL operations:
+- `tz1_timezone_names`: Creates a materialized view to cache `pg_timezone_names` for much faster access
+
 ## Usage
 
 ### Connect to Local Postgres Server

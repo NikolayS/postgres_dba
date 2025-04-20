@@ -41,7 +41,7 @@ VersCheck
 echo "\\ir $WARMUP" >> "$OUT"
 
 echo "\\echo '\\033[1;35mMenu:\\033[0m'" >> "$OUT"
-for f in ./sql/*.sql
+for f in ./sql/*.sql ./sql/optimizations/*.sql
 do
   prefix=$(echo $f | sed -e 's/_.*$//g' -e 's/^.*\///g')
   desc=$(head -n1 $f | sed -e 's/^--//g')
@@ -54,7 +54,7 @@ echo "\\prompt d_step_unq" >> "$OUT"
 echo "\\set d_stp '\\'' :d_step_unq '\\''" >> "$OUT"
 echo "select" >> "$OUT"
 
-for f in ./sql/*.sql
+for f in ./sql/*.sql ./sql/optimizations/*.sql
 do
   prefix=$(echo $f | sed -e 's/_.*$//g' -e 's/^.*\///g')
   echo ":d_stp::text = '$prefix' as d_step_is_$prefix," >> "$OUT"
@@ -64,7 +64,7 @@ echo ":d_stp::text = 'q' as d_step_is_q \\gset" >> "$OUT"
 echo "\\if :d_step_is_q" >> "$OUT"
 echo "  \\echo 'Bye!'" >> "$OUT"
 echo "  \\echo" >> "$OUT"
-for f in ./sql/*.sql
+for f in ./sql/*.sql ./sql/optimizations/*.sql
 do
   prefix=$(echo $f | sed -e 's/_.*$//g' -e 's/^.*\///g')
   echo "\\elif :d_step_is_$prefix" >> "$OUT"
