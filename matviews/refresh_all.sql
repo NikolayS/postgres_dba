@@ -61,6 +61,19 @@ begin
   end loop;
 
   raise notice 'Finished! % matviews refreshed in % iteration(s). It took %', done_cnt, (iter - 1), (clock_timestamp() - now())::text;
+  -- Make sure timezone names view is refreshed
+  if exists (select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace 
+             where c.relname = 'mview_pg_timezone_names' and n.nspname = 'public') then
+    begin
+      raise notice 'Refreshing timezone names materialized view...';
+      curts := clock_timestamp();
+      execute 'refresh materialized view public.mview_pg_timezone_names';
+      raise notice 'Timezone names view refreshed, it took %', (clock_timestamp() - curts)::text;
+    exception
+      when others then
+        raise warning 'Could not refresh timezone names view: %', sqlerrm;
+    end;
+  end if;
 end;
 $$ language plpgsql;
 
