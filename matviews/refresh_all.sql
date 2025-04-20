@@ -3,6 +3,9 @@
 -- it might perform multiple iterations and eventually refreshes
 -- all matviews (either all w/o data or absolutely all -- it's up to you).
 
+-- Individual refresh scripts for specific materialized views are available in this directory:
+-- - refresh_timezone_names.sql - Refreshes the mv_timezone_names materialized view
+
 -- set thos to TRUE here if you need ALL matviews to be refrehsed, not only those that already have been refreshed
 set postgres_dba.refresh_matviews_with_data = FALSE;
 -- alternatively, you can set 'postgres_dba.refresh_matviews_with_data_forced' to TRUE or FALSE in advance, outside of this script.
