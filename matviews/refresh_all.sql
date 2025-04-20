@@ -2,6 +2,8 @@
 -- In case when there are complex relations between matviews,
 -- it might perform multiple iterations and eventually refreshes
 -- all matviews (either all w/o data or absolutely all -- it's up to you).
+--
+-- This will also refresh the pg_timezone_names_mv materialized view if it exists.
 
 -- set thos to TRUE here if you need ALL matviews to be refrehsed, not only those that already have been refreshed
 set postgres_dba.refresh_matviews_with_data = FALSE;

@@ -22,6 +22,7 @@
 \echo '  s1 – Slowest queries, by total time (requires pg_stat_statements)'
 \echo '  s2 – Slowest queries report (requires pg_stat_statements)'
 \echo '  t1 – Postgres parameters tuning'
+\echo ' tz1 – Timezone names: create optimized materialized view'
 \echo '  v1 – Vacuum: current activity'
 \echo '  v2 – Vacuum: VACUUM progress and autovacuum queue'
 \echo '   q – Quit'
@@ -52,6 +53,7 @@ select
 :d_stp::text = 's1' as d_step_is_s1,
 :d_stp::text = 's2' as d_step_is_s2,
 :d_stp::text = 't1' as d_step_is_t1,
+:d_stp::text = 'tz1' as d_step_is_tz1,
 :d_stp::text = 'v1' as d_step_is_v1,
 :d_stp::text = 'v2' as d_step_is_v2,
 :d_stp::text = 'q' as d_step_is_q \gset
@@ -152,6 +154,10 @@ select
   \ir ./start.psql
 \elif :d_step_is_v2
   \ir ./sql/v2_autovacuum_progress_and_queue.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_tz1
+  \ir ./sql/tz1_timezone_names.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \else
