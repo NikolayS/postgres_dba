@@ -60,6 +60,17 @@ begin
     exit when iter > 5 or 0 = (select count(*) from pg_matviews where not ispopulated);
   end loop;
 
+  -- Refresh timezone cache if it exists
+  begin
+    execute 'select refresh_timezone_cache()';
+    raise notice 'Timezone cache refreshed successfully';
+  exception
+    when undefined_function then
+      raise notice 'Timezone cache function not found, skipping refresh';
+    when undefined_table then 
+      raise notice 'Timezone cache materialized view not found, skipping refresh';
+  end;
+
   raise notice 'Finished! % matviews refreshed in % iteration(s). It took %', done_cnt, (iter - 1), (clock_timestamp() - now())::text;
 end;
 $$ language plpgsql;
