@@ -67,3 +67,8 @@ $$ language plpgsql;
 reset postgres_dba.refresh_matviews_with_data;
 reset client_min_messages;
 reset statement_timeout;
+
+-- Refresh timezone names materialized view separately
+\echo 'Refreshing timezone names materialized view...'
+\ir ./timezone_names_matview.sql
+\echo 'Timezone names materialized view refreshed.'
