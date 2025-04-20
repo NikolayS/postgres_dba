@@ -24,6 +24,8 @@
 \echo '  t1 – Postgres parameters tuning'
 \echo '  v1 – Vacuum: current activity'
 \echo '  v2 – Vacuum: VACUUM progress and autovacuum queue'
+\echo '  tz – List all timezones (optimized)'
+\echo '  tzr – Refresh timezone cache'
 \echo '   q – Quit'
 \echo
 \echo Type your choice and press <Enter>:
@@ -54,6 +56,8 @@ select
 :d_stp::text = 't1' as d_step_is_t1,
 :d_stp::text = 'v1' as d_step_is_v1,
 :d_stp::text = 'v2' as d_step_is_v2,
+:d_stp::text = 'tz' as d_step_is_tz,
+:d_stp::text = 'tzr' as d_step_is_tzr,
 :d_stp::text = 'q' as d_step_is_q \gset
 \if :d_step_is_q
   \echo 'Bye!'
@@ -152,6 +156,14 @@ select
   \ir ./start.psql
 \elif :d_step_is_v2
   \ir ./sql/v2_autovacuum_progress_and_queue.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_tz
+  \ir ./sql/tz_names.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_tzr
+  \ir ./sql/tz_refresh_view.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \else

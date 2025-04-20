@@ -60,6 +60,19 @@ begin
     exit when iter > 5 or 0 = (select count(*) from pg_matviews where not ispopulated);
   end loop;
 
+  -- Explicitly refresh the timezone_names materialized view if it exists
+  perform 1 from pg_matviews where schemaname = 'postgres_dba' and matviewname = 'timezone_names';
+  if found then
+    begin
+      raise notice 'Explicitly refreshing postgres_dba.timezone_names...';
+      execute 'refresh materialized view postgres_dba.timezone_names';
+      raise notice 'postgres_dba.timezone_names refreshed successfully.';
+    exception
+      when others then
+        raise warning 'Could not refresh postgres_dba.timezone_names: %', sqlerrm;
+    end;
+  end if;
+
   raise notice 'Finished! % matviews refreshed in % iteration(s). It took %', done_cnt, (iter - 1), (clock_timestamp() - now())::text;
 end;
 $$ language plpgsql;
