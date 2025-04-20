@@ -3,6 +3,24 @@
 -- it might perform multiple iterations and eventually refreshes
 -- all matviews (either all w/o data or absolutely all -- it's up to you).
 
+-- Create the timezone cache view if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_matviews WHERE matviewname = 'mv_timezone_names'
+    ) THEN
+        EXECUTE 'CREATE MATERIALIZED VIEW mv_timezone_names AS 
+                 SELECT name, abbrev, utc_offset, is_dst 
+                 FROM pg_timezone_names 
+                 WITH DATA';
+        
+        EXECUTE 'CREATE INDEX idx_mv_timezone_names_name ON mv_timezone_names(name)';
+        
+        RAISE NOTICE 'Created materialized view mv_timezone_names';
+    END IF;
+END
+$$;
+
 -- set thos to TRUE here if you need ALL matviews to be refrehsed, not only those that already have been refreshed
 set postgres_dba.refresh_matviews_with_data = FALSE;
 -- alternatively, you can set 'postgres_dba.refresh_matviews_with_data_forced' to TRUE or FALSE in advance, outside of this script.

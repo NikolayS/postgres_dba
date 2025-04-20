@@ -82,6 +82,16 @@ And then:
 :dba
 ```
 
+## Performance Optimizations
+
+### Timezone Names Cache
+This tool includes a materialized view-based cache for timezone names to improve performance when querying `pg_timezone_names`. The original query `SELECT name FROM pg_timezone_names` can be slow (averaging ~196ms per execution), but using the materialized view reduces this significantly.
+
+To use the timezone names cache:
+1. Run the `t2` option from the menu
+2. Use `SELECT name FROM mv_timezone_names` instead of `SELECT name FROM pg_timezone_names` in your applications
+3. The cache is automatically refreshed when you run the refresh_all.sql script in the matviews directory
+
 ## How to Extend (Add More Queries)
 You can add your own useful SQL queries and use them from the main menu. Just add your SQL code to `./sql` directory. The filename should start with some 1 or 2-letter code, followed by underscore and some additional arbitrary words. Extension should be `.sql`. Example:
 ```
