@@ -3,9 +3,21 @@
 -- it might perform multiple iterations and eventually refreshes
 -- all matviews (either all w/o data or absolutely all -- it's up to you).
 
--- set thos to TRUE here if you need ALL matviews to be refrehsed, not only those that already have been refreshed
+-- set this to TRUE here if you need ALL matviews to be refreshed, not only those that already have been refreshed
 set postgres_dba.refresh_matviews_with_data = FALSE;
 -- alternatively, you can set 'postgres_dba.refresh_matviews_with_data_forced' to TRUE or FALSE in advance, outside of this script.
+
+-- Refresh timezone names materialized view first, as it's used frequently
+DO $$
+BEGIN
+  RAISE NOTICE 'Refreshing postgres_dba.mv_timezone_names...';
+  REFRESH MATERIALIZED VIEW postgres_dba.mv_timezone_names;
+  RAISE NOTICE 'postgres_dba.mv_timezone_names refreshed successfully.';
+EXCEPTION
+  WHEN undefined_table THEN
+    RAISE NOTICE 'postgres_dba.mv_timezone_names does not exist yet.';
+END;
+$$;
 
 set statement_timeout to 0;
 set client_min_messages to info;
