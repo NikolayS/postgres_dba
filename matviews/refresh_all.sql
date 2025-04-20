@@ -64,6 +64,22 @@ begin
 end;
 $$ language plpgsql;
 
+-- Manually refresh cached_timezone_names if it exists
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 
+    FROM pg_matviews
+    WHERE schemaname = 'public' 
+    AND matviewname = 'cached_timezone_names'
+  ) THEN
+    RAISE NOTICE 'Refreshing public.cached_timezone_names...';
+    EXECUTE 'REFRESH MATERIALIZED VIEW public.cached_timezone_names';
+    RAISE NOTICE 'public.cached_timezone_names refreshed successfully';
+  END IF;
+END
+$$;
+
 reset postgres_dba.refresh_matviews_with_data;
 reset client_min_messages;
 reset statement_timeout;
