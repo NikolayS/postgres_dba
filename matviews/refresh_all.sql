@@ -2,6 +2,10 @@
 -- In case when there are complex relations between matviews,
 -- it might perform multiple iterations and eventually refreshes
 -- all matviews (either all w/o data or absolutely all -- it's up to you).
+--
+-- Note: For pg_timezone_names_mv, this will refresh the timezone data.
+-- Timezone data rarely changes, so this refresh is only needed after PostgreSQL
+-- timezone database updates.
 
 -- set thos to TRUE here if you need ALL matviews to be refrehsed, not only those that already have been refreshed
 set postgres_dba.refresh_matviews_with_data = FALSE;
