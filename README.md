@@ -82,6 +82,15 @@ And then:
 :dba
 ```
 
+### Timezone Utilities
+This tool includes timezone utilities that improve performance of timezone queries in PostgreSQL:
+
+- Use the `tz1` option from the menu to create and refresh a materialized view of timezone names
+- The materialized view `mv_timezone_names` caches timezone data for fast access
+- Use `SELECT name FROM mv_timezone_names` instead of `SELECT name FROM pg_timezone_names` 
+- Performance improvement: 196ms → <1ms per query
+- Remember to refresh the materialized view periodically using the refresh script in `matviews/refresh_all.sql`
+
 ## How to Extend (Add More Queries)
 You can add your own useful SQL queries and use them from the main menu. Just add your SQL code to `./sql` directory. The filename should start with some 1 or 2-letter code, followed by underscore and some additional arbitrary words. Extension should be `.sql`. Example:
 ```
