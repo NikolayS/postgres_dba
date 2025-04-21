@@ -67,3 +67,15 @@ $$ language plpgsql;
 reset postgres_dba.refresh_matviews_with_data;
 reset client_min_messages;
 reset statement_timeout;
+
+-- Specifically refresh the timezone_names_mv if it exists
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_matviews WHERE schemaname = 'public' AND matviewname = 'timezone_names_mv'
+    ) THEN
+        EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY public.timezone_names_mv';
+        RAISE NOTICE 'Refreshed timezone_names_mv materialized view';
+    END IF;
+END
+$$;
