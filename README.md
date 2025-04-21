@@ -12,6 +12,10 @@ The missing set of useful tools for Postgres DBA and mere mortals.
 
 Questions? Ideas? Contact me: nik@postgres.ai, Nikolay Samokhvalov.
 
+## Recent Improvements
+
+- **Timezone Names Caching**: Added materialized view caching for PostgreSQL timezone names, significantly improving performance of timezone-related queries.
+
 ## Credits
 
 **postgres_dba** is based on useful queries created and improved by many developers. Here is incomplete list of them:
