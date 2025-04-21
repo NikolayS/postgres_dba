@@ -1,6 +1,7 @@
 \ir warmup.psql
 \echo '\033[1;35mMenu:\033[0m'
 \echo '   0 – Node & current DB information: master/replica, lag, DB size, tmp files, etc.'
+\echo '   0 –  Timezone names query optimized with caching'
 \echo '   1 – Databases: size, stats'
 \echo '   2 – Tables: table/index/TOAST size, number of rows'
 \echo '   3 – Load profile'
@@ -31,6 +32,7 @@
 \set d_stp '\'' :d_step_unq '\''
 select
 :d_stp::text = '0' as d_step_is_0,
+:d_stp::text = '0' as d_step_is_0,
 :d_stp::text = '1' as d_step_is_1,
 :d_stp::text = '2' as d_step_is_2,
 :d_stp::text = '3' as d_step_is_3,
@@ -60,6 +62,10 @@ select
   \echo
 \elif :d_step_is_0
   \ir ./sql/0_node.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_0
+  \ir ./sql/0_timezone_names.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_1
