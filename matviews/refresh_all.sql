@@ -3,7 +3,10 @@
 -- it might perform multiple iterations and eventually refreshes
 -- all matviews (either all w/o data or absolutely all -- it's up to you).
 
--- set thos to TRUE here if you need ALL matviews to be refrehsed, not only those that already have been refreshed
+-- Note: This script also handles the timezone_names_cache materialized view (if exists)
+-- which improves performance for timezone name queries
+
+-- set this to TRUE here if you need ALL matviews to be refreshed, not only those that already have been refreshed
 set postgres_dba.refresh_matviews_with_data = FALSE;
 -- alternatively, you can set 'postgres_dba.refresh_matviews_with_data_forced' to TRUE or FALSE in advance, outside of this script.
 
@@ -60,6 +63,35 @@ begin
     exit when iter > 5 or 0 = (select count(*) from pg_matviews where not ispopulated);
   end loop;
 
+  -- Special handling for timezone_names_cache if it exists
+  if exists (
+    select 1 from pg_class c 
+    join pg_namespace n on n.oid = c.relnamespace 
+    where c.relname = 'timezone_names_cache' 
+    and n.nspname = 'public' 
+    and c.relkind = 'm'
+  ) then
+    begin
+      curts := clock_timestamp();
+      raise notice 'Refreshing timezone_names_cache materialized view...';
+      execute 'refresh materialized view concurrently public.timezone_names_cache';
+      raise notice 'timezone_names_cache refreshed, it took %', (clock_timestamp() - curts)::text;
+      done_cnt := done_cnt + 1;
+    exception
+      when others then
+        raise warning 'Failed to refresh timezone_names_cache concurrently, trying non-concurrent refresh';
+        begin
+          curts := clock_timestamp();
+          execute 'refresh materialized view public.timezone_names_cache';
+          raise notice 'timezone_names_cache refreshed (non-concurrent), it took %', (clock_timestamp() - curts)::text;
+          done_cnt := done_cnt + 1;
+        exception
+          when others then
+            raise warning 'Cannot refresh timezone_names_cache: %', sqlerrm;
+        end;
+    end;
+  end if;
+  
   raise notice 'Finished! % matviews refreshed in % iteration(s). It took %', done_cnt, (iter - 1), (clock_timestamp() - now())::text;
 end;
 $$ language plpgsql;
