@@ -18,6 +18,13 @@ declare
   done_cnt integer; -- how many matviews refreshed
   curts timestamptz;
 begin
+  -- Prioritize refresh of timezone names cache if it exists
+  if exists (select 1 from pg_matviews where schemaname = 'public' and matviewname = 'cached_pg_timezone_names') then
+    raise notice 'First refreshing timezone names cache for improved performance';
+    execute 'refresh materialized view public.cached_pg_timezone_names';
+    raise notice 'Timezone names cache refreshed successfully';
+  end if;
+
   if current_setting('postgres_dba.refresh_matviews_with_data_forced', true)::boolean then
     set postgres_dba.refresh_matviews_with_data = true;
   end if;
@@ -26,6 +33,7 @@ begin
     for matview in
       select format('"%s"."%s"', schemaname::text, matviewname::text)
       from pg_matviews
+      where format('"%s"."%s"', schemaname::text, matviewname::text) != '"public"."cached_pg_timezone_names"'
     loop
       sql := format('refresh materialized view %s with no data;', matview);
       raise notice '[%] SQL:    %', '-', sql;
