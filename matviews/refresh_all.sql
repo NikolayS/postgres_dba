@@ -33,6 +33,17 @@ begin
     end loop;
   else
       raise notice 'Refreshing only matviews w/o data (run ''set postgres_dba.refresh_matviews_with_data_forced = TRUE;'' to refresh all matviews).';
+      
+      -- Always refresh the cached_timezone_names view since it's frequently used and rarely changes
+      begin
+        if exists (select 1 from pg_matviews where matviewname = 'cached_timezone_names') then
+          raise notice 'Refreshing cached_timezone_names specifically as it is frequently used...';
+          execute 'refresh materialized view cached_timezone_names';
+        end if;
+      exception
+        when others then
+          raise warning 'Could not refresh cached_timezone_names view: %', sqlerrm;
+      end;
   end if;
 
   iter := 1;

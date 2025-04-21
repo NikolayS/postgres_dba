@@ -8,6 +8,14 @@ The missing set of useful tools for Postgres DBA and mere mortals.
 
 :point_right: See also [postgres-checkup](https://gitlab.com/postgres-ai/postgres-checkup), a tool for automated health checks and SQL performance analysis.
 
+## Features
+
+- Performance diagnostics and monitoring
+- Index optimization and analysis
+- Database maintenance utilities
+- Bottleneck identification
+- Materialized view caching for common operations (like timezone names)
+
 ## Questions?
 
 Questions? Ideas? Contact me: nik@postgres.ai, Nikolay Samokhvalov.
