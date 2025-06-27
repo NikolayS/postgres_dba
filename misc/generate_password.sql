@@ -15,6 +15,6 @@ with init(len, arr) as (
   select array_to_string(array_agg(arr[i]), '') as password
   from init, indexes
 )
-select password--, 'md5' || md5(password || {{username}}) as password_md5
+select password--, 'md5' || md5(password || current_setting('postgres_dba.username')::text) as password_md5
 from res
 ;
