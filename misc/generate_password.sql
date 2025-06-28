@@ -1,6 +1,5 @@
--- WARNING: random() that is used here is not cryptographically strong – 
--- if an attacker knows one value, it's easy to guess the "next" value
--- TODO: rework to use pgcrypto instead
+-- This script uses pgcrypto extension to generate cryptographically secure random passwords
+-- You need to enable the pgcrypto extension first with: CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 with init(len, arr) as (
   -- edit password length and possible characters here
@@ -9,7 +8,8 @@ with init(len, arr) as (
   select count(*)
   from (select unnest(arr) from init) _
 ), indexes(i) as (
-  select 1 + int4(random() * (l - 1))
+  -- Using gen_random_bytes from pgcrypto for cryptographically secure randomness
+  select 1 + (get_byte(gen_random_bytes(1), 0)::int % (l - 1))
   from arrlen, (select generate_series(1, len) from init) _
 ), res as (
   select array_to_string(array_agg(arr[i]), '') as password
