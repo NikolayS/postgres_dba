@@ -1,0 +1,22 @@
+# WAL-G Prometheus Exporter Configuration
+# This is a sample configuration file for the WAL-G exporter
+
+# Server configuration
+listen_address: ":9351"
+metrics_path: "/metrics"
+scrape_interval: 60s
+
+# WAL-G configuration
+walg_binary: "wal-g"
+walg_config_file: "/etc/wal-g/config.yaml"
+
+# PostgreSQL connection
+postgres_connection: "host=localhost port=5432 user=postgres dbname=postgres sslmode=disable"
+
+# Logging configuration
+log_level: "info"  # debug, info, warn, error
+log_format: "json"  # json, text
+
+# Health check configuration
+health_check_interval: 30s
+ready_timeout: 5s
