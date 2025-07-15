@@ -1,0 +1,156 @@
+name: Test PostgreSQL Versions
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        postgres-version: ['13', '14', '15', '16', '17']
+      fail-fast: false
+    
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres-version }}
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install PostgreSQL client
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client-${{ matrix.postgres-version }}
+    
+    - name: Prepare test database
+      run: |
+        export PGPASSWORD=postgres
+        psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements;'
+        psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pgstattuple;'
+        psql -h localhost -U postgres -d test -c "CREATE TABLE align1 AS SELECT 1::int4, 2::int8, 3::int4 AS more FROM generate_series(1, 100000) _(i);"
+        psql -h localhost -U postgres -d test -c "CREATE TABLE align2 AS SELECT 1::int4, 3::int4 AS more, 2::int8 FROM generate_series(1, 100000) _(i);"
+      env:
+        PGPASSWORD: postgres
+    
+    - name: Test wide mode
+      run: |
+        export PGPASSWORD=postgres
+        echo "\set postgres_dba_wide true" > ~/.psqlrc
+        echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
+        for f in sql/*; do 
+          echo "Testing $f in wide mode..."
+          psql -h localhost -U postgres -d test -f warmup.psql -f "$f" > /dev/null
+        done
+      env:
+        PGPASSWORD: postgres
+    
+    - name: Test normal mode
+      run: |
+        export PGPASSWORD=postgres
+        echo "\set postgres_dba_wide false" > ~/.psqlrc
+        echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
+        for f in sql/*; do 
+          echo "Testing $f in normal mode..."
+          psql -h localhost -U postgres -d test -f warmup.psql -f "$f" > /dev/null
+        done
+      env:
+        PGPASSWORD: postgres
+    
+    - name: Run regression tests
+      run: |
+        export PGPASSWORD=postgres
+        echo "\set postgres_dba_wide false" > ~/.psqlrc
+        echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
+        
+        echo "Running regression test for 0_node.sql..."
+        diff -b test/regression/0_node.out <(psql -h localhost -U postgres -d test -f warmup.psql -f sql/0_node.sql | grep Role)
+        
+        echo "Running regression test for p1_alignment_padding.sql..."
+        diff -b test/regression/p1_alignment_padding.out <(psql -h localhost -U postgres -d test -f warmup.psql -f sql/p1_alignment_padding.sql | grep align)
+        
+        echo "Running regression test for a1_activity.sql..."
+        diff -b test/regression/a1_activity.out <(psql -h localhost -U postgres -d test -f warmup.psql -f sql/a1_activity.sql | grep User)
+      env:
+        PGPASSWORD: postgres
+
+  test-beta:
+    runs-on: ubuntu-latest
+    continue-on-error: true  # Allow beta tests to fail without breaking CI
+    
+    strategy:
+      matrix:
+        postgres-version: ['18-beta']
+    
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres-version }}
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install PostgreSQL client (beta)
+      run: |
+        sudo apt-get update
+        # Install latest PostgreSQL client for beta testing
+        sudo apt-get install -y postgresql-client
+    
+    - name: Prepare test database
+      run: |
+        export PGPASSWORD=postgres
+        psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements;'
+        psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pgstattuple;'
+        psql -h localhost -U postgres -d test -c "CREATE TABLE align1 AS SELECT 1::int4, 2::int8, 3::int4 AS more FROM generate_series(1, 100000) _(i);"
+        psql -h localhost -U postgres -d test -c "CREATE TABLE align2 AS SELECT 1::int4, 3::int4 AS more, 2::int8 FROM generate_series(1, 100000) _(i);"
+      env:
+        PGPASSWORD: postgres
+    
+    - name: Test wide mode (beta)
+      run: |
+        export PGPASSWORD=postgres
+        echo "\set postgres_dba_wide true" > ~/.psqlrc
+        echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
+        for f in sql/*; do 
+          echo "Testing $f in wide mode (PostgreSQL 18 beta)..."
+          psql -h localhost -U postgres -d test -f warmup.psql -f "$f" > /dev/null
+        done
+      env:
+        PGPASSWORD: postgres
+    
+    - name: Test normal mode (beta)
+      run: |
+        export PGPASSWORD=postgres
+        echo "\set postgres_dba_wide false" > ~/.psqlrc
+        echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
+        for f in sql/*; do 
+          echo "Testing $f in normal mode (PostgreSQL 18 beta)..."
+          psql -h localhost -U postgres -d test -f warmup.psql -f "$f" > /dev/null
+        done
+      env:
+        PGPASSWORD: postgres
