@@ -46,20 +46,25 @@ jobs:
           sleep 2
         done
         
-        # Get container ID and configure shared_preload_libraries
+        # Get container ID
         CONTAINER_ID=$(docker ps --filter "expose=5432" --format "{{.ID}}")
         echo "PostgreSQL container: $CONTAINER_ID"
         
-        # Configure shared_preload_libraries in postgresql.conf
+        # Stop PostgreSQL to modify configuration
+        docker exec $CONTAINER_ID pg_ctl -D /var/lib/postgresql/data -m fast stop || true
+        
+        # Configure shared_preload_libraries
         docker exec $CONTAINER_ID bash -c "echo \"shared_preload_libraries = 'pg_stat_statements'\" >> /var/lib/postgresql/data/postgresql.conf"
         
-        # Configure pg_hba.conf for trust authentication
-        docker exec $CONTAINER_ID bash -c "echo 'local all all trust' > /var/lib/postgresql/data/pg_hba.conf"
+        # Configure trust authentication for easier testing
+        docker exec $CONTAINER_ID bash -c "echo 'host all all all trust' > /var/lib/postgresql/data/pg_hba.conf"
+        docker exec $CONTAINER_ID bash -c "echo 'local all all trust' >> /var/lib/postgresql/data/pg_hba.conf"
         
-        # Restart PostgreSQL to load the configuration
-        docker restart $CONTAINER_ID
+        # Restart PostgreSQL
+        docker exec $CONTAINER_ID pg_ctl -D /var/lib/postgresql/data -l /var/lib/postgresql/data/logfile start
         
         # Wait for PostgreSQL to be ready after restart
+        sleep 5
         until pg_isready -h localhost -p 5432 -U postgres; do
           echo "Waiting for postgres to restart..."
           sleep 2
@@ -77,7 +82,7 @@ jobs:
         PGPASSWORD=postgres psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pgstattuple;'
         
         # Verify extensions
-        PGPASSWORD=postgres psql -h localhost -U postgres -d test -c 'SELECT extname FROM pg_extension;'
+        PGPASSWORD=postgres psql -h localhost -U postgres -d test -c 'SELECT extname FROM pg_extension ORDER BY extname;'
         
         # Create test tables (exactly as in CircleCI)
         PGPASSWORD=postgres psql -h localhost -U postgres -d test -c "CREATE TABLE align1 AS SELECT 1::int4, 2::int8, 3::int4 AS more FROM generate_series(1, 100000) _(i);"
@@ -90,10 +95,10 @@ jobs:
         echo "Testing all SQL files in wide mode..."
         for f in sql/*; do 
           echo "  Testing $f..."
-          if ! PGPASSWORD=postgres psql -h localhost -U postgres -d test -f warmup.psql -f "$f" > /dev/null 2>&1; then
+          if ! PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
             echo "❌ FAILED: $f in wide mode"
             echo "Error output:"
-            PGPASSWORD=postgres psql -h localhost -U postgres -d test -f warmup.psql -f "$f"
+            PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f"
             exit 1
           fi
         done
@@ -106,10 +111,10 @@ jobs:
         echo "Testing all SQL files in normal mode..."
         for f in sql/*; do 
           echo "  Testing $f..."
-          if ! PGPASSWORD=postgres psql -h localhost -U postgres -d test -f warmup.psql -f "$f" > /dev/null 2>&1; then
+          if ! PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
             echo "❌ FAILED: $f in normal mode"
             echo "Error output:"
-            PGPASSWORD=postgres psql -h localhost -U postgres -d test -f warmup.psql -f "$f"
+            PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f"
             exit 1
           fi
         done
@@ -123,13 +128,13 @@ jobs:
         echo "Running regression tests..."
         
         echo "  Testing 0_node.sql..."
-        diff -b test/regression/0_node.out <(PGPASSWORD=postgres psql -h localhost -U postgres -d test -f warmup.psql -f sql/0_node.sql | grep Role)
+        diff -b test/regression/0_node.out <(PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f sql/0_node.sql | grep Role)
         
         echo "  Testing p1_alignment_padding.sql..."
-        diff -b test/regression/p1_alignment_padding.out <(PGPASSWORD=postgres psql -h localhost -U postgres -d test -f warmup.psql -f sql/p1_alignment_padding.sql | grep align)
+        diff -b test/regression/p1_alignment_padding.out <(PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f sql/p1_alignment_padding.sql | grep align)
         
         echo "  Testing a1_activity.sql..."
-        diff -b test/regression/a1_activity.out <(PGPASSWORD=postgres psql -h localhost -U postgres -d test -f warmup.psql -f sql/a1_activity.sql | grep User)
+        diff -b test/regression/a1_activity.out <(PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f sql/a1_activity.sql | grep User)
         
         echo "✅ All regression tests passed"
 
@@ -173,20 +178,25 @@ jobs:
           sleep 2
         done
         
-        # Get container ID and configure shared_preload_libraries
+        # Get container ID
         CONTAINER_ID=$(docker ps --filter "expose=5432" --format "{{.ID}}")
         echo "PostgreSQL container: $CONTAINER_ID"
         
-        # Configure shared_preload_libraries in postgresql.conf
+        # Stop PostgreSQL to modify configuration
+        docker exec $CONTAINER_ID pg_ctl -D /var/lib/postgresql/data -m fast stop || true
+        
+        # Configure shared_preload_libraries
         docker exec $CONTAINER_ID bash -c "echo \"shared_preload_libraries = 'pg_stat_statements'\" >> /var/lib/postgresql/data/postgresql.conf"
         
-        # Configure pg_hba.conf for trust authentication
-        docker exec $CONTAINER_ID bash -c "echo 'local all all trust' > /var/lib/postgresql/data/pg_hba.conf"
+        # Configure trust authentication
+        docker exec $CONTAINER_ID bash -c "echo 'host all all all trust' > /var/lib/postgresql/data/pg_hba.conf"
+        docker exec $CONTAINER_ID bash -c "echo 'local all all trust' >> /var/lib/postgresql/data/pg_hba.conf"
         
-        # Restart PostgreSQL to load the configuration
-        docker restart $CONTAINER_ID
+        # Restart PostgreSQL
+        docker exec $CONTAINER_ID pg_ctl -D /var/lib/postgresql/data -l /var/lib/postgresql/data/logfile start
         
         # Wait for PostgreSQL to be ready after restart
+        sleep 5
         until pg_isready -h localhost -p 5432 -U postgres; do
           echo "Waiting for postgres to restart..."
           sleep 2
@@ -211,10 +221,10 @@ jobs:
       run: |
         echo "\set postgres_dba_wide true" > ~/.psqlrc
         echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
-        echo "Testing all SQL files in wide mode (PostgreSQL 18 beta)..."
+        echo "Testing all SQL files in wide mode (PostgreSQL ${{ matrix.postgres-version }})..."
         for f in sql/*; do 
           echo "  Testing $f..."
-          PGPASSWORD=postgres psql -h localhost -U postgres -d test -f warmup.psql -f "$f" > /dev/null 2>&1 || echo "  ⚠️ Warning: $f failed in wide mode (beta)"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1 || echo "  ⚠️ Warning: $f failed in wide mode (beta)"
         done
         echo "✅ Wide mode tests completed (beta)"
     
@@ -222,10 +232,10 @@ jobs:
       run: |
         echo "\set postgres_dba_wide false" > ~/.psqlrc
         echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
-        echo "Testing all SQL files in normal mode (PostgreSQL 18 beta)..."
+        echo "Testing all SQL files in normal mode (PostgreSQL ${{ matrix.postgres-version }})..."
         for f in sql/*; do 
           echo "  Testing $f..."
-          PGPASSWORD=postgres psql -h localhost -U postgres -d test -f warmup.psql -f "$f" > /dev/null 2>&1 || echo "  ⚠️ Warning: $f failed in normal mode (beta)"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1 || echo "  ⚠️ Warning: $f failed in normal mode (beta)"
         done
         echo "✅ Normal mode tests completed (beta)"
 
