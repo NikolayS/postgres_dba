@@ -139,7 +139,7 @@ jobs:
     
     strategy:
       matrix:
-        postgres-version: ['18-beta']
+        postgres-version: ['18-beta', '19-beta']
       fail-fast: false
     
     services:
