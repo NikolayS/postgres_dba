@@ -21,8 +21,27 @@ jobs:
     
     - name: Start PostgreSQL and configure
       run: |
-        # Configure PostgreSQL for pg_stat_statements
-        sudo sed -i "s/#shared_preload_libraries = ''/shared_preload_libraries = 'pg_stat_statements'/" /etc/postgresql/*/main/postgresql.conf
+        # Stop default PostgreSQL if running
+        sudo systemctl stop postgresql.service || true
+        
+        # Find PostgreSQL config files
+        echo "PostgreSQL config files:"
+        find /etc/postgresql -name "postgresql.conf" -type f
+        find /etc/postgresql -name "pg_hba.conf" -type f
+        
+        # Configure PostgreSQL for pg_stat_statements (multiple approaches to ensure it works)
+        sudo sed -i "s/#shared_preload_libraries = ''/shared_preload_libraries = 'pg_stat_statements'/" /etc/postgresql/*/main/postgresql.conf || true
+        sudo sed -i "s/^#shared_preload_libraries = ''/shared_preload_libraries = 'pg_stat_statements'/" /etc/postgresql/*/main/postgresql.conf || true
+        sudo bash -c "echo \"shared_preload_libraries = 'pg_stat_statements'\" >> /etc/postgresql/*/main/postgresql.conf"
+        
+        # Show the final configuration
+        echo "Final postgresql.conf shared_preload_libraries setting:"
+        grep -n "shared_preload_libraries" /etc/postgresql/*/main/postgresql.conf || echo "Not found"
+        
+        # Set trust authentication for local connections
+        sudo bash -c "echo 'local all all trust' > /etc/postgresql/*/main/pg_hba.conf"
+        
+        # Start PostgreSQL
         sudo systemctl start postgresql.service
         pg_isready
         
@@ -32,9 +51,16 @@ jobs:
     
     - name: Prepare test database
       run: |
+        # Check PostgreSQL version and available extensions
+        sudo -u postgres psql -d test -c 'SELECT version();'
+        sudo -u postgres psql -d test -c 'SELECT * FROM pg_available_extensions WHERE name IN ('"'"'pg_stat_statements'"'"', '"'"'pgstattuple'"'"');'
+        
         # Create extensions (they need to be created by superuser)
         sudo -u postgres psql -d test -c 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements;'
         sudo -u postgres psql -d test -c 'CREATE EXTENSION IF NOT EXISTS pgstattuple;'
+        
+        # Verify extensions are created
+        sudo -u postgres psql -d test -c 'SELECT * FROM pg_extension;'
         
         # Create test tables
         psql -d test -c "CREATE TABLE align1 AS SELECT 1::int4, 2::int8, 3::int4 AS more FROM generate_series(1, 100000) _(i);"
@@ -46,7 +72,11 @@ jobs:
         echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
         for f in sql/*; do 
           echo "Testing $f in wide mode..."
-          psql -d test -f warmup.psql -f "$f" > /dev/null
+          if ! psql -d test -f warmup.psql -f "$f" > /dev/null 2>&1; then
+            echo "FAILED: $f in wide mode"
+            psql -d test -f warmup.psql -f "$f"
+            exit 1
+          fi
         done
     
     - name: Test normal mode
@@ -55,7 +85,11 @@ jobs:
         echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
         for f in sql/*; do 
           echo "Testing $f in normal mode..."
-          psql -d test -f warmup.psql -f "$f" > /dev/null
+          if ! psql -d test -f warmup.psql -f "$f" > /dev/null 2>&1; then
+            echo "FAILED: $f in normal mode"
+            psql -d test -f warmup.psql -f "$f"
+            exit 1
+          fi
         done
     
     - name: Run regression tests
