@@ -35,15 +35,12 @@ jobs:
     
     - name: Install PostgreSQL client
       run: |
-        # Add PostgreSQL official APT repository
+        # Install PostgreSQL client from Ubuntu repositories (works with all PostgreSQL versions)
         sudo apt-get update
-        sudo apt-get install -y wget ca-certificates
-        wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-        echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
-        sudo apt-get update
+        sudo apt-get install -y postgresql-client-common postgresql-client-14
         
-        # Install PostgreSQL client (will get the latest version available)
-        sudo apt-get install -y postgresql-client-common postgresql-client
+        # Verify installation
+        psql --version
     
     - name: Configure PostgreSQL for pg_stat_statements
       run: |
@@ -174,15 +171,12 @@ jobs:
     
     - name: Install PostgreSQL client
       run: |
-        # Add PostgreSQL official APT repository
+        # Install PostgreSQL client from Ubuntu repositories (works with all PostgreSQL versions)
         sudo apt-get update
-        sudo apt-get install -y wget ca-certificates
-        wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-        echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
-        sudo apt-get update
+        sudo apt-get install -y postgresql-client-common postgresql-client-14
         
-        # Install PostgreSQL client (will get the latest version available)
-        sudo apt-get install -y postgresql-client-common postgresql-client
+        # Verify installation
+        psql --version
     
     - name: Configure PostgreSQL for pg_stat_statements
       run: |
