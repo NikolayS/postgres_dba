@@ -16,6 +16,8 @@ cat > "$WARMUP" <<- VersCheck
   select 1/0;
 \endif
 
+select current_setting('server_version_num')::integer >= 180000 as postgres_dba_pgvers_18plus \gset
+select current_setting('server_version_num')::integer >= 170000 as postgres_dba_pgvers_17plus \gset
 select current_setting('server_version_num')::integer >= 160000 as postgres_dba_pgvers_16plus \gset
 select current_setting('server_version_num')::integer >= 150000 as postgres_dba_pgvers_15plus \gset
 select current_setting('server_version_num')::integer >= 140000 as postgres_dba_pgvers_14plus \gset
