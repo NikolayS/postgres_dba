@@ -8,6 +8,59 @@ For Postgres versions older than 10, run this first:
   \set postgres_dba_is_wal_replay_paused pg_is_xlog_replay_paused
 */
 
+-- Functions to handle PostgreSQL version differences
+create or replace function pg_checkpoints() returns text language plpgsql as $$
+begin
+  if current_setting('server_version_num')::int >= 170000 then
+    return (select (num_timed + num_requested)::text from pg_stat_checkpointer);
+  else
+    return (select (checkpoints_timed + checkpoints_req)::text from pg_stat_bgwriter);
+  end if;
+end;
+$$;
+
+create or replace function pg_forced_checkpoints() returns text language plpgsql as $$
+begin
+  if current_setting('server_version_num')::int >= 170000 then
+    return (
+      select round(100.0 * num_requested::numeric /
+        (nullif(num_timed + num_requested, 0)), 1)::text || '%'
+      from pg_stat_checkpointer
+    );
+  else
+    return (
+      select round(100.0 * checkpoints_req::numeric /
+        (nullif(checkpoints_timed + checkpoints_req, 0)), 1)::text || '%'
+      from pg_stat_bgwriter
+    );
+  end if;
+end;
+$$;
+
+create or replace function pg_checkpoint_mbps() returns text language plpgsql as $$
+begin
+  if current_setting('server_version_num')::int >= 170000 then
+    return (
+      select round((nullif(buffers_written::numeric, 0) /
+        ((1024.0 * 1024 /
+          (current_setting('block_size')::numeric))
+            * extract('epoch' from now() - stats_reset)
+        ))::numeric, 6)::text
+      from pg_stat_checkpointer
+    );
+  else
+    return (
+      select round((nullif(buffers_checkpoint::numeric, 0) /
+        ((1024.0 * 1024 /
+          (current_setting('block_size')::numeric))
+            * extract('epoch' from now() - stats_reset)
+        ))::numeric, 6)::text
+      from pg_stat_bgwriter
+    );
+  end if;
+end;
+$$;
+
 with data as (
   select s.*
   from pg_stat_database s
@@ -48,57 +101,11 @@ select 'Started At', pg_postmaster_start_time()::timestamptz(0)::text
 union all
 select 'Uptime', (now() - pg_postmaster_start_time())::interval(0)::text
 union all
-select
-  'Checkpoints',
-  (
-    case 
-      when current_setting('server_version_num')::int >= 170000
-      then (select (num_timed + num_requested)::text from pg_stat_checkpointer)
-      else (select (checkpoints_timed + checkpoints_req)::text from pg_stat_bgwriter)
-    end
-  )
+select 'Checkpoints', pg_checkpoints()
 union all
-select
-  'Forced Checkpoints',
-  (
-    case 
-      when current_setting('server_version_num')::int >= 170000
-      then (
-        select round(100.0 * num_requested::numeric /
-          (nullif(num_timed + num_requested, 0)), 1)::text || '%'
-        from pg_stat_checkpointer
-      )
-      else (
-        select round(100.0 * checkpoints_req::numeric /
-          (nullif(checkpoints_timed + checkpoints_req, 0)), 1)::text || '%'
-        from pg_stat_bgwriter
-      )
-    end
-  )
+select 'Forced Checkpoints', pg_forced_checkpoints()
 union all
-select
-  'Checkpoint MB/sec',
-  (
-    case 
-      when current_setting('server_version_num')::int >= 170000
-      then (
-        select round((nullif(buffers_written::numeric, 0) /
-          ((1024.0 * 1024 /
-            (current_setting('block_size')::numeric))
-              * extract('epoch' from now() - stats_reset)
-          ))::numeric, 6)::text
-        from pg_stat_checkpointer
-      )
-      else (
-        select round((nullif(buffers_checkpoint::numeric, 0) /
-          ((1024.0 * 1024 /
-            (current_setting('block_size')::numeric))
-              * extract('epoch' from now() - stats_reset)
-          ))::numeric, 6)::text
-        from pg_stat_bgwriter
-      )
-    end
-  )
+select 'Checkpoint MB/sec', pg_checkpoint_mbps()
 union all
 select repeat('-', 33), repeat('-', 88)
 union all
