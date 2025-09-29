@@ -6,7 +6,7 @@ The missing set of useful tools for Postgres DBA and mere mortals.
 <img alt="Demo" src="https://user-images.githubusercontent.com/1345402/74124060-dbe25c00-4b85-11ea-9538-8d3b67f09896.gif">
 
 
-:point_right: See also [postgres-checkup](https://gitlab.com/postgres-ai/postgres-checkup), a tool for automated health checks and SQL performance analysis.
+:point_right: See also [postgres_ai](https://github.com/postgres-ai/postgres_ai), a comprehensive monitoring and optimization platform that includes automated health checks, SQL performance analysis, and much more.
 
 ## Questions?
 
@@ -33,6 +33,19 @@ sudo apt-get install -y postgresql-client-12
 ```
 
 Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg.
+
+## Supported PostgreSQL Versions
+
+**postgres_dba** is tested and supports **PostgreSQL 13-18**, including the latest PostgreSQL 18 release.
+
+- ✅ **PostgreSQL 13** - Fully supported
+- ✅ **PostgreSQL 14** - Fully supported  
+- ✅ **PostgreSQL 15** - Fully supported
+- ✅ **PostgreSQL 16** - Fully supported
+- ✅ **PostgreSQL 17** - Fully supported (includes `pg_stat_checkpointer` compatibility)
+- ✅ **PostgreSQL 18** - Fully supported (latest release)
+
+Older versions (9.6-12) may work but are not actively tested. Some reports may require specific PostgreSQL features introduced in newer versions.
 
 ## Installation
 The installation is trivial. Clone the repository and put "dba" alias to your `.psqlrc` file (works in bash, zsh, and csh):

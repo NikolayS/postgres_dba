@@ -1,0 +1,149 @@
+name: Test PostgreSQL Versions
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        postgres-version: ['13', '14', '15', '16', '17', '18']
+      fail-fast: false
+    
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres-version }}
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_INITDB_ARGS: --auth-host=trust --auth-local=trust
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install PostgreSQL client
+      run: |
+        # Install default PostgreSQL client (works for all versions)
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
+        
+        # Verify installation
+        psql --version
+    
+    - name: Prepare test database
+      run: |
+        # Wait for PostgreSQL to be ready
+        until pg_isready -h localhost -p 5432 -U postgres; do
+          echo "Waiting for postgres..."
+          sleep 2
+        done
+        
+        # Check PostgreSQL version
+        psql -h localhost -U postgres -d test -c 'SELECT version();'
+        
+        # Create extensions (pg_stat_statements may not work without shared_preload_libraries)
+        psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements;' || echo "Warning: pg_stat_statements extension not available"
+        psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pgstattuple;'
+        
+        # Create minimal privilege user for testing
+        psql -h localhost -U postgres -d test -c "CREATE USER dba_user;"
+        psql -h localhost -U postgres -d test -c "GRANT pg_monitor TO dba_user;"
+        psql -h localhost -U postgres -d test -c "GRANT CONNECT ON DATABASE test TO dba_user;"
+        psql -h localhost -U postgres -d test -c "GRANT USAGE ON SCHEMA public TO dba_user;"
+        
+        # Verify extensions
+        psql -h localhost -U postgres -d test -c 'SELECT extname FROM pg_extension ORDER BY extname;'
+        
+        # Create test tables for alignment testing (as superuser)
+        psql -h localhost -U postgres -d test -c "CREATE TABLE align1 AS SELECT 1::int4, 2::int8, 3::int4 AS more FROM generate_series(1, 100000) _(i);"
+        psql -h localhost -U postgres -d test -c "CREATE TABLE align2 AS SELECT 1::int4, 3::int4 AS more, 2::int8 FROM generate_series(1, 100000) _(i);"
+        
+        # Grant access to test tables for dba_user
+        psql -h localhost -U postgres -d test -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO dba_user;"
+        
+        # Test connection as dba_user
+        psql -h localhost -U dba_user -d test -c 'SELECT current_user, session_user;'
+    
+    - name: Test wide mode
+      run: |
+        echo "\set postgres_dba_wide true" > ~/.psqlrc
+        echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
+        echo "Testing all SQL files in wide mode with minimal privileges..."
+        for f in sql/*; do 
+          echo "  Testing $f..."
+          if ! psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
+            echo "❌ FAILED: $f in wide mode"
+            echo "Error output:"
+            psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f"
+            exit 1
+          fi
+        done
+        echo "✅ All tests passed in wide mode"
+    
+    - name: Test normal mode
+      run: |
+        echo "\set postgres_dba_wide false" > ~/.psqlrc
+        echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
+        echo "Testing all SQL files in normal mode with minimal privileges..."
+        for f in sql/*; do 
+          echo "  Testing $f..."
+          if ! psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
+            echo "❌ FAILED: $f in normal mode"
+            echo "Error output:"
+            psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f"
+            exit 1
+          fi
+        done
+        echo "✅ All tests passed in normal mode"
+    
+    - name: Run regression tests
+      run: |
+        echo "\set postgres_dba_wide false" > ~/.psqlrc
+        echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
+        
+        echo "Running regression tests with minimal privileges..."
+        
+        echo "  Testing 0_node.sql..."
+        OUTPUT=$(psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/0_node.sql | grep Role)
+        if [[ "$OUTPUT" == *"Master"* ]]; then
+          echo "    ✓ Role test passed"
+        else
+          echo "    ✗ Role test failed: $OUTPUT"
+          exit 1
+        fi
+        
+        echo "  Testing p1_alignment_padding.sql..."
+        OUTPUT=$(psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/p1_alignment_padding.sql | grep align)
+        if [[ "$OUTPUT" == *"align1"* && "$OUTPUT" == *"align2"* && "$OUTPUT" == *"int4, more, int8"* ]]; then
+          echo "    ✓ Alignment padding test passed"
+        else
+          echo "    ✗ Alignment padding test failed: $OUTPUT"
+          exit 1
+        fi
+        
+        echo "  Testing a1_activity.sql..."
+        OUTPUT=$(psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/a1_activity.sql | grep User)
+        if [[ "$OUTPUT" == *"User"* ]]; then
+          echo "    ✓ Activity test passed"
+        else
+          echo "    ✗ Activity test failed: $OUTPUT"
+          exit 1
+        fi
+        
+        echo "✅ All regression tests passed with minimal privileges"
+
+

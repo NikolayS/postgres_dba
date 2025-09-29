@@ -8,6 +8,7 @@ For Postgres versions older than 10, run this first:
   \set postgres_dba_is_wal_replay_paused pg_is_xlog_replay_paused
 */
 
+
 with data as (
   select s.*
   from pg_stat_database s
@@ -48,28 +49,41 @@ select 'Started At', pg_postmaster_start_time()::timestamptz(0)::text
 union all
 select 'Uptime', (now() - pg_postmaster_start_time())::interval(0)::text
 union all
-select
-  'Checkpoints',
-  (select (checkpoints_timed + checkpoints_req)::text from pg_stat_bgwriter)
+\if :postgres_dba_pgvers_17plus
+select 'Checkpoints', (select (num_timed + num_requested)::text from pg_stat_checkpointer)
 union all
-select
-  'Forced Checkpoints',
-  (
-    select round(100.0 * checkpoints_req::numeric /
-      (nullif(checkpoints_timed + checkpoints_req, 0)), 1)::text || '%'
-    from pg_stat_bgwriter
-  )
+select 'Forced Checkpoints', (
+  select round(100.0 * num_requested::numeric /
+    (nullif(num_timed + num_requested, 0)), 1)::text || '%'
+  from pg_stat_checkpointer
+)
 union all
-select
-  'Checkpoint MB/sec',
-  (
-    select round((nullif(buffers_checkpoint::numeric, 0) /
-      ((1024.0 * 1024 /
-        (current_setting('block_size')::numeric))
-          * extract('epoch' from now() - stats_reset)
-      ))::numeric, 6)::text
-    from pg_stat_bgwriter
-  )
+select 'Checkpoint MiB/sec', (
+  select round((nullif(buffers_written::numeric, 0) /
+    ((1024.0 * 1024 /
+      (current_setting('block_size')::numeric))
+        * extract('epoch' from now() - stats_reset)
+    ))::numeric, 6)::text
+  from pg_stat_checkpointer
+)
+\else
+select 'Checkpoints', (select (checkpoints_timed + checkpoints_req)::text from pg_stat_bgwriter)
+union all
+select 'Forced Checkpoints', (
+  select round(100.0 * checkpoints_req::numeric /
+    (nullif(checkpoints_timed + checkpoints_req, 0)), 1)::text || '%'
+  from pg_stat_bgwriter
+)
+union all
+select 'Checkpoint MiB/sec', (
+  select round((nullif(buffers_checkpoint::numeric, 0) /
+    ((1024.0 * 1024 /
+      (current_setting('block_size')::numeric))
+        * extract('epoch' from now() - stats_reset)
+    ))::numeric, 6)::text
+  from pg_stat_bgwriter
+)
+\endif
 union all
 select repeat('-', 33), repeat('-', 88)
 union all
