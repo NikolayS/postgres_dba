@@ -58,7 +58,7 @@ select 'Forced Checkpoints', (
   from pg_stat_checkpointer
 )
 union all
-select 'Checkpoint MB/sec', (
+select 'Checkpoint MiB/sec', (
   select round((nullif(buffers_written::numeric, 0) /
     ((1024.0 * 1024 /
       (current_setting('block_size')::numeric))
@@ -75,7 +75,7 @@ select 'Forced Checkpoints', (
   from pg_stat_bgwriter
 )
 union all
-select 'Checkpoint MB/sec', (
+select 'Checkpoint MiB/sec', (
   select round((nullif(buffers_checkpoint::numeric, 0) /
     ((1024.0 * 1024 /
       (current_setting('block_size')::numeric))
