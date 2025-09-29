@@ -6,7 +6,7 @@ The missing set of useful tools for Postgres DBA and mere mortals.
 <img alt="Demo" src="https://user-images.githubusercontent.com/1345402/74124060-dbe25c00-4b85-11ea-9538-8d3b67f09896.gif">
 
 
-:point_right: See also [postgres-checkup](https://gitlab.com/postgres-ai/postgres-checkup), a tool for automated health checks and SQL performance analysis.
+:point_right: See also [postgres_ai](https://github.com/postgres-ai/postgres_ai), a comprehensive monitoring and optimization platform that includes automated health checks, SQL performance analysis, and much more.
 
 ## Questions?
 
