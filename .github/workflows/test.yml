@@ -12,7 +12,7 @@ jobs:
     
     strategy:
       matrix:
-        postgres-version: ['13', '14', '15', '16', '17', '18beta1']
+        postgres-version: ['13', '14', '15', '16', '17', '18']
       fail-fast: false
     
     services:
