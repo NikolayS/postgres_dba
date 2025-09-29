@@ -52,7 +52,7 @@ select
   'Checkpoints',
   (
     case 
-      when exists (select 1 from information_schema.tables where table_schema = 'pg_catalog' and table_name = 'pg_stat_checkpointer')
+      when current_setting('server_version_num')::int >= 170000
       then (select (num_timed + num_requested)::text from pg_stat_checkpointer)
       else (select (checkpoints_timed + checkpoints_req)::text from pg_stat_bgwriter)
     end
@@ -62,7 +62,7 @@ select
   'Forced Checkpoints',
   (
     case 
-      when exists (select 1 from information_schema.tables where table_schema = 'pg_catalog' and table_name = 'pg_stat_checkpointer')
+      when current_setting('server_version_num')::int >= 170000
       then (
         select round(100.0 * num_requested::numeric /
           (nullif(num_timed + num_requested, 0)), 1)::text || '%'
@@ -80,7 +80,7 @@ select
   'Checkpoint MB/sec',
   (
     case 
-      when exists (select 1 from information_schema.tables where table_schema = 'pg_catalog' and table_name = 'pg_stat_checkpointer')
+      when current_setting('server_version_num')::int >= 170000
       then (
         select round((nullif(buffers_written::numeric, 0) /
           ((1024.0 * 1024 /
