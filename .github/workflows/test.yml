@@ -55,7 +55,7 @@ jobs:
         echo "PostgreSQL container: $CONTAINER_ID"
         
         # Stop PostgreSQL to modify configuration
-        docker exec $CONTAINER_ID pg_ctl -D /var/lib/postgresql/data -m fast stop || true
+        docker exec --user postgres $CONTAINER_ID pg_ctl -D /var/lib/postgresql/data -m fast stop || true
         
         # Configure shared_preload_libraries
         docker exec $CONTAINER_ID bash -c "echo \"shared_preload_libraries = 'pg_stat_statements'\" >> /var/lib/postgresql/data/postgresql.conf"
@@ -65,7 +65,7 @@ jobs:
         docker exec $CONTAINER_ID bash -c "echo 'local all all trust' >> /var/lib/postgresql/data/pg_hba.conf"
         
         # Restart PostgreSQL
-        docker exec $CONTAINER_ID pg_ctl -D /var/lib/postgresql/data -l /var/lib/postgresql/data/logfile start
+        docker exec --user postgres $CONTAINER_ID pg_ctl -D /var/lib/postgresql/data -l /var/lib/postgresql/data/logfile start
         
         # Wait for PostgreSQL to be ready after restart
         sleep 5
