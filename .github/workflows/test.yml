@@ -21,11 +21,13 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test
+          POSTGRES_HOST_AUTH_METHOD: trust
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          -c shared_preload_libraries=pg_stat_statements
         ports:
           - 5432:5432
     
@@ -42,7 +44,7 @@ jobs:
         # Verify installation
         psql --version
     
-    - name: Configure PostgreSQL for pg_stat_statements
+    - name: Prepare test database
       run: |
         # Wait for PostgreSQL to be ready
         until pg_isready -h localhost -p 5432 -U postgres; do
@@ -50,47 +52,19 @@ jobs:
           sleep 2
         done
         
-        # Get container ID
-        CONTAINER_ID=$(docker ps --filter "expose=5432" --format "{{.ID}}")
-        echo "PostgreSQL container: $CONTAINER_ID"
-        
-        # Stop PostgreSQL to modify configuration
-        docker exec --user postgres $CONTAINER_ID pg_ctl -D /var/lib/postgresql/data -m fast stop || true
-        
-        # Configure shared_preload_libraries
-        docker exec $CONTAINER_ID bash -c "echo \"shared_preload_libraries = 'pg_stat_statements'\" >> /var/lib/postgresql/data/postgresql.conf"
-        
-        # Configure trust authentication for easier testing
-        docker exec $CONTAINER_ID bash -c "echo 'host all all all trust' > /var/lib/postgresql/data/pg_hba.conf"
-        docker exec $CONTAINER_ID bash -c "echo 'local all all trust' >> /var/lib/postgresql/data/pg_hba.conf"
-        
-        # Restart PostgreSQL
-        docker exec --user postgres $CONTAINER_ID pg_ctl -D /var/lib/postgresql/data -l /var/lib/postgresql/data/logfile start
-        
-        # Wait for PostgreSQL to be ready after restart
-        sleep 5
-        until pg_isready -h localhost -p 5432 -U postgres; do
-          echo "Waiting for postgres to restart..."
-          sleep 2
-        done
-        
-        echo "PostgreSQL ${{ matrix.postgres-version }} configured successfully"
-    
-    - name: Prepare test database
-      run: |
         # Check PostgreSQL version
-        PGPASSWORD=postgres psql -h localhost -U postgres -d test -c 'SELECT version();'
+        psql -h localhost -U postgres -d test -c 'SELECT version();'
         
         # Create extensions
-        PGPASSWORD=postgres psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements;'
-        PGPASSWORD=postgres psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pgstattuple;'
+        psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements;'
+        psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pgstattuple;'
         
         # Verify extensions
-        PGPASSWORD=postgres psql -h localhost -U postgres -d test -c 'SELECT extname FROM pg_extension ORDER BY extname;'
+        psql -h localhost -U postgres -d test -c 'SELECT extname FROM pg_extension ORDER BY extname;'
         
         # Create test tables (exactly as in CircleCI)
-        PGPASSWORD=postgres psql -h localhost -U postgres -d test -c "CREATE TABLE align1 AS SELECT 1::int4, 2::int8, 3::int4 AS more FROM generate_series(1, 100000) _(i);"
-        PGPASSWORD=postgres psql -h localhost -U postgres -d test -c "CREATE TABLE align2 AS SELECT 1::int4, 3::int4 AS more, 2::int8 FROM generate_series(1, 100000) _(i);"
+        psql -h localhost -U postgres -d test -c "CREATE TABLE align1 AS SELECT 1::int4, 2::int8, 3::int4 AS more FROM generate_series(1, 100000) _(i);"
+        psql -h localhost -U postgres -d test -c "CREATE TABLE align2 AS SELECT 1::int4, 3::int4 AS more, 2::int8 FROM generate_series(1, 100000) _(i);"
     
     - name: Test wide mode
       run: |
@@ -99,10 +73,10 @@ jobs:
         echo "Testing all SQL files in wide mode..."
         for f in sql/*; do 
           echo "  Testing $f..."
-          if ! PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
+          if ! psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
             echo "❌ FAILED: $f in wide mode"
             echo "Error output:"
-            PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f"
+            psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f"
             exit 1
           fi
         done
@@ -115,10 +89,10 @@ jobs:
         echo "Testing all SQL files in normal mode..."
         for f in sql/*; do 
           echo "  Testing $f..."
-          if ! PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
+          if ! psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
             echo "❌ FAILED: $f in normal mode"
             echo "Error output:"
-            PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f"
+            psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f"
             exit 1
           fi
         done
@@ -132,13 +106,13 @@ jobs:
         echo "Running regression tests..."
         
         echo "  Testing 0_node.sql..."
-        diff -b test/regression/0_node.out <(PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f sql/0_node.sql | grep Role)
+        diff -b test/regression/0_node.out <(psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f sql/0_node.sql | grep Role)
         
         echo "  Testing p1_alignment_padding.sql..."
-        diff -b test/regression/p1_alignment_padding.out <(PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f sql/p1_alignment_padding.sql | grep align)
+        diff -b test/regression/p1_alignment_padding.out <(psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f sql/p1_alignment_padding.sql | grep align)
         
         echo "  Testing a1_activity.sql..."
-        diff -b test/regression/a1_activity.out <(PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f sql/a1_activity.sql | grep User)
+        diff -b test/regression/a1_activity.out <(psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f sql/a1_activity.sql | grep User)
         
         echo "✅ All regression tests passed"
 
