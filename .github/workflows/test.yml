@@ -35,9 +35,9 @@ jobs:
     
     - name: Install PostgreSQL client
       run: |
-        # Install PostgreSQL client from Ubuntu repositories (works with all PostgreSQL versions)
+        # Install default PostgreSQL client (works for all versions)
         sudo apt-get update
-        sudo apt-get install -y postgresql-client-common postgresql-client-14
+        sudo apt-get install -y postgresql-client
         
         # Verify installation
         psql --version
@@ -142,108 +142,4 @@ jobs:
         
         echo "✅ All regression tests passed"
 
-  test-beta:
-    runs-on: ubuntu-latest
-    continue-on-error: true  # Allow beta tests to fail without breaking CI
-    
-    strategy:
-      matrix:
-        postgres-version: ['18-beta', '19-beta']
-      fail-fast: false
-    
-    services:
-      postgres:
-        image: postgres:${{ matrix.postgres-version }}
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Install PostgreSQL client
-      run: |
-        # Install PostgreSQL client from Ubuntu repositories (works with all PostgreSQL versions)
-        sudo apt-get update
-        sudo apt-get install -y postgresql-client-common postgresql-client-14
-        
-        # Verify installation
-        psql --version
-    
-    - name: Configure PostgreSQL for pg_stat_statements
-      run: |
-        # Wait for PostgreSQL to be ready
-        until pg_isready -h localhost -p 5432 -U postgres; do
-          echo "Waiting for postgres..."
-          sleep 2
-        done
-        
-        # Get container ID
-        CONTAINER_ID=$(docker ps --filter "expose=5432" --format "{{.ID}}")
-        echo "PostgreSQL container: $CONTAINER_ID"
-        
-        # Stop PostgreSQL to modify configuration
-        docker exec $CONTAINER_ID pg_ctl -D /var/lib/postgresql/data -m fast stop || true
-        
-        # Configure shared_preload_libraries
-        docker exec $CONTAINER_ID bash -c "echo \"shared_preload_libraries = 'pg_stat_statements'\" >> /var/lib/postgresql/data/postgresql.conf"
-        
-        # Configure trust authentication
-        docker exec $CONTAINER_ID bash -c "echo 'host all all all trust' > /var/lib/postgresql/data/pg_hba.conf"
-        docker exec $CONTAINER_ID bash -c "echo 'local all all trust' >> /var/lib/postgresql/data/pg_hba.conf"
-        
-        # Restart PostgreSQL
-        docker exec $CONTAINER_ID pg_ctl -D /var/lib/postgresql/data -l /var/lib/postgresql/data/logfile start
-        
-        # Wait for PostgreSQL to be ready after restart
-        sleep 5
-        until pg_isready -h localhost -p 5432 -U postgres; do
-          echo "Waiting for postgres to restart..."
-          sleep 2
-        done
-        
-        echo "PostgreSQL ${{ matrix.postgres-version }} configured successfully"
-    
-    - name: Prepare test database
-      run: |
-        # Check PostgreSQL version
-        PGPASSWORD=postgres psql -h localhost -U postgres -d test -c 'SELECT version();'
-        
-        # Create extensions
-        PGPASSWORD=postgres psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements;'
-        PGPASSWORD=postgres psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pgstattuple;'
-        
-        # Create test tables
-        PGPASSWORD=postgres psql -h localhost -U postgres -d test -c "CREATE TABLE align1 AS SELECT 1::int4, 2::int8, 3::int4 AS more FROM generate_series(1, 100000) _(i);"
-        PGPASSWORD=postgres psql -h localhost -U postgres -d test -c "CREATE TABLE align2 AS SELECT 1::int4, 3::int4 AS more, 2::int8 FROM generate_series(1, 100000) _(i);"
-    
-    - name: Test wide mode (beta)
-      run: |
-        echo "\set postgres_dba_wide true" > ~/.psqlrc
-        echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
-        echo "Testing all SQL files in wide mode (PostgreSQL ${{ matrix.postgres-version }})..."
-        for f in sql/*; do 
-          echo "  Testing $f..."
-          PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1 || echo "  ⚠️ Warning: $f failed in wide mode (beta)"
-        done
-        echo "✅ Wide mode tests completed (beta)"
-    
-    - name: Test normal mode (beta)
-      run: |
-        echo "\set postgres_dba_wide false" > ~/.psqlrc
-        echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
-        echo "Testing all SQL files in normal mode (PostgreSQL ${{ matrix.postgres-version }})..."
-        for f in sql/*; do 
-          echo "  Testing $f..."
-          PGPASSWORD=postgres psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1 || echo "  ⚠️ Warning: $f failed in normal mode (beta)"
-        done
-        echo "✅ Normal mode tests completed (beta)"
 
