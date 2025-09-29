@@ -12,7 +12,7 @@ jobs:
     
     strategy:
       matrix:
-        postgres-version: ['13', '14', '15', '16', '17']
+        postgres-version: ['13', '14', '15', '16', '17', '18beta1']
       fail-fast: false
     
     services:
@@ -59,24 +59,36 @@ jobs:
         psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements;' || echo "Warning: pg_stat_statements extension not available"
         psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pgstattuple;'
         
+        # Create minimal privilege user for testing
+        psql -h localhost -U postgres -d test -c "CREATE USER dba_user;"
+        psql -h localhost -U postgres -d test -c "GRANT pg_monitor TO dba_user;"
+        psql -h localhost -U postgres -d test -c "GRANT CONNECT ON DATABASE test TO dba_user;"
+        psql -h localhost -U postgres -d test -c "GRANT USAGE ON SCHEMA public TO dba_user;"
+        
         # Verify extensions
         psql -h localhost -U postgres -d test -c 'SELECT extname FROM pg_extension ORDER BY extname;'
         
-        # Create test tables for alignment testing
+        # Create test tables for alignment testing (as superuser)
         psql -h localhost -U postgres -d test -c "CREATE TABLE align1 AS SELECT 1::int4, 2::int8, 3::int4 AS more FROM generate_series(1, 100000) _(i);"
         psql -h localhost -U postgres -d test -c "CREATE TABLE align2 AS SELECT 1::int4, 3::int4 AS more, 2::int8 FROM generate_series(1, 100000) _(i);"
+        
+        # Grant access to test tables for dba_user
+        psql -h localhost -U postgres -d test -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO dba_user;"
+        
+        # Test connection as dba_user
+        psql -h localhost -U dba_user -d test -c 'SELECT current_user, session_user;'
     
     - name: Test wide mode
       run: |
         echo "\set postgres_dba_wide true" > ~/.psqlrc
         echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
-        echo "Testing all SQL files in wide mode..."
+        echo "Testing all SQL files in wide mode with minimal privileges..."
         for f in sql/*; do 
           echo "  Testing $f..."
-          if ! psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
+          if ! psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
             echo "❌ FAILED: $f in wide mode"
             echo "Error output:"
-            psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f"
+            psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f"
             exit 1
           fi
         done
@@ -86,13 +98,13 @@ jobs:
       run: |
         echo "\set postgres_dba_wide false" > ~/.psqlrc
         echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
-        echo "Testing all SQL files in normal mode..."
+        echo "Testing all SQL files in normal mode with minimal privileges..."
         for f in sql/*; do 
           echo "  Testing $f..."
-          if ! psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
+          if ! psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
             echo "❌ FAILED: $f in normal mode"
             echo "Error output:"
-            psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f "$f"
+            psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f"
             exit 1
           fi
         done
@@ -103,10 +115,10 @@ jobs:
         echo "\set postgres_dba_wide false" > ~/.psqlrc
         echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
         
-        echo "Running regression tests..."
+        echo "Running regression tests with minimal privileges..."
         
         echo "  Testing 0_node.sql..."
-        OUTPUT=$(psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f sql/0_node.sql | grep Role)
+        OUTPUT=$(psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/0_node.sql | grep Role)
         if [[ "$OUTPUT" == *"Master"* ]]; then
           echo "    ✓ Role test passed"
         else
@@ -115,7 +127,7 @@ jobs:
         fi
         
         echo "  Testing p1_alignment_padding.sql..."
-        OUTPUT=$(psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f sql/p1_alignment_padding.sql | grep align)
+        OUTPUT=$(psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/p1_alignment_padding.sql | grep align)
         if [[ "$OUTPUT" == *"align1"* && "$OUTPUT" == *"align2"* && "$OUTPUT" == *"int4, more, int8"* ]]; then
           echo "    ✓ Alignment padding test passed"
         else
@@ -124,7 +136,7 @@ jobs:
         fi
         
         echo "  Testing a1_activity.sql..."
-        OUTPUT=$(psql -h localhost -U postgres -d test --no-psqlrc -f warmup.psql -f sql/a1_activity.sql | grep User)
+        OUTPUT=$(psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/a1_activity.sql | grep User)
         if [[ "$OUTPUT" == *"User"* ]]; then
           echo "    ✓ Activity test passed"
         else
@@ -132,6 +144,6 @@ jobs:
           exit 1
         fi
         
-        echo "✅ All regression tests passed"
+        echo "✅ All regression tests passed with minimal privileges"
 
 
