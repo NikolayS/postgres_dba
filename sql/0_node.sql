@@ -49,30 +49,12 @@ select 'Started At', pg_postmaster_start_time()::timestamptz(0)::text
 union all
 select 'Uptime', (now() - pg_postmaster_start_time())::interval(0)::text
 union all
-select 'Checkpoints Note', 
+select 'Checkpoint Info', 
   case 
     when current_setting('server_version_num')::int >= 170000
     then 'Use pg_stat_checkpointer view for checkpoint statistics (PostgreSQL 17+)'
-    else 'Checkpoint statistics from pg_stat_bgwriter'
+    else 'Use pg_stat_bgwriter view for checkpoint statistics (PostgreSQL <17)'
   end
-union all
-select 'Checkpoints', (select (checkpoints_timed + checkpoints_req)::text from pg_stat_bgwriter)
-  where current_setting('server_version_num')::int < 170000
-union all
-select 'Forced Checkpoints', (
-  select round(100.0 * checkpoints_req::numeric /
-    (nullif(checkpoints_timed + checkpoints_req, 0)), 1)::text || '%'
-  from pg_stat_bgwriter
-) where current_setting('server_version_num')::int < 170000
-union all
-select 'Checkpoint MB/sec', (
-  select round((nullif(buffers_checkpoint::numeric, 0) /
-    ((1024.0 * 1024 /
-      (current_setting('block_size')::numeric))
-        * extract('epoch' from now() - stats_reset)
-    ))::numeric, 6)::text
-  from pg_stat_bgwriter
-) where current_setting('server_version_num')::int < 170000
 union all
 select repeat('-', 33), repeat('-', 88)
 union all
