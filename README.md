@@ -42,7 +42,7 @@ Using alternative psql pager called "pspg" is highly recommended (but not requir
 - ✅ **PostgreSQL 14** - Fully supported  
 - ✅ **PostgreSQL 15** - Fully supported
 - ✅ **PostgreSQL 16** - Fully supported
-- ✅ **PostgreSQL 17** - Fully supported (includes pg_stat_checkpointer compatibility)
+- ✅ **PostgreSQL 17** - Fully supported (includes `pg_stat_checkpointer` compatibility)
 - ✅ **PostgreSQL 18** - Fully supported (latest release)
 
 Older versions (9.6-12) may work but are not actively tested. Some reports may require specific PostgreSQL features introduced in newer versions.
