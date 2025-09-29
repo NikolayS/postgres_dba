@@ -62,7 +62,7 @@ jobs:
         # Verify extensions
         psql -h localhost -U postgres -d test -c 'SELECT extname FROM pg_extension ORDER BY extname;'
         
-        # Create test tables (exactly as in CircleCI)
+        # Create test tables for alignment testing
         psql -h localhost -U postgres -d test -c "CREATE TABLE align1 AS SELECT 1::int4, 2::int8, 3::int4 AS more FROM generate_series(1, 100000) _(i);"
         psql -h localhost -U postgres -d test -c "CREATE TABLE align2 AS SELECT 1::int4, 3::int4 AS more, 2::int8 FROM generate_series(1, 100000) _(i);"
     
