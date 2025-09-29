@@ -50,25 +50,54 @@ select 'Uptime', (now() - pg_postmaster_start_time())::interval(0)::text
 union all
 select
   'Checkpoints',
-  (select (checkpoints_timed + checkpoints_req)::text from pg_stat_bgwriter)
+  (
+    case 
+      when exists (select 1 from information_schema.tables where table_schema = 'pg_catalog' and table_name = 'pg_stat_checkpointer')
+      then (select (num_timed + num_requested)::text from pg_stat_checkpointer)
+      else (select (checkpoints_timed + checkpoints_req)::text from pg_stat_bgwriter)
+    end
+  )
 union all
 select
   'Forced Checkpoints',
   (
-    select round(100.0 * checkpoints_req::numeric /
-      (nullif(checkpoints_timed + checkpoints_req, 0)), 1)::text || '%'
-    from pg_stat_bgwriter
+    case 
+      when exists (select 1 from information_schema.tables where table_schema = 'pg_catalog' and table_name = 'pg_stat_checkpointer')
+      then (
+        select round(100.0 * num_requested::numeric /
+          (nullif(num_timed + num_requested, 0)), 1)::text || '%'
+        from pg_stat_checkpointer
+      )
+      else (
+        select round(100.0 * checkpoints_req::numeric /
+          (nullif(checkpoints_timed + checkpoints_req, 0)), 1)::text || '%'
+        from pg_stat_bgwriter
+      )
+    end
   )
 union all
 select
   'Checkpoint MB/sec',
   (
-    select round((nullif(buffers_checkpoint::numeric, 0) /
-      ((1024.0 * 1024 /
-        (current_setting('block_size')::numeric))
-          * extract('epoch' from now() - stats_reset)
-      ))::numeric, 6)::text
-    from pg_stat_bgwriter
+    case 
+      when exists (select 1 from information_schema.tables where table_schema = 'pg_catalog' and table_name = 'pg_stat_checkpointer')
+      then (
+        select round((nullif(buffers_written::numeric, 0) /
+          ((1024.0 * 1024 /
+            (current_setting('block_size')::numeric))
+              * extract('epoch' from now() - stats_reset)
+          ))::numeric, 6)::text
+        from pg_stat_checkpointer
+      )
+      else (
+        select round((nullif(buffers_checkpoint::numeric, 0) /
+          ((1024.0 * 1024 /
+            (current_setting('block_size')::numeric))
+              * extract('epoch' from now() - stats_reset)
+          ))::numeric, 6)::text
+        from pg_stat_bgwriter
+      )
+    end
   )
 union all
 select repeat('-', 33), repeat('-', 88)
