@@ -22,14 +22,14 @@ Questions? Ideas? Contact me: nik@postgres.ai, Nikolay Samokhvalov.
 ## Requirements
 
 **You need to have psql version 10 or newer**, but the Postgres server itself can be older – most tools work with it.
-You can install the latest postgresql-client library on your machine and use it to work with older Postgres servers – in this case postgres_dba will work. It's recommended to use psql from PostgreSQL 18 (the latest release) for the best compatibility.
+You can install postgresql-client library version, say, 12 on your machine and use it to work with Postgres server version 9.6 and older – in this case postgres_dba will work. But you do need to have psql from the latest (version 12) Postgres release.
 
 On clean Ubuntu, this is how you can get postgresql-client and have the most recent psql:
 ```
 sudo sh -c "echo \"deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main\" >> /etc/apt/sources.list.d/pgdg.list"
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 sudo apt-get update
-sudo apt-get install -y postgresql-client-18
+sudo apt-get install -y postgresql-client-12
 ```
 
 Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg.
@@ -94,36 +94,6 @@ And then:
 ```
 :dba
 ```
-
-## Key Features
-
-### Secure Role Management
-
-**postgres_dba** includes interactive tools for secure role (user) management:
-
-- **r1** – Create user with random password (interactive)
-- **r2** – Alter user with random password (interactive)
-
-These tools help prevent password exposure in psql history, logs, and command-line process lists by:
-- Generating secure random 16-character passwords
-- Using interactive prompts instead of command-line arguments
-- Only displaying the password once at creation/alteration time
-
-**Usage example:**
-```sql
--- In psql, after launching :dba
--- Select option r1 to create a new user
--- The script will prompt you for:
---   - Username
---   - Superuser privilege (yes/no)
---   - Login privilege (yes/no)
--- The generated password will be displayed once in the output
-
--- To see the password, set client_min_messages to DEBUG first:
-set client_min_messages to DEBUG;
-```
-
-**Security note:** These are DBA tools designed for trusted environments where the user already has superuser privileges. The password is shown in the psql output, so ensure you're working in a secure session.
 
 ## How to Extend (Add More Queries)
 You can add your own useful SQL queries and use them from the main menu. Just add your SQL code to `./sql` directory. The filename should start with some 1 or 2-letter code, followed by underscore and some additional arbitrary words. Extension should be `.sql`. Example:
