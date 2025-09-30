@@ -1,4 +1,4 @@
---Current activity: count of current connections grouped by database, user name, state
+--Current activity: count of current connections grouped by database, username, state
 select
   coalesce(usename, '** ALL users **') as "User",
   coalesce(datname, '** ALL databases **') as "DB",

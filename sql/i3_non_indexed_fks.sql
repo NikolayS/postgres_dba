@@ -1,4 +1,4 @@
---FKs with missing/bad indexes
+--Foreign keys with missing or bad indexes
 
 --Created by PostgreSQL Experts https://github.com/pgexperts/pgx_scripts/blob/master/indexes/fk_no_index.sql
 
