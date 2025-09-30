@@ -19,6 +19,8 @@
 \echo '  l1 – Lock trees (leightweight)'
 \echo '  l2 – Lock trees, detailed (based on pg_blocking_pids())'
 \echo '  p1 – [EXP] Alignment padding: how many bytes can be saved if columns are reordered?'
+\echo '  r1 –  Create user with random password (interactive)'
+\echo '  r2 –  Alter user with random password (interactive)'
 \echo '  s1 – Slowest queries, by total time (requires pg_stat_statements)'
 \echo '  s2 – Slowest queries report (requires pg_stat_statements)'
 \echo '  t1 – Postgres parameters tuning'
@@ -49,6 +51,8 @@ select
 :d_stp::text = 'l1' as d_step_is_l1,
 :d_stp::text = 'l2' as d_step_is_l2,
 :d_stp::text = 'p1' as d_step_is_p1,
+:d_stp::text = 'r1' as d_step_is_r1,
+:d_stp::text = 'r2' as d_step_is_r2,
 :d_stp::text = 's1' as d_step_is_s1,
 :d_stp::text = 's2' as d_step_is_s2,
 :d_stp::text = 't1' as d_step_is_t1,
@@ -132,6 +136,14 @@ select
   \ir ./start.psql
 \elif :d_step_is_p1
   \ir ./sql/p1_alignment_padding.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_r1
+  \ir ./sql/r1_create_user_with_random_password.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_r2
+  \ir ./sql/r2_alter_user_with_random_password.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_s1
