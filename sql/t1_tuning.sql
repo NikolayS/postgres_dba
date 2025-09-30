@@ -42,7 +42,7 @@ select :postgres_dba_t1_location = 3 as postgres_dba_t1_location_rds \gset
 
 \echo
 \echo
-\echo 'Type total available memory (in GB): '
+\echo 'Type total available memory (in GiB): '
 \prompt postgres_dba_t1_memory
 
 \echo

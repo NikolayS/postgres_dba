@@ -1,4 +1,4 @@
---Lock trees (leightweight)
+--Lock trees (lightweight)
 
 -- Source: https://github.com/dataegret/pg-utils/blob/master/sql/locktree.sql
 -- The paths won't be precise but this query is very light and may be used quite frequently
