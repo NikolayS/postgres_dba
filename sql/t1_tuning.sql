@@ -1,4 +1,4 @@
---Postgres parameters tuning
+--PostgreSQL parameters tuning
 
 -- For Postgres versions older than 10, copy/paste the part
 -- below the last "\else" (scroll down)
