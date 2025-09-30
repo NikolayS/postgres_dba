@@ -16,7 +16,7 @@ Questions? Ideas? Contact me: nik@postgres.ai, Nikolay Samokhvalov.
 
 **postgres_dba** is based on useful queries created and improved by many developers. Here is incomplete list of them:
  * Jehan-Guillaume (ioguix) de Rorthais https://github.com/ioguix/pgsql-bloat-estimation
- * Alexey Lesovsky, Alexey Ermakov, Maxim Boguk, Ilya Kosmodemiansky et al. from Data Egret (aka PostgreSQL-Consulting) https://github.com/dataegret/pg-utils
+ * Alexey Lesovsky, Alexey Ermakov, Maxim Boguk, Ilya Kosmodemiansky et al. https://github.com/dataegret/pg-utils
  * Josh Berkus, Quinn Weaver et al. from PostgreSQL Experts, Inc. https://github.com/pgexperts/pgx_scripts
 
 ## Requirements
@@ -24,15 +24,53 @@ Questions? Ideas? Contact me: nik@postgres.ai, Nikolay Samokhvalov.
 **You need to have psql version 10 or newer**, but the Postgres server itself can be older – most tools work with it.
 You can install the latest postgresql-client library on your machine and use it to work with older Postgres servers – in this case postgres_dba will work. It's recommended to use psql from PostgreSQL 18 (the latest release) for the best compatibility.
 
+### Installing on Ubuntu
+
 On clean Ubuntu, this is how you can get postgresql-client and have the most recent psql:
-```
+```bash
 sudo sh -c "echo \"deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main\" >> /etc/apt/sources.list.d/pgdg.list"
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 sudo apt-get update
 sudo apt-get install -y postgresql-client-18
 ```
 
-Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg.
+### Installing on macOS
+
+On macOS, use Homebrew to install PostgreSQL client and pspg:
+
+```bash
+# Install PostgreSQL client (includes psql)
+brew install libpq
+
+# Add libpq to PATH (required because it's keg-only)
+echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+
+# For Intel Macs, use:
+# echo 'export PATH="/usr/local/opt/libpq/bin:$PATH"' >> ~/.zshrc
+
+# Verify installation
+psql --version
+
+# Install pspg (recommended pager)
+brew install pspg
+```
+
+Alternatively, you can install the full PostgreSQL package which includes psql:
+```bash
+brew install postgresql@18
+```
+
+### pspg - Enhanced psql Pager (Optional)
+
+Using alternative psql pager called "pspg" is highly recommended but optional: https://github.com/okbob/pspg.
+
+After installing pspg, configure it in your `~/.psqlrc`:
+```bash
+\setenv PAGER pspg
+\pset border 2
+\pset linestyle unicode
+```
 
 ## Supported PostgreSQL Versions
 
@@ -52,7 +90,7 @@ The installation is trivial. Clone the repository and put "dba" alias to your `.
 ```bash
 git clone https://github.com/NikolayS/postgres_dba.git
 cd postgres_dba
-printf "%s %s %s %s\n" \\echo 🧐 🐘 'postgres_dba 6.0 installed. Use ":dba" to see menu' >> ~/.psqlrc
+printf "%s %s %s %s\n" \\echo 🧐 🐘 'postgres_dba 18.0 installed. Use ":dba" to see menu' >> ~/.psqlrc
 printf "%s %s %s %s\n" \\set dba \'\\\\i $(pwd)/start.psql\' >> ~/.psqlrc
 ```
 
