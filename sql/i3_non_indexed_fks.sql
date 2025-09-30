@@ -63,7 +63,7 @@ with fk_actions ( code, action ) as (
   join fk_cols_list using (fkoid)
   left join index_list on
     conrelid = indrelid
-    and (indkey::int2[])[0:(array_length(key_cols,1) -1)] operator(pg_catalog.@>) key_cols::int2[]
+    and (indkey::int2[])[0:(array_length(key_cols,1) -1)] operator(pg_catalog.@>) key_cols
 
 ), fk_perfect_match as (
   select fkoid
