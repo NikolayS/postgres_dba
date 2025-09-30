@@ -58,6 +58,7 @@ jobs:
         # Create extensions (pg_stat_statements may not work without shared_preload_libraries)
         psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements;' || echo "Warning: pg_stat_statements extension not available"
         psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pgstattuple;'
+        psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS intarray;'
         
         # Create minimal privilege user for testing
         psql -h localhost -U postgres -d test -c "CREATE USER dba_user;"
@@ -71,7 +72,14 @@ jobs:
         # Create test tables for alignment testing (as superuser)
         psql -h localhost -U postgres -d test -c "CREATE TABLE align1 AS SELECT 1::int4, 2::int8, 3::int4 AS more FROM generate_series(1, 100000) _(i);"
         psql -h localhost -U postgres -d test -c "CREATE TABLE align2 AS SELECT 1::int4, 3::int4 AS more, 2::int8 FROM generate_series(1, 100000) _(i);"
-        
+
+        # Create test tables for foreign key testing (i3 query)
+        psql -h localhost -U postgres -d test -c "CREATE TABLE fk_parent (id int PRIMARY KEY, data text);"
+        psql -h localhost -U postgres -d test -c "CREATE TABLE fk_child (id int PRIMARY KEY, parent_id int, data text, CONSTRAINT fk_test FOREIGN KEY (parent_id) REFERENCES fk_parent(id));"
+        psql -h localhost -U postgres -d test -c "INSERT INTO fk_parent SELECT i, 'data_' || i FROM generate_series(1, 100000) i;"
+        psql -h localhost -U postgres -d test -c "INSERT INTO fk_child SELECT i, (i % 100000) + 1, 'data_' || i FROM generate_series(1, 200000) i;"
+        psql -h localhost -U postgres -d test -c "ANALYZE;"
+
         # Grant access to test tables for dba_user
         psql -h localhost -U postgres -d test -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO dba_user;"
         
@@ -83,12 +91,12 @@ jobs:
         echo "\set postgres_dba_wide true" > ~/.psqlrc
         echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
         echo "Testing all SQL files in wide mode with minimal privileges..."
-        for f in sql/*; do 
+        for f in sql/*; do
           echo "  Testing $f..."
-          if ! psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
+          if ! PAGER=cat psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
             echo "❌ FAILED: $f in wide mode"
             echo "Error output:"
-            psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f"
+            PAGER=cat psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f"
             exit 1
           fi
         done
@@ -99,12 +107,12 @@ jobs:
         echo "\set postgres_dba_wide false" > ~/.psqlrc
         echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
         echo "Testing all SQL files in normal mode with minimal privileges..."
-        for f in sql/*; do 
+        for f in sql/*; do
           echo "  Testing $f..."
-          if ! psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
+          if ! PAGER=cat psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f" > /dev/null 2>&1; then
             echo "❌ FAILED: $f in normal mode"
             echo "Error output:"
-            psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f"
+            PAGER=cat psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f "$f"
             exit 1
           fi
         done
@@ -114,36 +122,50 @@ jobs:
       run: |
         echo "\set postgres_dba_wide false" > ~/.psqlrc
         echo "\set postgres_dba_interactive_mode false" >> ~/.psqlrc
-        
+
         echo "Running regression tests with minimal privileges..."
-        
+
         echo "  Testing 0_node.sql..."
-        OUTPUT=$(psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/0_node.sql | grep Role)
+        OUTPUT=$(PAGER=cat psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/0_node.sql | grep Role)
         if [[ "$OUTPUT" == *"Master"* ]]; then
           echo "    ✓ Role test passed"
         else
           echo "    ✗ Role test failed: $OUTPUT"
           exit 1
         fi
-        
+
         echo "  Testing p1_alignment_padding.sql..."
-        OUTPUT=$(psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/p1_alignment_padding.sql | grep align)
+        OUTPUT=$(PAGER=cat psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/p1_alignment_padding.sql | grep align)
         if [[ "$OUTPUT" == *"align1"* && "$OUTPUT" == *"align2"* && "$OUTPUT" == *"int4, more, int8"* ]]; then
           echo "    ✓ Alignment padding test passed"
         else
           echo "    ✗ Alignment padding test failed: $OUTPUT"
           exit 1
         fi
-        
+
         echo "  Testing a1_activity.sql..."
-        OUTPUT=$(psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/a1_activity.sql | grep User)
+        OUTPUT=$(PAGER=cat psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/a1_activity.sql | grep User)
         if [[ "$OUTPUT" == *"User"* ]]; then
           echo "    ✓ Activity test passed"
         else
           echo "    ✗ Activity test failed: $OUTPUT"
           exit 1
         fi
-        
+
+        echo "  Testing i3_non_indexed_fks.sql (with intarray extension)..."
+        OUTPUT=$(PAGER=cat psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/i3_non_indexed_fks.sql 2>&1)
+        if [[ "$OUTPUT" == *"ERROR"* ]]; then
+          echo "    ✗ i3 test failed with error:"
+          echo "$OUTPUT"
+          exit 1
+        elif [[ "$OUTPUT" == *"fk_child"* && "$OUTPUT" == *"fk_test"* ]]; then
+          echo "    ✓ i3 foreign key test passed (found foreign key without index)"
+        else
+          echo "    ✗ i3 test failed: unexpected output"
+          echo "$OUTPUT"
+          exit 1
+        fi
+
         echo "✅ All regression tests passed with minimal privileges"
 
 
