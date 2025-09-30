@@ -1,4 +1,4 @@
---Vacuum: VACUUM progress and autovacuum queue
+--VACUUM progress and autovacuum queue
 
 -- Based on: https://gitlab.com/snippets/1889668
 
