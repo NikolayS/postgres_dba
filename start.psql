@@ -24,7 +24,7 @@
 \echo '  s1 – Slowest queries, by total time (requires pg_stat_statements)'
 \echo '  s2 – Slowest queries report (requires pg_stat_statements)'
 \echo '  t1 – Postgres parameters tuning'
-\echo '  t2 – Storage parameters (reloptions)'
+\echo '  t2 – Objects with custom storage parameters'
 \echo '  v1 – Vacuum: current activity'
 \echo '  v2 – VACUUM progress and autovacuum queue'
 \echo '   q – Quit'

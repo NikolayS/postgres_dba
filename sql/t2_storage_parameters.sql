@@ -1,4 +1,4 @@
---Storage parameters (reloptions)
+--Objects with custom storage parameters
 
 with rel_with_options as (
   select
