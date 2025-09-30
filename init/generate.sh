@@ -16,6 +16,10 @@ cat > "$WARMUP" <<- VersCheck
   select 1/0;
 \endif
 
+select current_setting('server_version_num')::integer >= 170000 as postgres_dba_pgvers_17plus \gset
+
+select current_setting('server_version_num')::integer >= 130000 as postgres_dba_pgvers_13plus \gset
+
 select current_setting('server_version_num')::integer >= 100000 as postgres_dba_pgvers_10plus \gset
 \if :postgres_dba_pgvers_10plus
   \set postgres_dba_last_wal_receive_lsn pg_last_wal_receive_lsn
