@@ -3,7 +3,7 @@
 -- Use it to see redundant indexes list
 
 -- This query doesn't need any additional extensions to be installed
--- (except plpgsql), and doesn't create anything (like views or smth)
+-- (except plpgsql), and doesn't create anything (like views or something)
 -- -- so feel free to use it in your clouds (Heroku, AWS RDS, etc)
 
 -- (Keep in mind, that on replicas, the whole picture of index usage
@@ -37,7 +37,7 @@ index_data as (
     array_to_string(indclass, ', ') as opclasses
   from pg_index i
   join pg_class ci on ci.oid = i.indexrelid and ci.relkind = 'i'
-  where indisvalid = true and ci.relpages > 0 -- raise for a DD with a lot of indexes
+  where indisvalid = true and ci.relpages > 0 -- raise for a DB with a lot of indexes
 ), redundant_indexes as (
   select
     i2.indexrelid as index_id,
@@ -53,10 +53,10 @@ index_data as (
     pg_get_indexdef(i2.indexrelid) index_def,
     pg_relation_size(i2.indexrelid) index_size_bytes,
     s.idx_scan as index_usage,
-    quote_ident(tnsp.nspname) as formated_schema_name,
-    coalesce(nullif(quote_ident(tnsp.nspname), 'public') || '.', '') || quote_ident(irel.relname) as formated_index_name,
-    quote_ident(trel.relname) AS formated_table_name,
-    coalesce(nullif(quote_ident(tnsp.nspname), 'public') || '.', '') || quote_ident(trel.relname) as formated_relation_name,
+    quote_ident(tnsp.nspname) as formatted_schema_name,
+    coalesce(nullif(quote_ident(tnsp.nspname), 'public') || '.', '') || quote_ident(irel.relname) as formatted_index_name,
+    quote_ident(trel.relname) AS formatted_table_name,
+    coalesce(nullif(quote_ident(tnsp.nspname), 'public') || '.', '') || quote_ident(trel.relname) as formatted_relation_name,
     i2.opclasses
   from
     index_data as i1
@@ -80,9 +80,9 @@ index_data as (
     and am1.amname = am2.amname -- same access type
     and i1.columns like (i2.columns || '%') -- index 2 includes all columns from index 1
     and i1.opclasses like (i2.opclasses || '%')
-    -- index expressions is same
+    -- index expressions are the same
     and pg_get_expr(i1.indexprs, i1.indrelid) is not distinct from pg_get_expr(i2.indexprs, i2.indrelid)
-    -- index predicates is same
+    -- index predicates are the same
     and pg_get_expr(i1.indpred, i1.indrelid) is not distinct from pg_get_expr(i2.indpred, i2.indrelid)
 ), redundant_indexes_fk as (
   select

@@ -112,7 +112,7 @@ And type `:dba <Enter>` in psql. (Or `\i /path/to/postgres_dba/start.psql` if yo
 What to do if you need to connect to a remote Postgres server? Usually, Postgres is behind a firewall and/or doesn't listen to a public network interface. So you need to be able to connect to the server using SSH. If you can do it, then just create SSH tunnel (assuming that Postgres listens to default port 5432 on that server:
 
 ```bash
-ssh -fNTML 9432:localhost:5432 sshusername@you-server.com
+ssh -fNTML 9432:localhost:5432 sshusername@your-server.com
 ```
 
 Then, just launch psql, connecting to port 9432 at localhost:
@@ -175,7 +175,7 @@ Once you added your queries, regenerate `start.psql` file:
 /bin/bash ./init/generate.sh
 ```
 
-Now your have the new `start.psql` and can use it as described above.
+Now you have the new `start.psql` and can use it as described above.
 
 ‼️ If your new queries are good consider sharing them with public. The best way to do it is to open a Pull Request (https://help.github.com/articles/creating-a-pull-request/).
 

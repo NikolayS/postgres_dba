@@ -16,10 +16,10 @@
 -- you will drop it during the next cleanup routine procedure.
 
 -- This query doesn't need any additional extensions to be installed
--- (except plpgsql), and doesn't create anything (like views or smth)
+-- (except plpgsql), and doesn't create anything (like views or something)
 -- -- so feel free to use it in your clouds (Heroku, AWS RDS, etc)
 
--- It also does't do anything except reading system catalogs and
+-- It also doesn't do anything except reading system catalogs and
 -- printing NOTICEs, so you can easily run it on your
 --  production *master* database.
 -- (Keep in mind, that on replicas, the whole picture of index usage
@@ -86,7 +86,7 @@ with unused as (
     and  am1.amname = am2.amname -- same access type
     and (
       i2.columns like (i1.columns || '%') -- index 2 includes all columns from index 1
-      or i1.columns = i2.columns -- index1 and index 2 includes same columns
+      or i1.columns = i2.columns -- index1 and index 2 include the same columns
     )
     and (
       i2.opclasses like (i1.opclasses || '%')

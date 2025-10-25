@@ -3,7 +3,7 @@
 -- Use it to see invalid indexes list
 
 -- This query doesn't need any additional extensions to be installed
--- (except plpgsql), and doesn't create anything (like views or smth)
+-- (except plpgsql), and doesn't create anything (like views or something)
 -- -- so feel free to use it in your clouds (Heroku, AWS RDS, etc)
 
 -- (Keep in mind, that on replicas, the whole picture of index usage
