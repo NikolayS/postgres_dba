@@ -155,7 +155,7 @@ with recursive constants as (
     r1.shifts,
     r2.cols as alt_cols,
     r2.types as alt_types,
-    r2.shifts as alt_shits,
+    r2.shifts as alt_shifts,
     r1.pads,
     r1.curleft,
     r2.pads as alt_pads,
