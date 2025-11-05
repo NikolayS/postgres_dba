@@ -14,7 +14,7 @@ Questions? Ideas? Contact me: nik@postgres.ai, Nikolay Samokhvalov.
 
 ## Credits
 
-**postgres_dba** is based on useful queries created and improved by many developers. Here is incomplete list of them:
+**postgres_dba** is based on useful queries created and improved by many developers. Here is an incomplete list of them:
  * Jehan-Guillaume (ioguix) de Rorthais https://github.com/ioguix/pgsql-bloat-estimation
  * Alexey Lesovsky, Alexey Ermakov, Maxim Boguk, Ilya Kosmodemiansky et al. https://github.com/dataegret/pg-utils
  * Josh Berkus, Quinn Weaver et al. from PostgreSQL Experts, Inc. https://github.com/pgexperts/pgx_scripts
@@ -104,9 +104,7 @@ If you are running psql and Postgres server on the same machine, just launch psq
 psql -U <username> <dbname>
 ```
 
-And type `:dba <Enter>` in psql. (Or `\i /path/to/postgres_dba/start.psql` if you haven't added shortcut to your `~/.psqlrc` file).
-
-– it will open interactive menu.
+And type `:dba <Enter>` in psql. (Or `\i /path/to/postgres_dba/start.psql` if you haven't added shortcut to your `~/.psqlrc` file). This will open an interactive menu.
 
 ### Connect to Remote Postgres Server
 What to do if you need to connect to a remote Postgres server? Usually, Postgres is behind a firewall and/or doesn't listen to a public network interface. So you need to be able to connect to the server using SSH. If you can do it, then just create SSH tunnel (assuming that Postgres listens to default port 5432 on that server:

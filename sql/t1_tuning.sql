@@ -110,7 +110,6 @@ where
     'autovacuum_vacuum_scale_factor',
     'autovacuum_work_mem',
     'autovacuum_naptime',
-    'random_page_cost',
     'seq_page_cost'
   )
 order by category, name;

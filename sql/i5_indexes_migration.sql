@@ -21,9 +21,9 @@
 
 -- It also doesn't do anything except reading system catalogs and
 -- printing NOTICEs, so you can easily run it on your
---  production *master* database.
+--  production *primary* database.
 -- (Keep in mind, that on replicas, the whole picture of index usage
--- is usually very different from master).
+-- is usually very different from the primary).
 
 -- TODO: take into account type of index and opclass
 -- TODO: schemas

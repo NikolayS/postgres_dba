@@ -84,5 +84,5 @@ echo "  \\ir ./$OUT" >> "$OUT"
 echo "\\endif" >> "$OUT"
 
 echo "Done."
-cd ->/dev/null
+cd - >/dev/null
 exit 0
