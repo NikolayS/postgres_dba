@@ -1,8 +1,8 @@
 --Table bloat (requires pgstattuple; expensive)
 
---https://github.com/dataegret/pg-utils/tree/master/sql
---pgstattuple extension required
---WARNING: without table name/mask query will read all available tables which could cause I/O spikes
+-- https://github.com/dataegret/pg-utils/tree/master/sql
+-- pgstattuple extension required
+-- WARNING: without table name/mask query will read all available tables which could cause I/O spikes
 select nspname,
 relname,
 pg_size_pretty(relation_size + toast_relation_size) as total_size,
@@ -22,7 +22,7 @@ from (
     left join pg_namespace n on (n.oid = c.relnamespace)
     where nspname not in ('pg_catalog', 'information_schema')
     and nspname !~ '^pg_toast' and relkind = 'r'
-    --put your table name/mask here
+    -- put your table name/mask here
     and relname ~ ''
 ) t
 order by (toast_free_space + relation_size - (relation_size - free_space)*100/fillfactor) desc

@@ -30,7 +30,7 @@ with table_opts as (
   from pg_stat_progress_vacuum
 )
 select
-  --vacuum_settings.oid,
+  -- vacuum_settings.oid,
   coalesce(
     coalesce(nullif(vacuum_settings.nspname, 'public') || '.', '') || vacuum_settings.relname, -- current DB
     format('[something in "%I"]', p.datname)

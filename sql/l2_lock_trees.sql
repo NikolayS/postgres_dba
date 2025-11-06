@@ -61,7 +61,7 @@ select
   format(
     '%s %s%s',
     lpad('[' || pid::text || ']', 7, ' '),
-    repeat('.', level - 1) || case when level > 1 then ' ' end,
+    repeat('.', level - 1) || case when level > 1 then ' ' else '' end,
     left(query, 1000)
   ) as query
 from tree

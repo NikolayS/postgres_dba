@@ -1,8 +1,8 @@
 --B-tree indexes bloat (requires pgstattuple; expensive)
 
---https://github.com/dataegret/pg-utils/tree/master/sql
---pgstattuple extension required
---WARNING: without index name/mask query will read all available indexes which could cause I/O spikes
+-- https://github.com/dataegret/pg-utils/tree/master/sql
+-- pgstattuple extension required
+-- WARNING: without index name/mask query will read all available indexes which could cause I/O spikes
 with data as (
   select
     schemaname as schema_name,
@@ -25,7 +25,7 @@ with data as (
   join pg_class c_table on p.relid = c_table.oid
   where
     pg_get_indexdef(p.indexrelid) like '%USING btree%'
-    --put your index name/mask here
+    -- put your index name/mask here
     and indexrelname ~ ''
 )
 select
