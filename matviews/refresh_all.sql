@@ -1,7 +1,7 @@
 -- Use this to do the very 1st REFRESH for your matviews
 -- In case when there are complex relations between matviews,
 -- it might perform multiple iterations and eventually refreshes
--- all matviews (either all w/o data or absolutely all -- it's up to you).
+-- all matviews (either all without data or absolutely all -- it's up to you).
 
 -- set this to TRUE here if you need ALL matviews to be refreshed, not only those that already have been refreshed
 set postgres_dba.refresh_matviews_with_data = FALSE;
@@ -22,7 +22,7 @@ begin
     set postgres_dba.refresh_matviews_with_data = true;
   end if;
   if current_setting('postgres_dba.refresh_matviews_with_data')::boolean then
-    raise notice 'Refreshing ALL matviews (run ''set postgres_dba.refresh_matviews_with_data_forced = TRUE;'' to refresh only matviews w/o data).';
+    raise notice 'Refreshing ALL matviews (run ''set postgres_dba.refresh_matviews_with_data_forced = FALSE;'' to refresh only matviews without data).';
     for matview in
       select format('"%s"."%s"', schemaname::text, matviewname::text)
       from pg_matviews
@@ -32,7 +32,7 @@ begin
       execute sql;
     end loop;
   else
-      raise notice 'Refreshing only matviews w/o data (run ''set postgres_dba.refresh_matviews_with_data_forced = TRUE;'' to refresh all matviews).';
+      raise notice 'Refreshing only matviews without data (run ''set postgres_dba.refresh_matviews_with_data_forced = TRUE;'' to refresh all matviews).';
   end if;
 
   iter := 1;
