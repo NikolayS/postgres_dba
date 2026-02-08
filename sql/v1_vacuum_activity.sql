@@ -15,7 +15,7 @@ with data as (
     nspname as schema_name,
     relname as table_name,
     (now() - a.xact_start) as duration,
-    coalesce(wait_event_type ||'.'|| wait_event, null) as waiting,
+    coalesce(wait_event_type || '.' || wait_event, null) as waiting,
     case
       when a.query ~* '^autovacuum.*to prevent wraparound' then 'wraparound'
       when a.query ~* '^vacuum' then 'user'
@@ -32,10 +32,10 @@ with data as (
     p.index_vacuum_count,
     p.num_dead_item_ids,
     pg_size_pretty(p.max_dead_tuple_bytes) as dead_tuple_mem
-  from pg_stat_progress_vacuum p
-  left join pg_stat_activity a using (pid)
-  left join pg_class c on c.oid = p.relid
-  left join pg_namespace n on n.oid = c.relnamespace
+  from pg_stat_progress_vacuum as p
+  left join pg_stat_activity as a using (pid)
+  left join pg_class as c on c.oid = p.relid
+  left join pg_namespace as n on n.oid = c.relnamespace
 )
 select
   pid as "PID",
@@ -73,7 +73,7 @@ with data as (
     nspname as schema_name,
     relname as table_name,
     (now() - a.xact_start) as duration,
-    coalesce(wait_event_type ||'.'|| wait_event, null) as waiting,
+    coalesce(wait_event_type || '.' || wait_event, null) as waiting,
     case
       when a.query ~* '^autovacuum.*to prevent wraparound' then 'wraparound'
       when a.query ~* '^vacuum' then 'user'
@@ -91,10 +91,10 @@ with data as (
     round(100.0 * p.num_dead_tuples / nullif(p.max_dead_tuples, 0), 2) as dead_pct,
     p.num_dead_tuples,
     p.max_dead_tuples
-  from pg_stat_progress_vacuum p
-  left join pg_stat_activity a using (pid)
-  left join pg_class c on c.oid = p.relid
-  left join pg_namespace n on n.oid = c.relnamespace
+  from pg_stat_progress_vacuum as p
+  left join pg_stat_activity as a using (pid)
+  left join pg_class as c on c.oid = p.relid
+  left join pg_namespace as n on n.oid = c.relnamespace
 )
 select
   pid as "PID",
