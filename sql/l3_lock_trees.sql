@@ -1,7 +1,10 @@
---Lock trees, detailed (based on pg_blocking_pids())
+--Lock trees, detailed, with wait time (PG14+; based on pg_blocking_pids() and pg_locks.waitstart)
 
--- Based on: https://gitlab.com/-/snippets/1890428
--- See also: https://postgres.ai/blog/20211018-postgresql-lock-trees
+-- Based on: https://postgres.ai/blog/20211018-postgresql-lock-trees
+-- Requires PG14+ for pg_locks.waitstart column
+-- Uses low lock_timeout and statement_timeout for safety
+
+\if :postgres_dba_pgvers_14plus
 
 begin;
 
@@ -13,8 +16,8 @@ with recursive activity as (
     pg_blocking_pids(pid) blocked_by,
     *,
     age(clock_timestamp(), xact_start)::interval(0) as tx_age,
-    age(clock_timestamp(), state_change)::interval(0) as state_age
-  from pg_stat_activity
+    age(clock_timestamp(), (select max(l.waitstart) from pg_locks l where a.pid = l.pid))::interval(0) as wait_age
+  from pg_stat_activity a
   where state is distinct from 'idle'
 ), blockers as (
   select
@@ -50,18 +53,18 @@ with recursive activity as (
 select
   pid,
   blocked_by,
+  case when wait_event_type <> 'Lock' then replace(state, 'idle in transaction', 'idletx') else 'waiting' end as state,
+  wait_event_type || ':' || wait_event as wait,
+  wait_age,
   tx_age,
-  state_age,
-  backend_xid as xid,
-  backend_xmin as xmin,
-  replace(state, 'idle in transaction', 'idletx') as state,
+  to_char(age(backend_xid), 'FM999,999,999,990') as xid_age,
+  to_char(2147483647 - age(backend_xmin), 'FM999,999,999,990') as xmin_ttf,
   datname,
   usename,
-  wait_event_type || ':' || wait_event as wait,
   (select count(distinct t1.pid) from tree t1 where array[tree.pid] <@ t1.path and t1.pid <> tree.pid) as blkd,
   format(
     '%s %s%s',
-    lpad('[' || pid::text || ']', 7, ' '),
+    lpad('[' || pid::text || ']', 9, ' '),
     repeat('.', level - 1) || case when level > 1 then ' ' end,
     left(query, 1000)
   ) as query
@@ -69,3 +72,10 @@ from tree
 order by top_blocker_pid, level, pid;
 
 commit;
+
+\else
+\echo
+\echo 'This report requires PostgreSQL 14 or newer (for pg_locks.waitstart).'
+\echo 'Use l1 or l2 for older PostgreSQL versions.'
+\echo
+\endif
