@@ -56,8 +56,8 @@ select
   end as mode,
   case
     when a.pid is null then null
-    when wait_event_type is not null then format('%s.%s', wait_event_type, wait_event)
-    else 'f'
+    when wait_event_type is not null then format('%s:%s', wait_event_type, wait_event)
+    else 'CPU*' -- CPU or uninstrumented wait event
   end as waiting,
   round(100.0 * p.heap_blks_scanned / nullif(p.heap_blks_total, 0), 1) AS scanned_pct,
   round(100.0 * p.heap_blks_vacuumed / nullif(p.heap_blks_total, 0), 1) AS vacuumed_pct,

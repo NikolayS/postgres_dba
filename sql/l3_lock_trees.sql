@@ -64,6 +64,7 @@ select
   case
     when wait_event_type is not null
       then format('%s:%s', wait_event_type, wait_event)
+    else 'CPU*' -- CPU or uninstrumented wait event
   end as wait,
   wait_age,
   tx_age,

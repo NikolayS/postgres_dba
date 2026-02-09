@@ -17,7 +17,8 @@ with data as (
     (now() - a.xact_start) as duration,
     case
       when wait_event_type is not null
-        then format('%s.%s', wait_event_type, wait_event)
+        then format('%s:%s', wait_event_type, wait_event)
+      else 'CPU*' -- CPU or uninstrumented wait event
     end as waiting,
     case
       when a.query ~* '^autovacuum.*to prevent wraparound' then 'wraparound'
@@ -78,7 +79,8 @@ with data as (
     (now() - a.xact_start) as duration,
     case
       when wait_event_type is not null
-        then format('%s.%s', wait_event_type, wait_event)
+        then format('%s:%s', wait_event_type, wait_event)
+      else 'CPU*' -- CPU or uninstrumented wait event
     end as waiting,
     case
       when a.query ~* '^autovacuum.*to prevent wraparound' then 'wraparound'

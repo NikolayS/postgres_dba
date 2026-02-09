@@ -13,8 +13,8 @@ select
   pg_size_pretty(pg_relation_size(prog.relid)) as table_size,
   case
     when act.wait_event_type is not null
-      then format('%s: %s', act.wait_event_type, act.wait_event)
-    else ''
+      then format('%s:%s', act.wait_event_type, act.wait_event)
+    else 'CPU*' -- CPU or uninstrumented wait event
   end as wait,
   prog.phase,
   format(

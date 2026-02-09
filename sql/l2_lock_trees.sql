@@ -59,8 +59,8 @@ select
   datname,
   usename,
   case
-    when wait_event_type is not null
-      then format('%s:%s', wait_event_type, wait_event)
+    when wait_event_type is not null then format('%s:%s', wait_event_type, wait_event)
+    else 'CPU*' -- CPU or uninstrumented wait event
   end as wait,
   (
     select count(distinct t1.pid)
