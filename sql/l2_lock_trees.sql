@@ -2,6 +2,7 @@
 
 -- Based on: https://gitlab.com/-/snippets/1890428
 -- See also: https://postgres.ai/blog/20211018-postgresql-lock-trees
+-- On PG14+, shows wait_age from pg_locks.waitstart
 
 begin;
 
@@ -13,8 +14,16 @@ with recursive activity as (
     pg_blocking_pids(pid) as blocked_by,
     *,
     age(clock_timestamp(), xact_start)::interval(0) as tx_age,
+\if :postgres_dba_pgvers_14plus
+    age(
+      clock_timestamp(),
+      (select max(lck.waitstart) from pg_locks as lck where sa.pid = lck.pid)
+    )::interval(0) as wait_age
+  from pg_stat_activity as sa
+\else
     age(clock_timestamp(), state_change)::interval(0) as state_age
-  from pg_stat_activity
+  from pg_stat_activity as sa
+\endif
   where state is distinct from 'idle'
 ), blockers as (
   select
@@ -51,17 +60,24 @@ with recursive activity as (
 select
   pid,
   blocked_by,
-  tx_age,
-  state_age,
-  backend_xid as xid,
-  backend_xmin as xmin,
-  replace(state, 'idle in transaction', 'idletx') as state,
-  datname,
-  usename,
+  case
+    when wait_event_type = 'Lock' then 'waiting'
+    else replace(state, 'idle in transaction', 'idletx')
+  end as state,
   case
     when wait_event_type is not null then format('%s:%s', wait_event_type, wait_event)
     else 'CPU*' -- CPU or uninstrumented wait event
   end as wait,
+\if :postgres_dba_pgvers_14plus
+  wait_age,
+\else
+  state_age,
+\endif
+  tx_age,
+  to_char(age(backend_xid), 'FM999,999,999,990') as xid_age,
+  to_char(2147483647 - age(backend_xmin), 'FM999,999,999,990') as xmin_ttf,
+  datname,
+  usename,
   (
     select count(distinct t1.pid)
     from tree as t1
@@ -71,7 +87,7 @@ select
   ) as blkd,
   format(
     '%s %s%s',
-    lpad('[' || pid::text || ']', 7, ' '),
+    lpad('[' || pid::text || ']', 9, ' '),
     repeat('.', level - 1) || case when level > 1 then ' ' end,
     left(query, 1000)
   ) as query

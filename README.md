@@ -32,8 +32,7 @@ Then connect to any Postgres server via psql and type `:dba` to open the interac
 |----|--------|
 | a1 | Current activity: connections grouped by database, user, state |
 | l1 | Lock trees (lightweight) |
-| l2 | Lock trees, detailed (based on `pg_blocking_pids()`) |
-| l3 | Lock trees with wait time (PG14+, uses `pg_locks.waitstart`) |
+| l2 | Lock trees, detailed (on PG14+ shows wait time from `pg_locks.waitstart`) |
 
 ### Bloat
 | ID | Report |
