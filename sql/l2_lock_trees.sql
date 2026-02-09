@@ -58,7 +58,10 @@ select
   replace(state, 'idle in transaction', 'idletx') as state,
   datname,
   usename,
-  wait_event_type || ':' || wait_event as wait,
+  case
+    when wait_event_type is not null
+      then format('%s:%s', wait_event_type, wait_event)
+  end as wait,
   (
     select count(distinct t1.pid)
     from tree as t1

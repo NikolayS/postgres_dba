@@ -11,10 +11,11 @@ select
   prog.index_relid::regclass as index_name,
   prog.relid::regclass as table_name,
   pg_size_pretty(pg_relation_size(prog.relid)) as table_size,
-  coalesce(
-    nullif(act.wait_event_type, '') || ': ' || act.wait_event,
-    ''
-  ) as wait,
+  case
+    when act.wait_event_type is not null
+      then format('%s: %s', act.wait_event_type, act.wait_event)
+    else ''
+  end as wait,
   prog.phase,
   format(
     '%s (%s of %s)',

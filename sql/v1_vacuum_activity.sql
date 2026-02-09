@@ -15,7 +15,10 @@ with data as (
     nspname as schema_name,
     relname as table_name,
     (now() - a.xact_start) as duration,
-    coalesce(wait_event_type || '.' || wait_event, null) as waiting,
+    case
+      when wait_event_type is not null
+        then format('%s.%s', wait_event_type, wait_event)
+    end as waiting,
     case
       when a.query ~* '^autovacuum.*to prevent wraparound' then 'wraparound'
       when a.query ~* '^vacuum' then 'user'
@@ -73,7 +76,10 @@ with data as (
     nspname as schema_name,
     relname as table_name,
     (now() - a.xact_start) as duration,
-    coalesce(wait_event_type || '.' || wait_event, null) as waiting,
+    case
+      when wait_event_type is not null
+        then format('%s.%s', wait_event_type, wait_event)
+    end as waiting,
     case
       when a.query ~* '^autovacuum.*to prevent wraparound' then 'wraparound'
       when a.query ~* '^vacuum' then 'user'

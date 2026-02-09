@@ -58,11 +58,13 @@ select
   pid,
   blocked_by,
   case
-    when wait_event_type <> 'Lock'
-      then replace(state, 'idle in transaction', 'idletx')
-    else 'waiting'
+    when wait_event_type = 'Lock' then 'waiting'
+    else replace(state, 'idle in transaction', 'idletx')
   end as state,
-  wait_event_type || ':' || wait_event as wait,
+  case
+    when wait_event_type is not null
+      then format('%s:%s', wait_event_type, wait_event)
+  end as wait,
   wait_age,
   tx_age,
   to_char(age(backend_xid), 'FM999,999,999,990') as xid_age,
