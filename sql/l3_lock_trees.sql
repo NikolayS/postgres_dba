@@ -1,4 +1,4 @@
---Lock trees, detailed, with wait time (PG14+; based on pg_blocking_pids() and pg_locks.waitstart)
+-- Lock trees, detailed, with wait time (PG14+; based on pg_blocking_pids() and pg_locks.waitstart)
 
 -- Based on: https://postgres.ai/blog/20211018-postgresql-lock-trees
 -- Requires PG14+ for pg_locks.waitstart column
@@ -18,7 +18,7 @@ with recursive activity as (
     age(clock_timestamp(), xact_start)::interval(0) as tx_age,
     age(
       clock_timestamp(),
-      (select max(lck.waitstart) from pg_locks as lck where sa.pid = lck.pid)
+      (select max(lck.waitstart) from pg_locks as lck where sa.pid = lck.pid and not lck.granted)
     )::interval(0) as wait_age
   from pg_stat_activity as sa
   where state is distinct from 'idle'
@@ -59,7 +59,7 @@ select
   blocked_by,
   case
     when wait_event_type = 'Lock' then 'waiting'
-    else replace(state, 'idle in transaction', 'idletx')
+    else coalesce(replace(state, 'idle in transaction', 'idletx'), 'bg')
   end as state,
   case
     when wait_event_type is not null

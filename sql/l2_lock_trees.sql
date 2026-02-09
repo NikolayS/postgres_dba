@@ -1,4 +1,4 @@
---Lock trees, detailed (based on pg_blocking_pids())
+-- Lock trees, detailed (based on pg_blocking_pids())
 
 -- Based on: https://gitlab.com/-/snippets/1890428
 -- See also: https://postgres.ai/blog/20211018-postgresql-lock-trees
@@ -71,7 +71,7 @@ select
   ) as blkd,
   format(
     '%s %s%s',
-    lpad('[' || pid::text || ']', 7, ' '),
+    lpad('[' || pid::text || ']', 9, ' '),
     repeat('.', level - 1) || case when level > 1 then ' ' end,
     left(query, 1000)
   ) as query

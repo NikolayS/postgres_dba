@@ -59,8 +59,8 @@ select
     when wait_event_type is not null then format('%s:%s', wait_event_type, wait_event)
     else 'CPU*' -- CPU or uninstrumented wait event
   end as waiting,
-  round(100.0 * p.heap_blks_scanned / nullif(p.heap_blks_total, 0), 1) AS scanned_pct,
-  round(100.0 * p.heap_blks_vacuumed / nullif(p.heap_blks_total, 0), 1) AS vacuumed_pct,
+  round(100.0 * p.heap_blks_scanned / nullif(p.heap_blks_total, 0), 1) as scanned_pct,
+  round(100.0 * p.heap_blks_vacuumed / nullif(p.heap_blks_total, 0), 1) as vacuumed_pct,
   p.index_vacuum_count,
   case
     when psat.relid is not null and p.relid is not null then

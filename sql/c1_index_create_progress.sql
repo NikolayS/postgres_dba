@@ -1,4 +1,4 @@
---Index (re)creation progress (CREATE INDEX / REINDEX)
+-- Index (re)creation progress (CREATE INDEX / REINDEX)
 
 -- Based on: https://postgres.ai/blog/20220114-progress-bar-for-postgres-queries-lets-dive-deeper
 -- Uses pg_stat_progress_create_index (available since PG12)
