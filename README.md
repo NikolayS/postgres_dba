@@ -1,183 +1,111 @@
-# postgres_dba (PostgresDBA)
-The missing set of useful tools for Postgres DBA and mere mortals.
+# postgres_dba
 
-:warning: If you have great ideas, feel free to create a pull request or open an issue.
+The missing set of useful tools for Postgres DBAs.
 
-<img alt="Demo" src="https://user-images.githubusercontent.com/1345402/74124060-dbe25c00-4b85-11ea-9538-8d3b67f09896.gif">
+![Demo](https://user-images.githubusercontent.com/1345402/74124060-dbe25c00-4b85-11ea-9538-8d3b67f09896.gif)
 
+## Installation
 
-:point_right: See also [postgres_ai](https://github.com/postgres-ai/postgres_ai), a comprehensive monitoring and optimization platform that includes automated health checks, SQL performance analysis, and much more.
-
-## Questions?
-
-Questions? Ideas? Contact me: nik@postgres.ai, Nikolay Samokhvalov.
-
-## Credits
-
-**postgres_dba** is based on useful queries created and improved by many developers. Here is incomplete list of them:
- * Jehan-Guillaume (ioguix) de Rorthais https://github.com/ioguix/pgsql-bloat-estimation
- * Alexey Lesovsky, Alexey Ermakov, Maxim Boguk, Ilya Kosmodemiansky et al. https://github.com/dataegret/pg-utils
- * Josh Berkus, Quinn Weaver et al. from PostgreSQL Experts, Inc. https://github.com/pgexperts/pgx_scripts
-
-## Requirements
-
-**You need to have psql version 10 or newer**, but the Postgres server itself can be older – most tools work with it.
-You can install the latest postgresql-client library on your machine and use it to work with older Postgres servers – in this case postgres_dba will work. It's recommended to use psql from PostgreSQL 18 (the latest release) for the best compatibility.
-
-### Installing on Ubuntu
-
-On clean Ubuntu, this is how you can get postgresql-client and have the most recent psql:
 ```bash
-sudo sh -c "echo \"deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main\" >> /etc/apt/sources.list.d/pgdg.list"
-wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-sudo apt-get update
-sudo apt-get install -y postgresql-client-18
+git clone https://github.com/NikolayS/postgres_dba.git
+cd postgres_dba
+printf "%s %s %s %s\n" \\echo 🧐 🐘 'postgres_dba installed. Use ":dba" to see menu' >> ~/.psqlrc
+printf "%s %s %s %s\n" \\set dba \'\\\\i $(pwd)/start.psql\' >> ~/.psqlrc
 ```
 
-### Installing on macOS
+Then connect to any Postgres server via psql and type `:dba` to open the interactive menu.
 
-On macOS, use Homebrew to install PostgreSQL client and pspg:
+**Requires psql 10+.** The Postgres server itself can be older for most reports. For best results, use psql from the latest PostgreSQL release.
+
+## Reports
+
+### General info
+| ID | Report |
+|----|--------|
+| 0 | Node information: primary/replica, lag, database size, temp files |
+| 1 | Database sizes and stats |
+| 2 | Table and index sizes, row counts |
+| 3 | Load profile |
+
+### Activity and locks
+| ID | Report |
+|----|--------|
+| a1 | Current activity: connections grouped by database, user, state |
+| l1 | Lock trees (lightweight) |
+| l2 | Lock trees, detailed (based on `pg_blocking_pids()`) |
+| l3 | Lock trees with wait time (PG14+, uses `pg_locks.waitstart`) |
+
+### Bloat
+| ID | Report |
+|----|--------|
+| b1 | Table bloat estimation |
+| b2 | B-tree index bloat estimation |
+| b3 | Table bloat via `pgstattuple` (expensive) |
+| b4 | B-tree index bloat via `pgstattuple` (expensive) |
+| b5 | Tables and columns without stats (bloat cannot be estimated) |
+
+### Indexes
+| ID | Report |
+|----|--------|
+| i1 | Unused and rarely used indexes |
+| i2 | Redundant indexes |
+| i3 | Foreign keys with missing indexes |
+| i4 | Invalid indexes |
+| i5 | Index cleanup migration DDL (DO & UNDO) |
+
+### Vacuum and maintenance
+| ID | Report |
+|----|--------|
+| v1 | Vacuum: current activity |
+| v2 | Autovacuum progress and queue |
+| c1 | Index creation/reindex progress |
+
+### Statements
+| ID | Report |
+|----|--------|
+| s1 | Slowest queries by total time (requires `pg_stat_statements`) |
+| s2 | Slowest queries report (requires `pg_stat_statements`) |
+
+### Configuration and other
+| ID | Report |
+|----|--------|
+| t1 | Postgres parameters tuning |
+| e1 | Installed extensions |
+| p1 | Alignment padding analysis (experimental) |
+| r1 | Create user with random password (interactive) |
+| r2 | Alter user with random password (interactive) |
+
+## PostgreSQL compatibility
+
+Tested with **PostgreSQL 13 through 18**. Older versions (9.6-12) may work but are not actively tested. Some reports require features from newer versions (noted in the report headers).
+
+## Adding custom reports
+
+Add a `.sql` file to the `sql/` directory. The filename format is `<id>_<name>.sql` (e.g., `f1_my_query.sql`). The first line must be an SQL comment (`--`) with the report description — it appears in the menu automatically.
+
+Then regenerate the menu:
 
 ```bash
-# Install PostgreSQL client (includes psql)
-brew install libpq
-
-# Add libpq to PATH (required because it's keg-only)
-echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
-
-# For Intel Macs, use:
-# echo 'export PATH="/usr/local/opt/libpq/bin:$PATH"' >> ~/.zshrc
-
-# Verify installation
-psql --version
-
-# Install pspg (recommended pager)
-brew install pspg
+bash ./init/generate.sh
 ```
 
-Alternatively, you can install the full PostgreSQL package which includes psql:
-```bash
-brew install postgresql@18
+## Recommended: pspg pager
+
+[pspg](https://github.com/okbob/pspg) makes tabular psql output much easier to read. After installing, add to `~/.psqlrc`:
+
 ```
-
-### pspg - Enhanced psql Pager (Optional)
-
-Using alternative psql pager called "pspg" is highly recommended but optional: https://github.com/okbob/pspg.
-
-After installing pspg, configure it in your `~/.psqlrc`:
-```bash
 \setenv PAGER pspg
 \pset border 2
 \pset linestyle unicode
 ```
 
-## Supported PostgreSQL Versions
+## Credits
 
-**postgres_dba** is tested and supports **PostgreSQL 13-18**, including the latest PostgreSQL 18 release.
+Based on queries by many contributors, including:
+- [ioguix](https://github.com/ioguix/pgsql-bloat-estimation) (bloat estimation)
+- [Data Egret](https://github.com/dataegret/pg-utils) (Lesovsky, Ermakov, Boguk, Kosmodemiansky et al.)
+- [PostgreSQL Experts](https://github.com/pgexperts/pgx_scripts) (Berkus, Weaver et al.)
 
-- ✅ **PostgreSQL 13** - Fully supported
-- ✅ **PostgreSQL 14** - Fully supported  
-- ✅ **PostgreSQL 15** - Fully supported
-- ✅ **PostgreSQL 16** - Fully supported
-- ✅ **PostgreSQL 17** - Fully supported (includes `pg_stat_checkpointer` compatibility)
-- ✅ **PostgreSQL 18** - Fully supported (latest release)
+## Contact
 
-Older versions (9.6-12) may work but are not actively tested. Some reports may require specific PostgreSQL features introduced in newer versions.
-
-## Installation
-The installation is trivial. Clone the repository and put "dba" alias to your `.psqlrc` file (works in bash, zsh, and csh):
-```bash
-git clone https://github.com/NikolayS/postgres_dba.git
-cd postgres_dba
-printf "%s %s %s %s\n" \\echo 🧐 🐘 'postgres_dba 18.0 installed. Use ":dba" to see menu' >> ~/.psqlrc
-printf "%s %s %s %s\n" \\set dba \'\\\\i $(pwd)/start.psql\' >> ~/.psqlrc
-```
-
-That's it.
-
-## Usage
-
-### Connect to Local Postgres Server
-If you are running psql and Postgres server on the same machine, just launch psql:
-```bash
-psql -U <username> <dbname>
-```
-
-And type `:dba <Enter>` in psql. (Or `\i /path/to/postgres_dba/start.psql` if you haven't added shortcut to your `~/.psqlrc` file).
-
-– it will open interactive menu.
-
-### Connect to Remote Postgres Server
-What to do if you need to connect to a remote Postgres server? Usually, Postgres is behind a firewall and/or doesn't listen to a public network interface. So you need to be able to connect to the server using SSH. If you can do it, then just create SSH tunnel (assuming that Postgres listens to default port 5432 on that server:
-
-```bash
-ssh -fNTML 9432:localhost:5432 sshusername@your-server.com
-```
-
-Then, just launch psql, connecting to port 9432 at localhost:
-```bash
-psql -h localhost -p 9432 -U <username> <dbname>
-```
-
-And type `:dba <Enter>` in psql to launch **postgres_dba**.
-
-### Connect to Heroku Postgres
-Just open psql as you usually do with Heroku:
-```bash
-heroku pg:psql -a <your_project_name>
-```
-
-And then:
-```
-:dba
-```
-
-## Key Features
-
-### Secure Role Management
-
-**postgres_dba** includes interactive tools for secure role (user) management:
-
-- **r1** – Create user with random password (interactive)
-- **r2** – Alter user with random password (interactive)
-
-These tools help prevent password exposure in psql history, logs, and command-line process lists by:
-- Generating secure random 16-character passwords
-- Using interactive prompts instead of command-line arguments
-- Only displaying the password once at creation/alteration time
-
-**Usage example:**
-```sql
--- In psql, after launching :dba
--- Select option r1 to create a new user
--- The script will prompt you for:
---   - Username
---   - Superuser privilege (yes/no)
---   - Login privilege (yes/no)
--- The generated password will be displayed once in the output
-
--- To see the password, set client_min_messages to DEBUG first:
-set client_min_messages to DEBUG;
-```
-
-**Security note:** These are DBA tools designed for trusted environments where the user already has superuser privileges. The password is shown in the psql output, so ensure you're working in a secure session.
-
-## How to Extend (Add More Queries)
-You can add your own useful SQL queries and use them from the main menu. Just add your SQL code to `./sql` directory. The filename should start with some 1 or 2-letter code, followed by underscore and some additional arbitrary words. Extension should be `.sql`. Example:
-```
-  sql/f1_cool_query.sql
-```
-– this will give you an option "f1" in the main menu. The very first line in the file should be an SQL comment (starts with `--`) with the query description. It will automatically appear in the menu.
-
-Once you added your queries, regenerate `start.psql` file:
-```bash
-/bin/bash ./init/generate.sh
-```
-
-Now you have the new `start.psql` and can use it as described above.
-
-‼️ If your new queries are good consider sharing them with public. The best way to do it is to open a Pull Request (https://help.github.com/articles/creating-a-pull-request/).
-
-## Uninstallation
-No steps are needed, just delete **postgres_dba** directory and remove `\set dba ...` in your `~/.psqlrc` if you added it.
+Questions or ideas: nik@postgres.ai (Nikolay Samokhvalov), or [open an issue](https://github.com/NikolayS/postgres_dba/issues).
