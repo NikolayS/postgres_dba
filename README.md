@@ -64,6 +64,7 @@ Then connect to any Postgres server via psql and type `:dba` to open the interac
 |----|--------|
 | s1 | Slowest queries by total time (requires `pg_stat_statements`) |
 | s2 | Slowest queries report (requires `pg_stat_statements`) |
+| s3 | Workload profile by query type (requires `pg_stat_statements`) |
 
 ### Configuration and other
 | ID | Report |
