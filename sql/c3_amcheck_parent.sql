@@ -1,4 +1,4 @@
--- Corruption: B-tree parent check — detects glibc/collation corruption (⚠️ ShareLock, use on clones)
+-- Corruption: B-tree parent check — detects glibc/collation corruption (ShareLock, use on clones)
 -- Requires: CREATE EXTENSION amcheck
 -- ⚠️  Takes ShareLock on each index — blocks writes while checking!
 -- ⚠️  Best used on clones (e.g., restored from backup) or standbys.

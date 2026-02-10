@@ -1,4 +1,4 @@
--- Corruption: FULL check — heapallindexed + parent + heap (⚠️⚠️ SLOW + ShareLock, use on clones)
+-- Corruption: FULL check — heapallindexed + parent + heap (SLOW + ShareLock, use on clones)
 -- Requires: CREATE EXTENSION amcheck
 -- ⚠️⚠️  HEAVY: Takes ShareLock AND scans entire heap for each index!
 -- ⚠️⚠️  This WILL be slow on large databases. Use on clones (e.g., restored from backup).
