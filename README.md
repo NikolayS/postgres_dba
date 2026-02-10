@@ -46,8 +46,9 @@ Then connect to any Postgres server via psql and type `:dba` to open the interac
 ### Corruption checks
 | ID | Report |
 |----|--------|
-| c1 | B-tree index integrity check (amcheck, non-blocking) |
-| c2 | Full B-tree + heap integrity check (amcheck, takes locks — use on standby!) |
+| c1 | Quick: btree + GIN (PG18) + heap (PG14) check — safe for production (AccessShareLock) |
+| c2 | Parent: btree parent-child check — detects glibc/collation corruption (⚠️ ShareLock) |
+| c3 | Full: heapallindexed + parent + heap — proves every tuple is indexed (⚠️⚠️ slow + ShareLock) |
 
 ### Memory
 | ID | Report |
