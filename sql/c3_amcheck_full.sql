@@ -1,10 +1,12 @@
--- Corruption: Full B-tree + heap check (amcheck, takes locks – use on standby!)
+-- Corruption: FULL check — heapallindexed + parent + heap. ⚠️⚠️ SLOW + ShareLock!
 -- Requires: CREATE EXTENSION amcheck
--- Uses bt_index_parent_check(heapallindexed := true) — thorough, takes locks.
--- ⚠️  Takes ShareLock on each index. Run on standbys or during maintenance windows.
--- Checks parent-child consistency, sibling pointers, root descent, unique constraints.
--- Verifies all heap tuples have corresponding index entries.
--- On PG14+, also runs verify_heapam() with full TOAST checking.
+-- ⚠️⚠️  HEAVY: Takes ShareLock AND scans entire heap for each index!
+-- ⚠️⚠️  This WILL be slow on large databases. Use on STANDBYS only.
+--
+-- bt_index_parent_check with heapallindexed=true: verifies that every single
+-- heap tuple has a corresponding index entry. Catches silent data loss where
+-- rows exist but are invisible to index scans.
+-- On PG14+: also verify_heapam with full TOAST checking.
 
 do $$
 declare
@@ -27,10 +29,15 @@ begin
 
   select current_setting('server_version_num')::int into pg_version;
 
-  raise warning '⚠️  This check takes locks! Use on standbys or during maintenance windows.';
-  raise notice '';
-  raise notice '=== Full B-tree index integrity (bt_index_parent_check + heapallindexed) ===';
-  raise notice 'Checking all btree indexes with parent-child + heap verification...';
+  raise warning '';
+  raise warning '⚠️⚠️  WARNING: This is the HEAVIEST corruption check!';
+  raise warning '⚠️⚠️  Takes ShareLock on each index (blocks writes) AND scans entire heap.';
+  raise warning '⚠️⚠️  On large databases this can take HOURS. Use on standbys only.';
+  raise warning '';
+
+  -- === Full B-tree check ===
+  raise notice '=== Full B-tree check (bt_index_parent_check + heapallindexed, ShareLock) ===';
+  raise notice 'Verifies: parent-child ordering, all heap tuples indexed, unique constraints';
   raise notice '';
 
   for rec in
@@ -46,8 +53,6 @@ begin
     join pg_namespace n on n.oid = c.relnamespace
     join pg_am a on a.oid = c.relam
     where a.amname = 'btree'
-      and n.nspname not in ('pg_catalog', 'information_schema')
-      and n.nspname !~ '^pg_toast'
       and c.relpersistence != 't'
       and i.indisvalid
     order by pg_relation_size(c.oid) asc  -- smallest first
@@ -72,7 +77,6 @@ begin
       idx_count := idx_count + 1;
     exception
       when insufficient_privilege then
-        raise notice '⚠️  Permission denied for %.% — need superuser or amcheck privileges', rec.schema_name, rec.index_name;
         skip_count := skip_count + 1;
       when others then
         raise warning '❌ CORRUPTION in %.% (table %.%, size %): %',
@@ -85,18 +89,17 @@ begin
   end loop;
 
   if err_count = 0 and skip_count = 0 then
-    raise notice '✅ All % btree indexes passed full integrity check.', idx_count;
+    raise notice '✅ All % btree indexes passed full check.', idx_count;
   elsif err_count = 0 then
-    raise notice '✅ % btree indexes passed, % skipped (insufficient privileges).', idx_count, skip_count;
+    raise notice '✅ % btree indexes OK, % skipped (insufficient privileges).', idx_count, skip_count;
   else
     raise warning '❌ % of % btree indexes have corruption!', err_count, idx_count + err_count + skip_count;
   end if;
 
-  -- Full heap verification (PG14+ only)
+  -- === Full heap verification (PG14+) ===
   if pg_version >= 140000 then
     raise notice '';
-    raise notice '=== Full heap integrity (verify_heapam + TOAST) ===';
-    raise notice 'Checking all user tables for heap and TOAST corruption...';
+    raise notice '=== Full heap check (verify_heapam + TOAST, AccessShareLock) ===';
     raise notice '';
 
     for rec in
@@ -108,7 +111,6 @@ begin
       from pg_class c
       join pg_namespace n on n.oid = c.relnamespace
       where c.relkind = 'r'
-        and n.nspname not in ('pg_catalog', 'information_schema')
         and c.relpersistence != 't'
       order by n.nspname, c.relname
     loop
@@ -132,7 +134,6 @@ begin
         end loop;
       exception
         when insufficient_privilege then
-          raise notice '⚠️  Permission denied for %.% — need superuser or amcheck privileges', rec.schema_name, rec.table_name;
           tbl_skip_count := tbl_skip_count + 1;
         when others then
           raise warning 'ERROR checking %.%: %', rec.schema_name, rec.table_name, sqlerrm;
@@ -142,9 +143,9 @@ begin
     end loop;
 
     if tbl_err_count = 0 and tbl_skip_count = 0 then
-      raise notice '✅ All % tables passed full heap integrity check.', tbl_count;
+      raise notice '✅ All % tables passed full heap check.', tbl_count;
     elsif tbl_err_count = 0 then
-      raise notice '✅ % tables passed, % skipped (insufficient privileges).', tbl_count - tbl_skip_count, tbl_skip_count;
+      raise notice '✅ % tables OK, % skipped (insufficient privileges).', tbl_count - tbl_skip_count, tbl_skip_count;
     else
       raise warning '❌ % of % tables have corruption!', tbl_err_count, tbl_count;
     end if;
