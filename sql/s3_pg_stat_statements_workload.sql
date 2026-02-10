@@ -24,11 +24,11 @@ select
   coalesce(word, '???') as "Query Type",
   sum(calls) as "Calls",
   round(
-    100.0 * sum(calls) / nullif(sum(sum(calls)) over (), 0), 1
+    (100.0 * sum(calls) / nullif(sum(sum(calls)) over (), 0))::numeric, 1
   ) as "Calls %",
   round(sum(total_exec_time)::numeric, 1) as "Exec (ms)",
   round(
-    100.0 * sum(total_exec_time) / nullif(sum(sum(total_exec_time)) over (), 0), 1
+    (100.0 * sum(total_exec_time) / nullif(sum(sum(total_exec_time)) over (), 0))::numeric, 1
   ) as "Exec %",
   round(sum(total_plan_time)::numeric, 1) as "Plan (ms)",
   round(
@@ -57,11 +57,11 @@ select
   coalesce(word, '???') as "Query Type",
   sum(calls) as "Calls",
   round(
-    100.0 * sum(calls) / nullif(sum(sum(calls)) over (), 0), 1
+    (100.0 * sum(calls) / nullif(sum(sum(calls)) over (), 0))::numeric, 1
   ) as "Calls %",
   round(sum(total_time)::numeric, 1) as "Time (ms)",
   round(
-    100.0 * sum(total_time) / nullif(sum(sum(total_time)) over (), 0), 1
+    (100.0 * sum(total_time) / nullif(sum(sum(total_time)) over (), 0))::numeric, 1
   ) as "Time %",
   round(
     (sum(total_time) / nullif(sum(calls), 0))::numeric, 3
