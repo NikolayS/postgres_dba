@@ -3,7 +3,11 @@
 --Original version – Data Egret: https://github.com/dataegret/pg-utils/blob/master/sql/global_reports/query_stat_total.sql
 \if :postgres_dba_pgvers_13plus
 with pg_stat_statements_slice as (
+\if :postgres_dba_pgvers_17plus
+  select *, shared_blk_read_time as blk_read_time, shared_blk_write_time as blk_write_time
+\else
   select *
+\endif
   from pg_stat_statements
   -- if current database is postgres then generate report for all databases,
   -- otherwise generate for current database only

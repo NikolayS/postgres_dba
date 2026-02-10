@@ -53,8 +53,13 @@ select
   sum(local_blks_written) as local_blks_written,
   sum(temp_blks_read) as temp_blks_read,
   sum(temp_blks_written) as temp_blks_written,
+\if :postgres_dba_pgvers_17plus
+  sum(shared_blk_read_time) as blk_read_time,
+  sum(shared_blk_write_time) as blk_write_time,
+\else
   sum(blk_read_time) as blk_read_time,
   sum(blk_write_time) as blk_write_time,
+\endif
   array_agg(queryid) as queryids -- 9.4+
 from pg_stat_statements
 group by userid, dbid, query
