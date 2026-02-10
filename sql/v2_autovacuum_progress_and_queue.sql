@@ -1,4 +1,4 @@
---VACUUM progress and autovacuum queue
+--Vacuum: autovacuum queue and pending tables
 
 -- Based on: https://gitlab.com/snippets/1889668
 

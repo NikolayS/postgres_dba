@@ -31,8 +31,8 @@
 \echo '  s3 – Workload profile by query type (requires pg_stat_statements)'
 \echo '  t1 – Postgres parameters tuning'
 \echo '  t2 – Objects with custom storage parameters'
-\echo '  v1 – Vacuum: current activity'
-\echo '  v2 – VACUUM progress and autovacuum queue'
+\echo '  v1 – Vacuum: running operations (detailed progress)'
+\echo '  v2 – Vacuum: autovacuum queue and pending tables'
 \echo '  x1 – [EXP] Alignment padding: how many bytes can be saved if columns are reordered?'
 \echo '   q – Quit'
 \echo

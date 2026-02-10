@@ -1,4 +1,4 @@
---Vacuum: current activity
+--Vacuum: running operations (detailed progress)
 
 -- Based on: https://github.com/lesovsky/uber-scripts/blob/master/postgresql/sql/vacuum_activity.sql
 
