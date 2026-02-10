@@ -15,7 +15,7 @@ Bloat estimation, index health, lock trees, vacuum monitoring, query analysis, c
 ```bash
 git clone https://github.com/NikolayS/postgres_dba.git
 cd postgres_dba
-echo "\\set dba '\\\\i $(pwd)/start.psql'" >> ~/.psqlrc
+bash -c "echo \"\\set dba '\\\\\\\\i $(pwd)/start.psql'\" >> ~/.psqlrc"
 ```
 
 Connect to any Postgres server via psql and type `:dba`.
