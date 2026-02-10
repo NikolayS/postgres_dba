@@ -1,6 +1,6 @@
 # postgres_dba 7.0
 
-**33 reports** | Tested on **PostgreSQL 13–18** | Works with `pg_monitor` role
+**34 reports** | Tested on **PostgreSQL 13–18** | Works with `pg_monitor` role
 
 ## New Reports
 
@@ -10,9 +10,10 @@ Three levels of integrity checking, all requiring `CREATE EXTENSION amcheck`:
 
 | Report | Lock | What it checks | When to use |
 |--------|------|----------------|-------------|
-| **c1** | AccessShareLock | B-tree pages, GIN indexes (PG18+), heap+TOAST (PG14+) | **Production primary** — safe, non-blocking |
-| **c2** | ShareLock ⚠️ | B-tree parent-child ordering, sibling pointers, rootdescend, checkunique (PG14+) | **Clones or standbys** — detects glibc/collation corruption |
-| **c3** | ShareLock ⚠️⚠️ | Everything in c2 + heapallindexed + verify_heapam with full TOAST | **Clones only** — proves every heap tuple is indexed, slow on large DBs |
+| **c1** | AccessShareLock | B-tree pages, GIN indexes (PG18+) | **Production** — fast, safe, non-blocking |
+| **c2** | AccessShareLock | c1 + heap/TOAST integrity (PG14+) | **Production** — safe but reads all data |
+| **c3** | ShareLock ⚠️ | B-tree parent-child ordering, sibling pointers, rootdescend, checkunique (PG14+) | **Clones or standbys** — detects glibc/collation corruption |
+| **c4** | ShareLock ⚠️⚠️ | Everything in c3 + heapallindexed + verify_heapam with full TOAST | **Clones only** — proves every heap tuple is indexed, slow on large DBs |
 
 All three check system catalog indexes (`pg_catalog`, `pg_toast`) — because catalog corruption is the scariest kind.
 
@@ -75,4 +76,4 @@ Categories reorganized for consistency:
 
 ## Compatibility
 
-Tested on PostgreSQL 13, 14, 15, 16, 17, and 18 — all 33 reports pass with both superuser and `pg_monitor` roles.
+Tested on PostgreSQL 13, 14, 15, 16, 17, and 18 — all 34 reports pass with both superuser and `pg_monitor` roles.

@@ -10,9 +10,10 @@
 \echo '  b3 – Table bloat (requires pgstattuple; expensive)'
 \echo '  b4 – B-tree indexes bloat (requires pgstattuple; expensive)'
 \echo '  b5 – Tables and columns without stats (so bloat cannot be estimated)'
-\echo '  c1 –  Corruption: quick check — btree, GIN (PG18+), heap (PG14+). Safe for production.'
-\echo '  c2 –  Corruption: B-tree parent check — detects glibc/collation corruption (⚠️ ShareLock, use on clones)'
-\echo '  c3 –  Corruption: FULL check — heapallindexed + parent + heap (⚠️⚠️ SLOW + ShareLock, use on clones)'
+\echo '  c1 –  Corruption: quick index check — btree + GIN (PG18+). Safe for production, fast.'
+\echo '  c2 –  Corruption: indexes + heap/TOAST check. Safe for production but reads all data.'
+\echo '  c3 –  Corruption: B-tree parent check — detects glibc/collation corruption (⚠️ ShareLock, use on clones)'
+\echo '  c4 –  Corruption: FULL check — heapallindexed + parent + heap (⚠️⚠️ SLOW + ShareLock, use on clones)'
 \echo '  e1 – Extensions installed in current database'
 \echo '  i1 – Unused and rarely used indexes'
 \echo '  i2 – Redundant indexes'
@@ -52,6 +53,7 @@ select
 :d_stp::text = 'c1' as d_step_is_c1,
 :d_stp::text = 'c2' as d_step_is_c2,
 :d_stp::text = 'c3' as d_step_is_c3,
+:d_stp::text = 'c4' as d_step_is_c4,
 :d_stp::text = 'e1' as d_step_is_e1,
 :d_stp::text = 'i1' as d_step_is_i1,
 :d_stp::text = 'i2' as d_step_is_i2,
@@ -117,15 +119,19 @@ select
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_c1
-  \ir ./sql/c1_amcheck_quick.sql
+  \ir ./sql/c1_amcheck_indexes.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_c2
-  \ir ./sql/c2_amcheck_parent.sql
+  \ir ./sql/c2_amcheck_heap.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_c3
-  \ir ./sql/c3_amcheck_full.sql
+  \ir ./sql/c3_amcheck_parent.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_c4
+  \ir ./sql/c4_amcheck_full.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_e1

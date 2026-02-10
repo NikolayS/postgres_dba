@@ -1,12 +1,8 @@
--- Corruption: FULL check — heapallindexed + parent + heap (⚠️⚠️ SLOW + ShareLock, use on clones)
+-- Corruption: indexes + heap/TOAST check. Safe for production but reads all data.
 -- Requires: CREATE EXTENSION amcheck
--- ⚠️⚠️  HEAVY: Takes ShareLock AND scans entire heap for each index!
--- ⚠️⚠️  This WILL be slow on large databases. Use on clones (e.g., restored from backup).
---
--- bt_index_parent_check with heapallindexed=true: verifies that every single
--- heap tuple has a corresponding index entry. Catches silent data loss where
--- rows exist but are invisible to index scans.
--- On PG14+: also verify_heapam with full TOAST checking.
+-- All checks use AccessShareLock only — no write blocking.
+-- Same index checks as c1, plus verify_heapam (PG14+) which reads every heap page.
+-- ℹ️  On large databases this can take a while — it's a full sequential read.
 
 do $$
 declare
@@ -15,13 +11,15 @@ declare
   idx_count int := 0;
   err_count int := 0;
   skip_count int := 0;
+  gin_count int := 0;
+  gin_err_count int := 0;
+  gin_skip_count int := 0;
   tbl_count int := 0;
   tbl_err_count int := 0;
   tbl_skip_count int := 0;
   has_errors boolean;
   pg_version int;
 begin
-  -- Check extension
   if not exists (select 1 from pg_extension where extname = 'amcheck') then
     raise notice '❌ amcheck extension is not installed. Run: CREATE EXTENSION amcheck;';
     return;
@@ -29,15 +27,9 @@ begin
 
   select current_setting('server_version_num')::int into pg_version;
 
-  raise warning '';
-  raise warning '⚠️⚠️  WARNING: This is the HEAVIEST corruption check!';
-  raise warning '⚠️⚠️  Takes ShareLock on each index (blocks writes) AND scans entire heap.';
-  raise warning '⚠️⚠️  On large databases this can take HOURS. Use on clones (e.g., restored from backup).';
-  raise warning '';
-
-  -- === Full B-tree check ===
-  raise notice '=== Full B-tree check (bt_index_parent_check + heapallindexed, ShareLock) ===';
-  raise notice 'Verifies: parent-child ordering, all heap tuples indexed, unique constraints';
+  -- === B-tree indexes ===
+  raise notice '';
+  raise notice '=== B-tree index check (bt_index_check, AccessShareLock) ===';
   raise notice '';
 
   for rec in
@@ -45,8 +37,7 @@ begin
       n.nspname as schema_name,
       c.relname as index_name,
       t.relname as table_name,
-      c.oid as index_oid,
-      pg_relation_size(c.oid) as index_size
+      c.oid as index_oid
     from pg_index i
     join pg_class c on c.oid = i.indexrelid
     join pg_class t on t.oid = i.indrelid
@@ -55,59 +46,90 @@ begin
     where a.amname = 'btree'
       and c.relpersistence != 't'
       and i.indisvalid
-    order by pg_relation_size(c.oid) asc  -- smallest first
+    order by n.nspname, t.relname, c.relname
   loop
     begin
-      if pg_version >= 140000 then
-        perform bt_index_parent_check(
-          rec.index_oid,
-          heapallindexed := true,
-          rootdescend := true,
-          checkunique := true
-        );
-      elsif pg_version >= 110000 then
-        perform bt_index_parent_check(
-          rec.index_oid,
-          heapallindexed := true,
-          rootdescend := true
-        );
-      else
-        perform bt_index_parent_check(rec.index_oid, heapallindexed := true);
-      end if;
+      perform bt_index_check(rec.index_oid);
       idx_count := idx_count + 1;
     exception
       when insufficient_privilege then
         skip_count := skip_count + 1;
       when others then
-        raise warning '❌ CORRUPTION in %.% (table %.%, size %): %',
-          rec.schema_name, rec.index_name,
-          rec.schema_name, rec.table_name,
-          pg_size_pretty(rec.index_size),
-          sqlerrm;
+        raise warning '❌ CORRUPTION in %.%: %',
+          rec.schema_name, rec.index_name, sqlerrm;
         err_count := err_count + 1;
     end;
   end loop;
 
   if err_count = 0 and skip_count = 0 then
-    raise notice '✅ All % btree indexes passed full check.', idx_count;
+    raise notice '✅ All % btree indexes OK.', idx_count;
   elsif err_count = 0 then
     raise notice '✅ % btree indexes OK, % skipped (insufficient privileges).', idx_count, skip_count;
   else
     raise warning '❌ % of % btree indexes have corruption!', err_count, idx_count + err_count + skip_count;
   end if;
 
-  -- === Full heap verification (PG14+) ===
+  -- === GIN indexes (PG18+) ===
+  if pg_version >= 180000 then
+    raise notice '';
+    raise notice '=== GIN index check (gin_index_check, AccessShareLock) ===';
+    raise notice '';
+
+    for rec in
+      select
+        n.nspname as schema_name,
+        c.relname as index_name,
+        t.relname as table_name,
+        c.oid as index_oid
+      from pg_index i
+      join pg_class c on c.oid = i.indexrelid
+      join pg_class t on t.oid = i.indrelid
+      join pg_namespace n on n.oid = c.relnamespace
+      join pg_am a on a.oid = c.relam
+      where a.amname = 'gin'
+        and c.relpersistence != 't'
+        and i.indisvalid
+      order by n.nspname, t.relname, c.relname
+    loop
+      begin
+        perform gin_index_check(rec.index_oid);
+        gin_count := gin_count + 1;
+      exception
+        when insufficient_privilege then
+          gin_skip_count := gin_skip_count + 1;
+        when others then
+          raise warning '❌ CORRUPTION in %.%: %',
+            rec.schema_name, rec.index_name, sqlerrm;
+          gin_err_count := gin_err_count + 1;
+      end;
+    end loop;
+
+    if gin_count + gin_err_count + gin_skip_count = 0 then
+      raise notice 'No GIN indexes found.';
+    elsif gin_err_count = 0 and gin_skip_count = 0 then
+      raise notice '✅ All % GIN indexes OK.', gin_count;
+    elsif gin_err_count = 0 then
+      raise notice '✅ % GIN indexes OK, % skipped (insufficient privileges).', gin_count, gin_skip_count;
+    else
+      raise warning '❌ % of % GIN indexes have corruption!', gin_err_count, gin_count + gin_err_count + gin_skip_count;
+    end if;
+  else
+    raise notice '';
+    raise notice 'ℹ️  GIN index checking requires PostgreSQL 18+. Skipped.';
+  end if;
+
+  -- === Heap verification (PG14+) ===
   if pg_version >= 140000 then
     raise notice '';
-    raise notice '=== Full heap check (verify_heapam + TOAST, AccessShareLock) ===';
+    raise notice '=== Heap + TOAST check (verify_heapam, AccessShareLock) ===';
+    raise notice 'ℹ️  Reads every heap page — may take a while on large databases.';
     raise notice '';
 
     for rec in
       select
         n.nspname as schema_name,
         c.relname as table_name,
-        c.oid as table_oid,
-        pg_relation_size(c.oid) as table_size
+        c.oid as table_oid
       from pg_class c
       join pg_namespace n on n.oid = c.relnamespace
       where c.relkind = 'r'
@@ -117,15 +139,10 @@ begin
       has_errors := false;
       begin
         for corruption in
-          select * from verify_heapam(
-            rec.table_oid,
-            on_error_stop := false,
-            check_toast := true,
-            skip := 'none'
-          )
+          select * from verify_heapam(rec.table_oid, check_toast := true)
         loop
           if not has_errors then
-            raise warning '❌ CORRUPTION in %.% (size %):', rec.schema_name, rec.table_name, pg_size_pretty(rec.table_size);
+            raise warning '❌ CORRUPTION in %.%:', rec.schema_name, rec.table_name;
             has_errors := true;
             tbl_err_count := tbl_err_count + 1;
           end if;
@@ -143,7 +160,7 @@ begin
     end loop;
 
     if tbl_err_count = 0 and tbl_skip_count = 0 then
-      raise notice '✅ All % tables passed full heap check.', tbl_count;
+      raise notice '✅ All % tables passed heap check.', tbl_count;
     elsif tbl_err_count = 0 then
       raise notice '✅ % tables OK, % skipped (insufficient privileges).', tbl_count - tbl_skip_count, tbl_skip_count;
     else

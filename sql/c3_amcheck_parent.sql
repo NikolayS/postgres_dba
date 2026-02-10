@@ -17,7 +17,6 @@ declare
   skip_count int := 0;
   pg_version int;
 begin
-  -- Check extension
   if not exists (select 1 from pg_extension where extname = 'amcheck') then
     raise notice '❌ amcheck extension is not installed. Run: CREATE EXTENSION amcheck;';
     return;
@@ -48,7 +47,7 @@ begin
     where a.amname = 'btree'
       and c.relpersistence != 't'
       and i.indisvalid
-    order by pg_relation_size(c.oid) asc  -- smallest first
+    order by pg_relation_size(c.oid) asc
   loop
     begin
       if pg_version >= 140000 then
