@@ -1,7 +1,7 @@
--- Corruption: B-tree parent check — detects collation/glibc corruption. ⚠️ ShareLock!
+-- Corruption: B-tree parent check — detects glibc/collation corruption (⚠️ ShareLock, use on clones)
 -- Requires: CREATE EXTENSION amcheck
 -- ⚠️  Takes ShareLock on each index — blocks writes while checking!
--- ⚠️  Best used on STANDBYS or during maintenance windows.
+-- ⚠️  Best used on clones (e.g., restored from backup) or standbys.
 --
 -- Uses bt_index_parent_check() which verifies parent-child key ordering.
 -- This is the most reliable way to detect corruption caused by glibc/ICU
@@ -27,7 +27,7 @@ begin
 
   raise warning '';
   raise warning '⚠️  WARNING: This check takes ShareLock on each index — blocks writes!';
-  raise warning '⚠️  Recommended: run on a STANDBY or during a maintenance window.';
+  raise warning '⚠️  Recommended: run on a clone (e.g., restored from backup), standby, or during maintenance.';
   raise warning '';
   raise notice '=== B-tree parent check (bt_index_parent_check, ShareLock) ===';
   raise notice 'Detects: collation/glibc corruption, parent-child inconsistency, sibling pointer errors';

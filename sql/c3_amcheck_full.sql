@@ -1,7 +1,7 @@
--- Corruption: FULL check — heapallindexed + parent + heap. ⚠️⚠️ SLOW + ShareLock!
+-- Corruption: FULL check — heapallindexed + parent + heap (⚠️⚠️ SLOW + ShareLock, use on clones)
 -- Requires: CREATE EXTENSION amcheck
 -- ⚠️⚠️  HEAVY: Takes ShareLock AND scans entire heap for each index!
--- ⚠️⚠️  This WILL be slow on large databases. Use on STANDBYS only.
+-- ⚠️⚠️  This WILL be slow on large databases. Use on clones (e.g., restored from backup).
 --
 -- bt_index_parent_check with heapallindexed=true: verifies that every single
 -- heap tuple has a corresponding index entry. Catches silent data loss where
@@ -32,7 +32,7 @@ begin
   raise warning '';
   raise warning '⚠️⚠️  WARNING: This is the HEAVIEST corruption check!';
   raise warning '⚠️⚠️  Takes ShareLock on each index (blocks writes) AND scans entire heap.';
-  raise warning '⚠️⚠️  On large databases this can take HOURS. Use on standbys only.';
+  raise warning '⚠️⚠️  On large databases this can take HOURS. Use on clones (e.g., restored from backup).';
   raise warning '';
 
   -- === Full B-tree check ===

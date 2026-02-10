@@ -47,8 +47,8 @@ Then connect to any Postgres server via psql and type `:dba` to open the interac
 | ID | Report |
 |----|--------|
 | c1 | Quick: btree + GIN (PG18) + heap (PG14) check — safe for production (AccessShareLock) |
-| c2 | Parent: btree parent-child check — detects glibc/collation corruption (⚠️ ShareLock) |
-| c3 | Full: heapallindexed + parent + heap — proves every tuple is indexed (⚠️⚠️ slow + ShareLock) |
+| c2 | Parent: btree parent-child check — detects glibc/collation corruption (⚠️ ShareLock — use on clones) |
+| c3 | Full: heapallindexed + parent + heap — proves every tuple is indexed (⚠️⚠️ slow + ShareLock — use on clones) |
 
 ### Memory
 | ID | Report |
