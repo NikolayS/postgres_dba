@@ -127,8 +127,8 @@ jobs:
           exit 1
         fi
         
-        echo "  Testing p1_alignment_padding.sql..."
-        OUTPUT=$(PAGER=cat psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/p1_alignment_padding.sql | grep align)
+        echo "  Testing x1_alignment_padding.sql..."
+        OUTPUT=$(PAGER=cat psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/x1_alignment_padding.sql | grep align)
         if [[ "$OUTPUT" == *"align1"* && "$OUTPUT" == *"align2"* && "$OUTPUT" == *"int4, more, int8"* ]]; then
           echo "    ✓ Alignment padding test passed"
         else
