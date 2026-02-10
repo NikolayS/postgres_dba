@@ -55,6 +55,9 @@ jobs:
         psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pgstattuple;'
         psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS intarray;'
         psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pg_buffercache;'
+        psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS amcheck;'
+        # amcheck needs execute privileges for non-superusers
+        psql -h localhost -U postgres -d test -c 'GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO PUBLIC;'
         
         # Minimal privilege user
         psql -h localhost -U postgres -d test -c "CREATE USER dba_user;"

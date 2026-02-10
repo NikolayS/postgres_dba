@@ -43,10 +43,16 @@ Then connect to any Postgres server via psql and type `:dba` to open the interac
 | b4 | B-tree index bloat via `pgstattuple` (expensive) |
 | b5 | Tables and columns without stats (bloat cannot be estimated) |
 
-### Cache
+### Corruption checks
 | ID | Report |
 |----|--------|
-| c1 | Buffer cache contents (requires `pg_buffercache`, expensive) |
+| c1 | B-tree index integrity check (amcheck, non-blocking) |
+| c2 | Full B-tree + heap integrity check (amcheck, takes locks — use on standby!) |
+
+### Memory
+| ID | Report |
+|----|--------|
+| m1 | Buffer cache contents (requires `pg_buffercache`, expensive) |
 
 ### Indexes
 | ID | Report |
