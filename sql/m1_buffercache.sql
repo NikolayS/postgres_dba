@@ -42,8 +42,7 @@ with buf as (
   where b.reldatabase = (select oid from pg_database where datname = current_database())
     and b.relfilenode is not null
     and b.relforknumber = 0
-    and n.nspname not in ('pg_catalog', 'information_schema')
-    and n.nspname !~ '^pg_toast'
+    -- include all schemas (system catalogs are often the biggest cache consumers)
   group by c.oid, n.nspname, c.relname, c.relkind
 )
 select
