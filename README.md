@@ -42,6 +42,7 @@ Then connect to any Postgres server via psql and type `:dba` to open the interac
 | b3 | Table bloat via `pgstattuple` (expensive) |
 | b4 | B-tree index bloat via `pgstattuple` (expensive) |
 | b5 | Tables and columns without stats (bloat cannot be estimated) |
+| b6 | Buffer cache contents (requires `pg_buffercache`, expensive) |
 
 ### Indexes
 | ID | Report |
@@ -69,6 +70,7 @@ Then connect to any Postgres server via psql and type `:dba` to open the interac
 | ID | Report |
 |----|--------|
 | t1 | Postgres parameters tuning |
+| t2 | Objects with custom storage parameters |
 | e1 | Installed extensions |
 | p1 | Alignment padding analysis (experimental) |
 | r1 | Create user with random password (interactive) |

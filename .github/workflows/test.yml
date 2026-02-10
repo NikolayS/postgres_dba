@@ -54,6 +54,7 @@ jobs:
         psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements;' || echo "Warning: pg_stat_statements not available"
         psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pgstattuple;'
         psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS intarray;'
+        psql -h localhost -U postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS pg_buffercache;'
         
         # Minimal privilege user
         psql -h localhost -U postgres -d test -c "CREATE USER dba_user;"
