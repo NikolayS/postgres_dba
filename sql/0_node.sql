@@ -45,6 +45,43 @@ union all
   from repl_groups
 )
 union all
+select
+  'WAL',
+  case when pg_is_in_recovery() then 'N/A (replica)'
+  else (
+    select
+      'Current LSN: ' || pg_current_wal_lsn()::text
+      || e'\n' || 'WAL files: ' || count(*)::text
+      || ', ' || pg_size_pretty(sum(size))
+    from pg_ls_waldir()
+  )
+  end
+union all
+(
+  with slot_info as (
+    select
+      slot_name,
+      slot_type,
+      case when active then 'active' else 'inactive' end as status,
+      case
+        when not pg_is_in_recovery()
+          then pg_size_pretty(pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn))
+        else null
+      end as lag
+    from pg_replication_slots
+  )
+  select
+    'Replication Slots',
+    coalesce(
+      string_agg(
+        slot_name || ' (' || slot_type || '/' || status || coalesce(', lag: ' || lag, '') || ')',
+        e'\n'
+      ),
+      'none'
+    )
+  from slot_info
+)
+union all
 select 'Started At', pg_postmaster_start_time()::timestamptz(0)::text
 union all
 select 'Uptime', (now() - pg_postmaster_start_time())::interval(0)::text
