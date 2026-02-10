@@ -10,8 +10,7 @@
 \echo '  b3 – Table bloat (requires pgstattuple; expensive)'
 \echo '  b4 – B-tree indexes bloat (requires pgstattuple; expensive)'
 \echo '  b5 – Tables and columns without stats (so bloat cannot be estimated)'
-\echo '  b6 – Buffer cache contents (requires pg_buffercache; expensive)'
-\echo '  c1 – Index (re)creation progress (CREATE INDEX / REINDEX)'
+\echo '  c1 – Buffer cache contents (requires pg_buffercache; expensive)'
 \echo '  e1 – Extensions installed in current database'
 \echo '  i1 – Unused and rarely used indexes'
 \echo '  i2 – Redundant indexes'
@@ -20,7 +19,7 @@
 \echo '  i5 – Cleanup unused and redundant indexes – DO & UNDO migration DDL'
 \echo '  l1 – Lock trees (lightweight)'
 \echo '  l2 – Lock trees, detailed (based on pg_blocking_pids())'
-\echo '  p1 – [EXP] Alignment padding: how many bytes can be saved if columns are reordered?'
+\echo '  p1 – Index (re)creation progress (CREATE INDEX / REINDEX)'
 \echo '  r1 – Create user with random password (interactive)'
 \echo '  r2 – Alter user with random password (interactive)'
 \echo '  s1 – Slowest queries, by total time (requires pg_stat_statements)'
@@ -30,6 +29,7 @@
 \echo '  t2 – Objects with custom storage parameters'
 \echo '  v1 – Vacuum: current activity'
 \echo '  v2 – VACUUM progress and autovacuum queue'
+\echo '  x1 – [EXP] Alignment padding: how many bytes can be saved if columns are reordered?'
 \echo '   q – Quit'
 \echo
 \echo Type your choice and press <Enter>:
@@ -46,7 +46,6 @@ select
 :d_stp::text = 'b3' as d_step_is_b3,
 :d_stp::text = 'b4' as d_step_is_b4,
 :d_stp::text = 'b5' as d_step_is_b5,
-:d_stp::text = 'b6' as d_step_is_b6,
 :d_stp::text = 'c1' as d_step_is_c1,
 :d_stp::text = 'e1' as d_step_is_e1,
 :d_stp::text = 'i1' as d_step_is_i1,
@@ -66,6 +65,7 @@ select
 :d_stp::text = 't2' as d_step_is_t2,
 :d_stp::text = 'v1' as d_step_is_v1,
 :d_stp::text = 'v2' as d_step_is_v2,
+:d_stp::text = 'x1' as d_step_is_x1,
 :d_stp::text = 'q' as d_step_is_q \gset
 \if :d_step_is_q
   \echo 'Bye!'
@@ -110,12 +110,8 @@ select
   \ir ./sql/b5_tables_no_stats.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
-\elif :d_step_is_b6
-  \ir ./sql/b6_buffercache.sql
-  \prompt 'Press <Enter> to continue…' d_dummy
-  \ir ./start.psql
 \elif :d_step_is_c1
-  \ir ./sql/c1_index_create_progress.sql
+  \ir ./sql/c1_buffercache.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_e1
@@ -151,7 +147,7 @@ select
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_p1
-  \ir ./sql/p1_alignment_padding.sql
+  \ir ./sql/p1_index_create_progress.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \elif :d_step_is_r1
@@ -188,6 +184,10 @@ select
   \ir ./start.psql
 \elif :d_step_is_v2
   \ir ./sql/v2_autovacuum_progress_and_queue.sql
+  \prompt 'Press <Enter> to continue…' d_dummy
+  \ir ./start.psql
+\elif :d_step_is_x1
+  \ir ./sql/x1_alignment_padding.sql
   \prompt 'Press <Enter> to continue…' d_dummy
   \ir ./start.psql
 \else

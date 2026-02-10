@@ -4,7 +4,7 @@
 
 ## New Reports
 
-### b6 — Buffer cache contents
+### c1 — Buffer cache contents
 What's in your `shared_buffers` right now. Shows cached size vs total size, % of cache used per object, and dirty buffer counts. Requires `pg_buffercache` extension.
 
 ### s3 — Workload profile by query type
@@ -17,6 +17,16 @@ Lists all tables, indexes, and materialized views with non-default `reloptions`.
 The node information report now includes:
 - **WAL**: current LSN, file count, total WAL size
 - **Replication Slots**: name, type, active/inactive status, lag from current WAL position
+
+## Report Renames
+
+Categories reorganized for consistency:
+
+| Old | New | Reason |
+|-----|-----|--------|
+| b6 | **c1** | Buffer cache isn't bloat — moved to new **c** (cache) category |
+| c1 | **p1** | Index creation progress → **p** (progress) category |
+| p1 | **x1** | Alignment padding (experimental) → **x** (experimental) category |
 
 ## Bug Fixes
 
