@@ -23,6 +23,18 @@ Robustness:
 - Version-conditional: uses appropriate function signatures for PG11–18
 - GIN support via `gin_index_check()` on PostgreSQL 18+
 
+### snapshot.sh — LLM-friendly output
+
+New `snapshot.sh` script dumps all safe reports as clean plain text — no ANSI colors, no interactive prompts, no psql noise. Perfect for:
+- Feeding database state to an LLM for analysis
+- Automated health checks in scripts
+- Saving periodic snapshots to files
+
+```bash
+./snapshot.sh -d mydb > snapshot.txt
+./snapshot.sh --full -d mydb    # include expensive reports too
+```
+
 ### m1 — Buffer cache contents
 What's in your `shared_buffers` right now. Shows cached size vs total size, % of cache used per object, and dirty buffer counts. Requires `pg_buffercache` extension.
 

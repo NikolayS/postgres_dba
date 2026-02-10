@@ -115,6 +115,19 @@ Tested on **PostgreSQL 13 through 18** via CI on every commit. Older versions (9
 
 Works with the `pg_monitor` role — superuser is not required for most reports (corruption checks need superuser or explicit `GRANT EXECUTE`).
 
+## Snapshot Mode (for LLMs, scripts, automation)
+
+Dump all safe reports as plain text — perfect for feeding to an LLM, saving to a file, or piping into other tools:
+
+```bash
+./snapshot.sh -h localhost -U postgres -d mydb           # plain text output
+./snapshot.sh -d mydb > snapshot.txt                     # save to file
+./snapshot.sh -d mydb | pbcopy                           # clipboard (macOS)
+./snapshot.sh --full -d mydb                             # include expensive reports
+```
+
+Skips interactive and expensive reports by default. Use `--full` to include everything except interactive prompts.
+
 ## Adding Custom Reports
 
 Drop a `.sql` file in `sql/`. The filename format is `<id>_<name>.sql`. The first line must be a `--` comment with the description — it becomes the menu entry automatically.
