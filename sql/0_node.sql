@@ -30,7 +30,7 @@ select
       end)::int)::text || ' second')::interval)::text
     || '; paused: ' || :postgres_dba_is_wal_replay_paused()::text || ')'
   else
-    'Master'
+    'Primary'
   end as value
 union all
 (

@@ -7,7 +7,7 @@
 -- -- so feel free to use it in your clouds (Heroku, AWS RDS, etc)
 
 -- (Keep in mind, that on replicas, the whole picture of index usage
--- is usually very different from master).
+-- is usually very different from the primary).
 
 with fk_indexes as (
   select
@@ -111,12 +111,6 @@ redundant_indexes_tmp_num as (
   left join redundant_indexes_tmp_num ri2 on ri2.reason_index_id = ri1.index_id and ri1.reason_index_id = ri2.index_id
   where ri1.num < ri2.num or ri2.num is null
 ), redundant_indexes_cut_grouped as (
-  select
-    distinct(num),
-    *
-  from redundant_indexes_tmp_cut
-  order by index_size_bytes desc
-), redundant_indexes_grouped as (
   select
     distinct(num),
     *
