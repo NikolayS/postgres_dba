@@ -119,7 +119,7 @@ jobs:
         
         echo "  Testing 0_node.sql..."
         OUTPUT=$(PAGER=cat psql -h localhost -U dba_user -d test --no-psqlrc -f warmup.psql -f sql/0_node.sql | grep Role)
-        if [[ "$OUTPUT" == *"Master"* ]]; then
+        if [[ "$OUTPUT" == *"Primary"* ]]; then
           echo "    ✓ Role test passed"
         else
           echo "    ✗ Role test failed: $OUTPUT"

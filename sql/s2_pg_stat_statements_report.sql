@@ -46,7 +46,7 @@ with pg_stat_statements_slice as (
   select
     (select datname from pg_database where oid = p.dbid) as database,
     (select rolname from pg_roles where oid = p.userid) as username,
-    --select shortest query, replace \n\n-- strings to avoid email clients format text as footer
+    -- select shortest query, replace \n\n-- strings to avoid email clients formatting text as footer
     substring(
       translate(
         replace(
@@ -205,7 +205,7 @@ with pg_stat_statements_slice as (
   select
     (select datname from pg_database where oid = p.dbid) as database,
     (select rolname from pg_roles where oid = p.userid) as username,
-    --select shortest query, replace \n\n-- strings to avoid email clients format text as footer
+    -- select shortest query, replace \n\n-- strings to avoid email clients formatting text as footer
     substring(
       translate(
         replace(

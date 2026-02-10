@@ -7,7 +7,7 @@
 -- -- so feel free to use it in your clouds (Heroku, AWS RDS, etc)
 
 -- (Keep in mind, that on replicas, the whole picture of index usage
--- is usually very different from master).
+-- is usually very different from the primary)..
 
 select 
     coalesce(nullif(pn.nspname, 'public') || '.', '') || pct.relname as "relation_name",

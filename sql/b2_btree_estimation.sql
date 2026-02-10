@@ -2,7 +2,7 @@
 
 -- enhanced version of https://github.com/ioguix/pgsql-bloat-estimation/blob/master/btree/btree_bloat.sql
 
--- WARNING: executed with a non-superuser role, the query inspect only index on tables you are granted to read.
+-- WARNING: executed with a non-superuser role, the query inspects only indexes on tables you are granted to read.
 -- WARNING: rows with is_na = 't' are known to have bad statistics ("name" type is not supported).
 -- This query is compatible with PostgreSQL 8.2+
 
@@ -26,9 +26,9 @@ with step1 as (
     /* per tuple header: add IndexAttributeBitMapData if some cols are null-able */
     case
       when max(coalesce(s.null_frac,0)) = 0 then 2 -- IndexTupleData size
-      else 2 + (( 32 + 8 - 1 ) / 8) -- IndexTupleData size + IndexAttributeBitMapData size ( max num filed per index + 8 - 1 /8)
+      else 2 + (( 32 + 8 - 1 ) / 8) -- IndexTupleData size + IndexAttributeBitMapData size ( max num fields per index + 8 - 1 /8)
     end as index_tuple_hdr_bm,
-    /* data len: we remove null values save space using it fractionnal part from stats */
+    /* data len: we remove null values save space using its fractional part from stats */
     sum((1 - coalesce(s.null_frac, 0)) * coalesce(s.avg_width, 1024)) as nulldatawidth,
     max(case when a.atttypid = 'pg_catalog.name'::regtype then 1 else 0 end) > 0 as is_na
   from pg_attribute as a
@@ -47,7 +47,7 @@ with step1 as (
     s.schemaname = i.nspname
     and (
       (s.tablename = i.tblname and s.attname = pg_catalog.pg_get_indexdef(a.attrelid, a.attnum, true)) -- stats from tbl
-      OR (s.tablename = i.idxname AND s.attname = a.attname) -- stats from functionnal cols
+      OR (s.tablename = i.idxname AND s.attname = a.attname) -- stats from functional cols
     )
   join pg_type as t on a.atttypid = t.oid
   where a.attnum > 0

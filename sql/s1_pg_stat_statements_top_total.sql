@@ -30,7 +30,6 @@ select
     round(max(max_plan_time)::numeric, 2)
   ) as min_max_plan_t,
 \else
-  sum(calls) as calls,
   round(sum(total_time)::numeric, 2) as total_time,
   round((sum(mean_time * calls) / sum(calls))::numeric, 2) as mean_time,
   format(

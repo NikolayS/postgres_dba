@@ -28,7 +28,7 @@ with recursive l as (
 select (clock_timestamp() - a.xact_start)::interval(0) as ts_age,
        (clock_timestamp() - a.state_change)::interval(0) as change_age,
        a.datname,a.usename,a.client_addr,
-       --w.obj wait_on_object,
+       -- w.obj wait_on_object,
        tree.pid,replace(a.state, 'idle in transaction', 'idletx') state,
        lvl,(select count(*) from tree p where p.path ~ ('^'||tree.path) and not p.path=tree.path) blocked,
        case when tree.pid=any(tree.dl) then '!>' else repeat(' .', lvl) end||' '||trim(left(regexp_replace(a.query, e'\\s+', ' ', 'g'),100)) query
