@@ -12,7 +12,7 @@ with data as (
     indexrelname as index_name,
     (
       select (case when avg_leaf_density = 'NaN' then 0
-        else greatest(ceil(index_size * (1 - avg_leaf_density / (coalesce((SELECT (regexp_matches(c.reloptions::text, E'.*fillfactor=(\\d+).*'))[1]),'90')::real)))::bigint, 0) end)
+        else greatest(ceil(index_size * (1 - avg_leaf_density / (coalesce((select (regexp_matches(c.reloptions::text, E'.*fillfactor=(\\d+).*'))[1]),'90')::real)))::bigint, 0) end)
       from pgstatindex(
         case when p.indexrelid::regclass::text ~ '\.' then p.indexrelid::regclass::text else schemaname || '.' || p.indexrelid::regclass::text end
       )

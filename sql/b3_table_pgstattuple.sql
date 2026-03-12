@@ -17,7 +17,7 @@ from (
     pg_relation_size(c.oid) as relation_size,
     (case when reltoastrelid = 0 then 0 else (select free_space from pgstattuple(c.reltoastrelid)) end) as toast_free_space,
     coalesce(pg_relation_size(c.reltoastrelid), 0) as toast_relation_size,
-    coalesce((SELECT (regexp_matches(reloptions::text, E'.*fillfactor=(\\d+).*'))[1]),'100')::real AS fillfactor
+    coalesce((select (regexp_matches(reloptions::text, E'.*fillfactor=(\\d+).*'))[1]),'100')::real as fillfactor
     from pg_class c
     left join pg_namespace n on (n.oid = c.relnamespace)
     where nspname not in ('pg_catalog', 'information_schema')

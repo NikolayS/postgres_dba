@@ -58,7 +58,7 @@ with step1 as (
     (
       index_tuple_hdr_bm + maxalign
       -- Add padding to the index tuple header to align on MAXALIGN
-      - case when index_tuple_hdr_bm % maxalign = 0 THEN maxalign else index_tuple_hdr_bm % maxalign end
+      - case when index_tuple_hdr_bm % maxalign = 0 then maxalign else index_tuple_hdr_bm % maxalign end
       + nulldatawidth + maxalign
       -- Add padding to the data to align on MAXALIGN
       - case
@@ -80,9 +80,9 @@ with step1 as (
   join pg_am am on step2.relam = am.oid
   where am.amname = 'btree'
 ), step4 as (
-  SELECT
+  select
     *,
-    bs*(relpages)::bigint AS real_size,
+    bs*(relpages)::bigint as real_size,
 -------current_database(), nspname AS schemaname, tblname, idxname, bs*(relpages)::bigint AS real_size,
     bs*(relpages-est_pages)::bigint AS extra_size,
     100 * (relpages-est_pages)::float / relpages AS extra_ratio,

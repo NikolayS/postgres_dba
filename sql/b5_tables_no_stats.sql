@@ -2,22 +2,22 @@
 
 --Created by PostgreSQL Experts https://github.com/pgexperts/pgx_scripts/blob/master/bloat/no_stats_table_check.sql
 
-SELECT table_schema, table_name,
-    ( pg_class.relpages = 0 ) AS is_empty,
-    ( psut.relname IS NULL OR ( psut.last_analyze IS NULL and psut.last_autoanalyze IS NULL ) ) AS never_analyzed,
+select table_schema, table_name,
+    ( pg_class.relpages = 0 ) as is_empty,
+    ( psut.relname is null or ( psut.last_analyze is null and psut.last_autoanalyze is null ) ) as never_analyzed,
     array_agg(column_name::TEXT) as no_stats_columns
-FROM information_schema.columns
-    JOIN pg_class ON columns.table_name = pg_class.relname
-        AND pg_class.relkind = 'r'
-    JOIN pg_namespace ON pg_class.relnamespace = pg_namespace.oid
-        AND nspname = table_schema
-    LEFT OUTER JOIN pg_stats
-    ON table_schema = pg_stats.schemaname
-        AND table_name = pg_stats.tablename
-        AND column_name = pg_stats.attname
-    LEFT OUTER JOIN pg_stat_user_tables AS psut
-        ON table_schema = psut.schemaname
-        AND table_name = psut.relname
-WHERE pg_stats.attname IS NULL
-    AND table_schema NOT IN ('pg_catalog', 'information_schema')
-GROUP BY table_schema, table_name, relpages, psut.relname, last_analyze, last_autoanalyze;
+from information_schema.columns
+    join pg_class on columns.table_name = pg_class.relname
+        and pg_class.relkind = 'r'
+    join pg_namespace on pg_class.relnamespace = pg_namespace.oid
+        and nspname = table_schema
+    left outer join pg_stats
+    on table_schema = pg_stats.schemaname
+        and table_name = pg_stats.tablename
+        and column_name = pg_stats.attname
+    left outer join pg_stat_user_tables as psut
+        on table_schema = psut.schemaname
+        and table_name = psut.relname
+where pg_stats.attname is null
+    and table_schema not in ('pg_catalog', 'information_schema')
+group by table_schema, table_name, relpages, psut.relname, last_analyze, last_autoanalyze;
