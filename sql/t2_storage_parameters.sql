@@ -26,7 +26,7 @@ with rel_with_options as (
   join pg_namespace as n on c.relnamespace = n.oid
   where c.reloptions is not null
     and n.nspname not in ('pg_catalog', 'information_schema')
-    and c.relname != 'pg_stats'
+    and c.relname <> 'pg_stats'
 )
 select
   schema_name,

@@ -39,7 +39,7 @@ begin
     join pg_namespace n on n.oid = c.relnamespace
     join pg_am a on a.oid = c.relam
     where a.amname = 'btree'
-      and c.relpersistence != 't'
+      and c.relpersistence <> 't'
       and i.indisvalid
     order by n.nspname, t.relname, c.relname
   loop
@@ -82,7 +82,7 @@ begin
       join pg_namespace n on n.oid = c.relnamespace
       join pg_am a on a.oid = c.relam
       where a.amname = 'gin'
-        and c.relpersistence != 't'
+        and c.relpersistence <> 't'
         and i.indisvalid
       order by n.nspname, t.relname, c.relname
     loop
