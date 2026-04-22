@@ -4,6 +4,12 @@
   select 1/0;
 \endif
 
+-- default postgres_dba_interactive_mode when unset (e.g. running a report standalone)
+\if :{?postgres_dba_interactive_mode}
+\else
+  \set postgres_dba_interactive_mode true
+\endif
+
 select current_setting('server_version_num')::integer >= 180000 as postgres_dba_pgvers_18plus \gset
 
 select current_setting('server_version_num')::integer >= 170000 as postgres_dba_pgvers_17plus \gset
