@@ -1,6 +1,8 @@
 --Slowest queries report (requires pg_stat_statements)
 
 --Original version – Data Egret: https://github.com/dataegret/pg-utils/blob/master/sql/global_reports/query_stat_total.sql
+select exists (select 1 from pg_extension where extname = 'pg_stat_statements') as postgres_dba_pgss_installed \gset
+\if :postgres_dba_pgss_installed
 \if :postgres_dba_pgvers_13plus
 with pg_stat_statements_slice as (
 \if :postgres_dba_pgvers_17plus
@@ -322,4 +324,7 @@ select
 from statements_readable
 order by pos
 );
+\endif
+\else
+\echo 'extension "pg_stat_statements" is not installed; skipping. Run: CREATE EXTENSION pg_stat_statements;'
 \endif

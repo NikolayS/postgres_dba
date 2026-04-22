@@ -4,6 +4,8 @@
 -- Strips block comments (/* ... */) and line comments (-- ...)
 -- before extracting the keyword.
 
+select exists (select 1 from pg_extension where extname = 'pg_stat_statements') as postgres_dba_pgss_installed \gset
+\if :postgres_dba_pgss_installed
 \if :postgres_dba_pgvers_13plus
 with data as (
   select
@@ -70,4 +72,7 @@ select
 from data
 group by word
 order by sum(total_time) desc;
+\endif
+\else
+\echo 'extension "pg_stat_statements" is not installed; skipping. Run: CREATE EXTENSION pg_stat_statements;'
 \endif

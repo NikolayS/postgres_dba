@@ -3,6 +3,8 @@
 -- https://github.com/dataegret/pg-utils/tree/master/sql
 -- pgstattuple extension required
 -- WARNING: without table name/mask query will read all available tables which could cause I/O spikes
+select exists (select 1 from pg_extension where extname = 'pgstattuple') as postgres_dba_pgstattuple_installed \gset
+\if :postgres_dba_pgstattuple_installed
 select nspname,
 relname,
 pg_size_pretty(relation_size + toast_relation_size) as total_size,
@@ -27,4 +29,7 @@ from (
 ) t
 order by (toast_free_space + relation_size - (relation_size - free_space)*100/fillfactor) desc
 limit 20;
+\else
+\echo 'extension "pgstattuple" is not installed; skipping. Run: CREATE EXTENSION pgstattuple;'
+\endif
 

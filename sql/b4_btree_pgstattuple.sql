@@ -3,6 +3,8 @@
 -- https://github.com/dataegret/pg-utils/tree/master/sql
 -- pgstattuple extension required
 -- WARNING: without index name/mask query will read all available indexes which could cause I/O spikes
+select exists (select 1 from pg_extension where extname = 'pgstattuple') as postgres_dba_pgstattuple_installed \gset
+\if :postgres_dba_pgstattuple_installed
 with data as (
   select
     schemaname as schema_name,
@@ -38,4 +40,7 @@ select
   pg_size_pretty(free_space) as "Wasted"
 from data
 order by free_space desc;
+\else
+\echo 'extension "pgstattuple" is not installed; skipping. Run: CREATE EXTENSION pgstattuple;'
+\endif
 

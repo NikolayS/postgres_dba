@@ -1,5 +1,7 @@
 -- Buffer cache contents (requires pg_buffercache; expensive on large shared_buffers)
 
+select exists (select 1 from pg_extension where extname = 'pg_buffercache') as postgres_dba_pg_buffercache_installed \gset
+\if :postgres_dba_pg_buffercache_installed
 with buf as (
   select
     c.oid as relid,
@@ -57,3 +59,6 @@ select
 from buf
 order by buffers desc
 limit 50;
+\else
+\echo 'extension "pg_buffercache" is not installed; skipping. Run: CREATE EXTENSION pg_buffercache;'
+\endif
