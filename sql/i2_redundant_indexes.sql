@@ -21,13 +21,11 @@ with fk_indexes as (
   join pg_class cr on cr.oid = i.indrelid and cr.relkind = 'r'
   join pg_namespace n on n.oid = ci.relnamespace
   join pg_constraint cn on cn.conrelid = cr.oid
-  left join pg_stat_user_indexes si on si.indexrelid = i.indexrelid
   where
      contype = 'f'
      and i.indisunique is false
      and conkey is not null
      and ci.relpages > 0 -- raise for a DB with a lot of indexes
-     and si.idx_scan < 10
 ),
 -- Redundant indexes
 index_data as (
