@@ -32,7 +32,7 @@ with unused as (
   select
       format('unused (idx_scan: %s)', pg_stat_user_indexes.idx_scan)::text as reason,
       pg_stat_user_indexes.relname as table_name,
-      pg_stat_user_indexes.schemaname || '.' || indexrelname::text as index_name,
+      quote_ident(pg_stat_user_indexes.schemaname) || '.' || quote_ident(indexrelname) as index_name,
       pg_stat_user_indexes.idx_scan,
       (coalesce(n_tup_ins, 0) + coalesce(n_tup_upd, 0) - coalesce(n_tup_hot_upd, 0) + coalesce(n_tup_del, 0)) as write_activity,
       pg_stat_user_tables.seq_scan,
