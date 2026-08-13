@@ -1,7 +1,7 @@
 # 🐘 postgres_dba
 
 [![CI](https://github.com/NikolayS/postgres_dba/actions/workflows/test.yml/badge.svg)](https://github.com/NikolayS/postgres_dba/actions)
-[![PostgreSQL 13–18](https://img.shields.io/badge/PostgreSQL-13--18-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![PostgreSQL 13–19beta2](https://img.shields.io/badge/PostgreSQL-13--19beta2-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![License: BSD-3](https://img.shields.io/badge/License-BSD--3-blue.svg)](LICENSE)
 
 **34 diagnostic reports for PostgreSQL, right inside `psql`.** No agents, no daemons, no external dependencies — just SQL.
@@ -111,7 +111,7 @@ Some reports benefit from additional extensions:
 
 ## Compatibility
 
-Tested on **PostgreSQL 13 through 18** via CI on every commit. Older versions (9.6–12) may work but are not actively tested.
+Tested on **PostgreSQL 13 through 18 and PostgreSQL 19 beta 2** via CI on every commit. Older versions (9.6–12) may work but are not actively tested.
 
 Works with the `pg_monitor` role — superuser is not required for most reports (corruption checks need superuser or explicit `GRANT EXECUTE`).
 
