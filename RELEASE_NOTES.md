@@ -5,7 +5,8 @@
 ## PostgreSQL 19 Beta 2
 
 - Added PostgreSQL 19 beta 2 to the compatibility matrix.
-- Verified all non-interactive reports with a `pg_monitor`-only user.
+- Verified all non-interactive reports with a non-superuser `pg_monitor` member
+  holding the minimal database and object grants the reports require.
 - Verified extension-backed reports with `amcheck`, `intarray`,
   `pg_buffercache`, `pg_stat_statements`, and `pgstattuple` installed.
 

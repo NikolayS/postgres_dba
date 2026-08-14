@@ -62,7 +62,13 @@ jobs:
           --no-align \
           --command='show server_version;')
         echo "PostgreSQL ${server_version}"
-        if [[ "${server_version}" != '${{ matrix.postgres-version }}'* ]]; then
+        expected_version='${{ matrix.postgres-version }}'
+        if [[ "${expected_version}" =~ ^[0-9]+$ ]]; then
+          expected_prefix="${expected_version}."
+        else
+          expected_prefix="${expected_version} "
+        fi
+        if [[ "${server_version}" != "${expected_prefix}"* ]]; then
           echo "Expected PostgreSQL ${{ matrix.postgres-version }}, got ${server_version}" >&2
           exit 1
         fi
@@ -105,7 +111,8 @@ jobs:
           constraint fk_test foreign key (parent_id) references fk_parent(id)
         );
         insert into fk_parent
-        select i, 'data_' || i from generate_series(1, 100000) i;
+        select i, 'data_' || i
+        from generate_series(1, 100000) i;
         insert into fk_child
         select i, (i % 100000) + 1, 'data_' || i
         from generate_series(1, 200000) i;
@@ -122,11 +129,26 @@ jobs:
           --username=dba_user \
           --dbname=test \
           --command='select current_user, session_user;'
+
+        pgss_rows=$(PAGER='cat' psql \
+          --no-psqlrc \
+          --set=ON_ERROR_STOP=1 \
+          --host=localhost \
+          --username=dba_user \
+          --dbname=test \
+          --tuples-only \
+          --no-align \
+          --command='select count(*) from pg_stat_statements;')
+        if (( pgss_rows == 0 )); then
+          echo 'pg_stat_statements did not capture any statements' >&2
+          exit 1
+        fi
     
     - name: Test non-interactive reports
       run: |
         echo "Testing all non-interactive reports with minimal privileges..."
         for report in ./sql/*.sql; do
+          # Interactive reports are covered with scripted input below.
           if [[ "${report}" == ./sql/r1_* || "${report}" == ./sql/r2_* ]]; then
             continue
           fi
@@ -186,13 +208,16 @@ jobs:
           exit 1
         fi
 
+        # md5 works with PG13 verifiers and negotiates SCRAM for newer verifiers.
         docker exec postgres-dba-test sh -c '
+          set -eu
           hba="${PGDATA}/pg_hba.conf"
           {
             printf "%s\n" \
               "host all ci_test_role all md5"
             cat "${hba}"
           } > "${hba}.new"
+          test -s "${hba}.new"
           mv "${hba}.new" "${hba}"
         '
         PAGER='cat' psql \
@@ -202,6 +227,27 @@ jobs:
           --username=postgres \
           --dbname=test \
           --command='select pg_reload_conf();'
+
+        auth_rule_ready=false
+        for _ in {1..30}; do
+          if auth_error=$(PGPASSWORD='deliberately-wrong' PAGER='cat' psql \
+            --no-psqlrc \
+            --host=localhost \
+            --username=ci_test_role \
+            --dbname=test \
+            --command='select 1;' 2>&1); then
+            :
+          elif [[ "${auth_error}" == \
+            *'password authentication failed for user "ci_test_role"'* ]]; then
+            auth_rule_ready=true
+            break
+          fi
+          sleep 0.1
+        done
+        if [[ "${auth_rule_ready}" != true ]]; then
+          echo 'Password-authentication rule did not become active' >&2
+          exit 1
+        fi
 
         PGPASSWORD="${created_password}" PAGER='cat' psql \
           --no-psqlrc \
@@ -223,6 +269,7 @@ jobs:
           --command="select md5(rolpassword) from pg_authid
                      where rolname = 'ci_test_role';")
 
+        # r2 emits its generated password at DEBUG level.
         if ! output=$(printf 'ci_test_role\n0\n1\n' \
           | PGOPTIONS='-c client_min_messages=debug' PAGER='cat' psql \
           --no-psqlrc \
@@ -246,6 +293,22 @@ jobs:
         echo "::add-mask::${altered_password}"
         if [[ "${created_password}" == "${altered_password}" ]]; then
           echo 'Alter-role report reused the previous password' >&2
+          exit 1
+        fi
+
+        altered_role_state=$(PAGER='cat' psql \
+          --no-psqlrc \
+          --set=ON_ERROR_STOP=1 \
+          --host=localhost \
+          --username=postgres \
+          --dbname=test \
+          --tuples-only \
+          --no-align \
+          --command="select rolsuper, rolcanlogin
+                     from pg_authid
+                     where rolname = 'ci_test_role';")
+        if [[ "${altered_role_state}" != 'f|t' ]]; then
+          echo "Unexpected altered role state: ${altered_role_state}" >&2
           exit 1
         fi
 
@@ -274,14 +337,19 @@ jobs:
           --dbname=test \
           --command='select 1;' \
           >/dev/null
-        if PGPASSWORD="${created_password}" PAGER='cat' psql \
+        if old_password_error=$(PGPASSWORD="${created_password}" PAGER='cat' psql \
           --no-psqlrc \
           --host=localhost \
           --username=ci_test_role \
           --dbname=test \
           --command='select 1;' \
-          >/dev/null 2>&1; then
+          2>&1); then
           echo 'Previous password still authenticates after rotation' >&2
+          exit 1
+        fi
+        if [[ "${old_password_error}" != \
+          *'password authentication failed for user "ci_test_role"'* ]]; then
+          echo "Unexpected old-password failure: ${old_password_error}" >&2
           exit 1
         fi
     
@@ -302,8 +370,10 @@ jobs:
           echo "${output}" >&2
           exit 1
         fi
-        role_line=$(printf '%s\n' "${output}" | grep -E '^[[:space:]]*Role[[:space:]]*\|')
-        if [[ "${role_line}" != *Primary* ]]; then
+        role_line=$(printf '%s\n' "${output}" \
+          | grep -E '^[[:space:]]*Role[[:space:]]*\|' \
+          || true)
+        if [[ -z "${role_line}" || "${role_line}" != *Primary* ]]; then
           echo "Role test failed: ${output}" >&2
           exit 1
         fi
@@ -365,6 +435,10 @@ jobs:
         fi
 
         echo "All regression tests passed with minimal privileges"
+
+    - name: Print PostgreSQL logs on failure
+      if: failure()
+      run: docker logs postgres-dba-test || true
 
     - name: Stop PostgreSQL
       if: always()
