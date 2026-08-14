@@ -27,7 +27,7 @@ jobs:
           --env POSTGRES_DB=test \
           --env POSTGRES_HOST_AUTH_METHOD=trust \
           --env POSTGRES_INITDB_ARGS='--auth-host=trust --auth-local=trust' \
-          --publish 5432:5432 \
+          --publish 127.0.0.1:5432:5432 \
           postgres:${{ matrix.postgres-version }} \
           -c shared_preload_libraries=pg_stat_statements
     
@@ -62,9 +62,8 @@ jobs:
           --no-align \
           --command='show server_version;')
         echo "PostgreSQL ${server_version}"
-        if [[ '${{ matrix.postgres-version }}' == '19beta2' \
-          && "${server_version}" != 19beta2* ]]; then
-          echo "Expected PostgreSQL 19beta2, got ${server_version}" >&2
+        if [[ "${server_version}" != '${{ matrix.postgres-version }}'* ]]; then
+          echo "Expected PostgreSQL ${{ matrix.postgres-version }}, got ${server_version}" >&2
           exit 1
         fi
 
@@ -124,15 +123,15 @@ jobs:
           --dbname=test \
           --command='select current_user, session_user;'
     
-    - name: Test wide mode
+    - name: Test non-interactive reports
       run: |
-        echo "Testing all SQL files in wide mode with minimal privileges..."
+        echo "Testing all non-interactive reports with minimal privileges..."
         for report in ./sql/*.sql; do
           if [[ "${report}" == ./sql/r1_* || "${report}" == ./sql/r2_* ]]; then
             continue
           fi
           echo "  Testing ${report}..."
-          if ! output=$(PGOPTIONS='-c postgres_dba.wide=on' PAGER='cat' psql \
+          if ! output=$(PAGER='cat' psql \
             --no-psqlrc \
             --set=ON_ERROR_STOP=1 \
             --set=postgres_dba_interactive_mode=false \
@@ -141,47 +140,24 @@ jobs:
             --dbname=test \
             --file=warmup.psql \
             --file="${report}" 2>&1); then
-            echo "FAILED: ${report} in wide mode" >&2
+            echo "FAILED: ${report}" >&2
             echo "${output}" >&2
             exit 1
           fi
         done
-        echo "All tests passed in wide mode"
-    
-    - name: Test normal mode
-      run: |
-        echo "Testing all SQL files in normal mode with minimal privileges..."
-        for report in ./sql/*.sql; do
-          if [[ "${report}" == ./sql/r1_* || "${report}" == ./sql/r2_* ]]; then
-            continue
-          fi
-          echo "  Testing ${report}..."
-          if ! output=$(PGOPTIONS='-c postgres_dba.wide=off' PAGER='cat' psql \
-            --no-psqlrc \
-            --set=ON_ERROR_STOP=1 \
-            --set=postgres_dba_interactive_mode=false \
-            --host=localhost \
-            --username=dba_user \
-            --dbname=test \
-            --file=warmup.psql \
-            --file="${report}" 2>&1); then
-            echo "FAILED: ${report} in normal mode" >&2
-            echo "${output}" >&2
-            exit 1
-          fi
-        done
-        echo "All tests passed in normal mode"
+        echo "All non-interactive reports passed"
 
     - name: Test interactive role reports
       run: |
-        if ! output=$(printf 'ci_test_role\n0\n1\n' | PAGER='cat' psql \
+        if ! printf 'ci_test_role\n0\n1\n' | PAGER='cat' psql \
           --no-psqlrc \
           --set=ON_ERROR_STOP=1 \
           --host=localhost \
           --username=postgres \
           --dbname=test \
-          --file=sql/r1_create_user_with_random_password.sql 2>&1); then
-          echo "${output}" | sed -E 's/(password: ).*/\1[redacted]/' >&2
+          --file=sql/r1_create_user_with_random_password.sql \
+          >/dev/null 2>&1; then
+          echo 'Create-role report failed; output suppressed because it contains a password' >&2
           exit 1
         fi
 
@@ -201,7 +177,7 @@ jobs:
           exit 1
         fi
 
-        old_password=$(PAGER='cat' psql \
+        old_password_digest=$(PAGER='cat' psql \
           --no-psqlrc \
           --set=ON_ERROR_STOP=1 \
           --host=localhost \
@@ -209,21 +185,22 @@ jobs:
           --dbname=test \
           --tuples-only \
           --no-align \
-          --command="select rolpassword from pg_authid
+          --command="select md5(rolpassword) from pg_authid
                      where rolname = 'ci_test_role';")
 
-        if ! output=$(printf 'ci_test_role\n0\n1\n' | PAGER='cat' psql \
+        if ! printf 'ci_test_role\n0\n1\n' | PAGER='cat' psql \
           --no-psqlrc \
           --set=ON_ERROR_STOP=1 \
           --host=localhost \
           --username=postgres \
           --dbname=test \
-          --file=sql/r2_alter_user_with_random_password.sql 2>&1); then
-          echo "${output}" | sed -E 's/(password: ).*/\1[redacted]/' >&2
+          --file=sql/r2_alter_user_with_random_password.sql \
+          >/dev/null 2>&1; then
+          echo 'Alter-role report failed; output suppressed because it may contain a password' >&2
           exit 1
         fi
 
-        new_password=$(PAGER='cat' psql \
+        new_password_digest=$(PAGER='cat' psql \
           --no-psqlrc \
           --set=ON_ERROR_STOP=1 \
           --host=localhost \
@@ -231,11 +208,11 @@ jobs:
           --dbname=test \
           --tuples-only \
           --no-align \
-          --command="select rolpassword from pg_authid
+          --command="select md5(rolpassword) from pg_authid
                      where rolname = 'ci_test_role';")
-        if [[ -z "${old_password}" \
-          || -z "${new_password}" \
-          || "${old_password}" == "${new_password}" ]]; then
+        if [[ -z "${old_password_digest}" \
+          || -z "${new_password_digest}" \
+          || "${old_password_digest}" == "${new_password_digest}" ]]; then
           echo 'Alter-role report did not rotate the password' >&2
           exit 1
         fi
@@ -245,7 +222,7 @@ jobs:
         echo "Running regression tests with minimal privileges..."
 
         echo "  Testing 0_node.sql..."
-        output=$(PGOPTIONS='-c postgres_dba.wide=off' PAGER='cat' psql \
+        if ! output=$(PAGER='cat' psql \
           --no-psqlrc \
           --set=ON_ERROR_STOP=1 \
           --set=postgres_dba_interactive_mode=false \
@@ -253,14 +230,18 @@ jobs:
           --username=dba_user \
           --dbname=test \
           --file=warmup.psql \
-          --file=sql/0_node.sql)
-        if [[ "${output}" != *Primary* ]]; then
+          --file=sql/0_node.sql 2>&1); then
+          echo "${output}" >&2
+          exit 1
+        fi
+        role_line=$(printf '%s\n' "${output}" | grep -E '^[[:space:]]*Role[[:space:]]*\|')
+        if [[ "${role_line}" != *Primary* ]]; then
           echo "Role test failed: ${output}" >&2
           exit 1
         fi
 
         echo "  Testing x1_alignment_padding.sql..."
-        output=$(PGOPTIONS='-c postgres_dba.wide=off' PAGER='cat' psql \
+        if ! output=$(PAGER='cat' psql \
           --no-psqlrc \
           --set=ON_ERROR_STOP=1 \
           --set=postgres_dba_interactive_mode=false \
@@ -268,7 +249,10 @@ jobs:
           --username=dba_user \
           --dbname=test \
           --file=warmup.psql \
-          --file=sql/x1_alignment_padding.sql)
+          --file=sql/x1_alignment_padding.sql 2>&1); then
+          echo "${output}" >&2
+          exit 1
+        fi
         if [[ "${output}" != *align1* \
           || "${output}" != *align2* \
           || "${output}" != *'int4, more, int8'* ]]; then
@@ -277,7 +261,7 @@ jobs:
         fi
 
         echo "  Testing a1_activity.sql..."
-        output=$(PGOPTIONS='-c postgres_dba.wide=off' PAGER='cat' psql \
+        if ! output=$(PAGER='cat' psql \
           --no-psqlrc \
           --set=ON_ERROR_STOP=1 \
           --set=postgres_dba_interactive_mode=false \
@@ -285,14 +269,17 @@ jobs:
           --username=dba_user \
           --dbname=test \
           --file=warmup.psql \
-          --file=sql/a1_activity.sql)
-        if [[ "${output}" != *User* ]]; then
+          --file=sql/a1_activity.sql 2>&1); then
+          echo "${output}" >&2
+          exit 1
+        fi
+        if [[ "${output}" != *dba_user* ]]; then
           echo "Activity test failed: ${output}" >&2
           exit 1
         fi
 
         echo "  Testing i3_non_indexed_fks.sql (with intarray extension)..."
-        output=$(PGOPTIONS='-c postgres_dba.wide=off' PAGER='cat' psql \
+        if ! output=$(PAGER='cat' psql \
           --no-psqlrc \
           --set=ON_ERROR_STOP=1 \
           --set=postgres_dba_interactive_mode=false \
@@ -300,10 +287,17 @@ jobs:
           --username=dba_user \
           --dbname=test \
           --file=warmup.psql \
-          --file=sql/i3_non_indexed_fks.sql 2>&1)
+          --file=sql/i3_non_indexed_fks.sql 2>&1); then
+          echo "${output}" >&2
+          exit 1
+        fi
         if [[ "${output}" != *fk_child* || "${output}" != *fk_test* ]]; then
           echo "i3 test failed: ${output}" >&2
           exit 1
         fi
 
         echo "All regression tests passed with minimal privileges"
+
+    - name: Stop PostgreSQL
+      if: always()
+      run: docker rm --force postgres-dba-test
