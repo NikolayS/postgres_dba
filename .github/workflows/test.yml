@@ -149,17 +149,26 @@ jobs:
 
     - name: Test interactive role reports
       run: |
-        if ! printf 'ci_test_role\n0\n1\n' | PAGER='cat' psql \
+        if ! output=$(printf 'ci_test_role\n0\n1\n' | PAGER='cat' psql \
           --no-psqlrc \
           --set=ON_ERROR_STOP=1 \
           --host=localhost \
           --username=postgres \
           --dbname=test \
           --file=sql/r1_create_user_with_random_password.sql \
-          >/dev/null 2>&1; then
+          2>&1); then
           echo 'Create-role report failed; output suppressed because it contains a password' >&2
           exit 1
         fi
+
+        created_password=$(printf '%s\n' "${output}" \
+          | sed -nE \
+            's/^.*INFO:[[:space:]]+User ci_test_role created, password: ([[:alnum:]]+)$/\1/p')
+        if [[ -z "${created_password}" ]]; then
+          echo 'Create-role report did not return a parseable password' >&2
+          exit 1
+        fi
+        echo "::add-mask::${created_password}"
 
         role_state=$(PAGER='cat' psql \
           --no-psqlrc \
@@ -177,6 +186,32 @@ jobs:
           exit 1
         fi
 
+        docker exec postgres-dba-test sh -c '
+          hba="${PGDATA}/pg_hba.conf"
+          {
+            printf "%s\n" \
+              "host all ci_test_role all scram-sha-256"
+            cat "${hba}"
+          } > "${hba}.new"
+          mv "${hba}.new" "${hba}"
+        '
+        PAGER='cat' psql \
+          --no-psqlrc \
+          --set=ON_ERROR_STOP=1 \
+          --host=localhost \
+          --username=postgres \
+          --dbname=test \
+          --command='select pg_reload_conf();'
+
+        PGPASSWORD="${created_password}" PAGER='cat' psql \
+          --no-psqlrc \
+          --set=ON_ERROR_STOP=1 \
+          --host=localhost \
+          --username=ci_test_role \
+          --dbname=test \
+          --command='select 1;' \
+          >/dev/null
+
         old_password_digest=$(PAGER='cat' psql \
           --no-psqlrc \
           --set=ON_ERROR_STOP=1 \
@@ -188,15 +223,29 @@ jobs:
           --command="select md5(rolpassword) from pg_authid
                      where rolname = 'ci_test_role';")
 
-        if ! printf 'ci_test_role\n0\n1\n' | PAGER='cat' psql \
+        if ! output=$(printf 'ci_test_role\n0\n1\n' \
+          | PGOPTIONS='-c client_min_messages=debug' PAGER='cat' psql \
           --no-psqlrc \
           --set=ON_ERROR_STOP=1 \
           --host=localhost \
           --username=postgres \
           --dbname=test \
           --file=sql/r2_alter_user_with_random_password.sql \
-          >/dev/null 2>&1; then
+          2>&1); then
           echo 'Alter-role report failed; output suppressed because it may contain a password' >&2
+          exit 1
+        fi
+
+        altered_password=$(printf '%s\n' "${output}" \
+          | sed -nE \
+            's/^.*DEBUG:[[:space:]]+User ci_test_role altered, password: ([[:alnum:]]+)$/\1/p')
+        if [[ -z "${altered_password}" ]]; then
+          echo 'Alter-role report did not return a parseable password' >&2
+          exit 1
+        fi
+        echo "::add-mask::${altered_password}"
+        if [[ "${created_password}" == "${altered_password}" ]]; then
+          echo 'Alter-role report reused the previous password' >&2
           exit 1
         fi
 
@@ -214,6 +263,25 @@ jobs:
           || -z "${new_password_digest}" \
           || "${old_password_digest}" == "${new_password_digest}" ]]; then
           echo 'Alter-role report did not rotate the password' >&2
+          exit 1
+        fi
+
+        PGPASSWORD="${altered_password}" PAGER='cat' psql \
+          --no-psqlrc \
+          --set=ON_ERROR_STOP=1 \
+          --host=localhost \
+          --username=ci_test_role \
+          --dbname=test \
+          --command='select 1;' \
+          >/dev/null
+        if PGPASSWORD="${created_password}" PAGER='cat' psql \
+          --no-psqlrc \
+          --host=localhost \
+          --username=ci_test_role \
+          --dbname=test \
+          --command='select 1;' \
+          >/dev/null 2>&1; then
+          echo 'Previous password still authenticates after rotation' >&2
           exit 1
         fi
     
