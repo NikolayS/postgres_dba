@@ -190,7 +190,7 @@ jobs:
           hba="${PGDATA}/pg_hba.conf"
           {
             printf "%s\n" \
-              "host all ci_test_role all scram-sha-256"
+              "host all ci_test_role all md5"
             cat "${hba}"
           } > "${hba}.new"
           mv "${hba}.new" "${hba}"

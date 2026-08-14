@@ -15,8 +15,8 @@
 - Enabled `pg_stat_statements` in `shared_preload_libraries`, so its reports
   execute instead of returning a masked error.
 - Added scripted functional tests for the interactive create-role and
-  alter-role reports, including successful authentication, password rotation,
-  and rejection of the previous password.
+  alter-role reports, including successful password authentication, password
+  rotation, and rejection of the previous password.
 - Added assertions that every job is running its expected PostgreSQL version.
 - Restricted the test database to loopback and added unconditional cleanup.
 
