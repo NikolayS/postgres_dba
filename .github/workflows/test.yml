@@ -245,7 +245,7 @@ jobs:
           sleep 0.1
         done
         if [[ "${auth_rule_ready}" != true ]]; then
-          echo 'Password-authentication rule did not become active' >&2
+          echo "Password-authentication rule did not become active: ${auth_error}" >&2
           exit 1
         fi
 
