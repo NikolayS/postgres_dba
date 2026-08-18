@@ -11,7 +11,7 @@ Follow the rules at https://gitlab.com/postgres-ai/rules/-/tree/main/rules — a
 
 ## CI
 
-GitHub Actions (`test.yml`): runs on push and PRs — tests across PostgreSQL 13, 14, 15, 16, 17, 18.
+GitHub Actions (`test.yml`): runs on push and PRs — tests across PostgreSQL 13, 14, 15, 16, 17, 18, and 19 beta 2.
 
 ## Code Review
 

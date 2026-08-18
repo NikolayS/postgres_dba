@@ -1,3 +1,33 @@
+# postgres_dba 2026.8.1
+
+**34 reports** | Tested on **PostgreSQL 13–19beta2** | Works with `pg_monitor` role
+
+## PostgreSQL 19 Beta 2
+
+- Added PostgreSQL 19 beta 2 to the compatibility matrix.
+- Verified all non-interactive reports with a non-superuser `pg_monitor` member
+  holding the minimal database and object grants the reports require.
+- Verified extension-backed reports with `amcheck`, `intarray`,
+  `pg_buffercache`, `pg_stat_statements`, and `pgstattuple` installed.
+
+## CI Reliability
+
+- Made SQL errors fail the test job with `ON_ERROR_STOP`.
+- Enabled `pg_stat_statements` in `shared_preload_libraries`, so its reports
+  execute instead of returning a masked error.
+- Added scripted functional tests for the interactive create-role and
+  alter-role reports, including successful password authentication, password
+  rotation, and rejection of the previous password.
+- Added assertions that every job is running its expected PostgreSQL version.
+- Restricted the test database to loopback and added unconditional cleanup.
+
+## Versioning
+
+Starting with this release, postgres_dba uses calendar versions in
+`YYYY.M.patch` format.
+
+---
+
 # postgres_dba 7.0
 
 **34 reports** | Tested on **PostgreSQL 13–18** | Works with `pg_monitor` role
