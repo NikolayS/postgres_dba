@@ -130,7 +130,7 @@ jobs:
           --dbname=test \
           --command='select current_user, session_user;'
 
-        pgss_rows=$(PAGER='cat' psql \
+        if ! pgss_rows=$(PAGER='cat' psql \
           --no-psqlrc \
           --set=ON_ERROR_STOP=1 \
           --host=localhost \
@@ -138,7 +138,10 @@ jobs:
           --dbname=test \
           --tuples-only \
           --no-align \
-          --command='select count(*) from pg_stat_statements;')
+          --command='select count(*) from pg_stat_statements;'); then
+          echo 'pg_stat_statements query failed' >&2
+          exit 1
+        fi
         if (( pgss_rows == 0 )); then
           echo 'pg_stat_statements did not capture any statements' >&2
           exit 1
@@ -147,25 +150,28 @@ jobs:
     - name: Test non-interactive reports
       run: |
         echo "Testing all non-interactive reports with minimal privileges..."
-        for report in ./sql/*.sql; do
-          # Interactive reports are covered with scripted input below.
-          if [[ "${report}" == ./sql/r1_* || "${report}" == ./sql/r2_* ]]; then
-            continue
-          fi
-          echo "  Testing ${report}..."
-          if ! output=$(PAGER='cat' psql \
-            --no-psqlrc \
-            --set=ON_ERROR_STOP=1 \
-            --set=postgres_dba_interactive_mode=false \
-            --host=localhost \
-            --username=dba_user \
-            --dbname=test \
-            --file=warmup.psql \
-            --file="${report}" 2>&1); then
-            echo "FAILED: ${report}" >&2
-            echo "${output}" >&2
-            exit 1
-          fi
+        for mode in off on; do
+          echo "Testing reports with postgres_dba.wide=${mode}..."
+          for report in ./sql/*.sql; do
+            # Interactive reports are covered with scripted input below.
+            if [[ "${report}" == ./sql/r1_* || "${report}" == ./sql/r2_* ]]; then
+              continue
+            fi
+            echo "  Testing ${report}..."
+            if ! output=$(PGOPTIONS="-c postgres_dba.wide=${mode}" PAGER='cat' psql \
+              --no-psqlrc \
+              --set=ON_ERROR_STOP=1 \
+              --set=postgres_dba_interactive_mode=false \
+              --host=localhost \
+              --username=dba_user \
+              --dbname=test \
+              --file=warmup.psql \
+              --file="${report}" 2>&1); then
+              echo "FAILED (${mode}): ${report}" >&2
+              echo "${output}" >&2
+              exit 1
+            fi
+          done
         done
         echo "All non-interactive reports passed"
 
