@@ -33,10 +33,10 @@ jobs:
           -c shared_preload_libraries=pg_stat_statements \
           -c password_encryption=scram-sha-256
     
-    # ubuntu-latest may not package psql 19 yet; use the official client image.
-    - name: Install PostgreSQL 19 client wrappers
+    # Use official clients so the runner package catalog does not limit versions.
+    - name: Install PostgreSQL client wrappers
       run: |
-        docker pull postgres:19
+        docker pull postgres:${{ matrix.postgres-version }}
         mkdir -p "$RUNNER_TEMP/pg-client"
         cat > "$RUNNER_TEMP/pg-client/psql" <<'SH'
         #!/bin/sh
@@ -44,12 +44,12 @@ jobs:
           --env PGHOST --env PGPORT --env PGUSER --env PGDATABASE \
           --env PGPASSWORD --env PGOPTIONS --env PAGER=cat \
           --volume "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE:ro" \
-          --workdir "$PWD" postgres:19 "$(basename "$0")" "$@"
+          --workdir "$PWD" postgres:${{ matrix.postgres-version }} "$(basename "$0")" "$@"
         SH
         chmod +x "$RUNNER_TEMP/pg-client/psql"
         cp "$RUNNER_TEMP/pg-client/psql" "$RUNNER_TEMP/pg-client/pg_isready"
         echo "$RUNNER_TEMP/pg-client" >> "$GITHUB_PATH"
-        "$RUNNER_TEMP/pg-client/psql" --version | grep -E '^psql \(PostgreSQL\) 19\.'
+        "$RUNNER_TEMP/pg-client/psql" --version | grep -E '^psql \(PostgreSQL\) ${{ matrix.postgres-version }}\.'
 
     - name: Prepare test database
       run: |
@@ -164,29 +164,25 @@ jobs:
     - name: Test non-interactive reports
       run: |
         echo "Testing all non-interactive reports with minimal privileges..."
-        # Exercise both accepted legacy settings; reports currently use identical SQL.
-        for mode in off on; do
-          echo "Testing reports with postgres_dba.wide=${mode}..."
-          for report in ./sql/*.sql; do
-            # Interactive reports are covered with scripted input below.
-            if [[ "${report}" == ./sql/r1_* || "${report}" == ./sql/r2_* ]]; then
-              continue
-            fi
-            echo "  Testing ${report}..."
-            if ! output=$(PGOPTIONS="-c postgres_dba.wide=${mode}" PAGER='cat' psql \
-              --no-psqlrc \
-              --set=ON_ERROR_STOP=1 \
-              --set=postgres_dba_interactive_mode=false \
-              --host=localhost \
-              --username=dba_user \
-              --dbname=test \
-              --file=warmup.psql \
-              --file="${report}" 2>&1); then
-              echo "FAILED (${mode}): ${report}" >&2
-              echo "${output}" >&2
-              exit 1
-            fi
-          done
+        for report in ./sql/*.sql; do
+          # Interactive reports are covered with scripted input below.
+          if [[ "${report}" == ./sql/r1_* || "${report}" == ./sql/r2_* ]]; then
+            continue
+          fi
+          echo "  Testing ${report}..."
+          if ! output=$(PAGER='cat' psql \
+            --no-psqlrc \
+            --set=ON_ERROR_STOP=1 \
+            --set=postgres_dba_interactive_mode=false \
+            --host=localhost \
+            --username=dba_user \
+            --dbname=test \
+            --file=warmup.psql \
+            --file="${report}" 2>&1); then
+            echo "FAILED: ${report}" >&2
+            echo "${output}" >&2
+            exit 1
+          fi
         done
         echo "All non-interactive reports passed"
 

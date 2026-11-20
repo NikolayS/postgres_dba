@@ -20,7 +20,7 @@ bash -c "echo \"\\set dba '\\\\\\\\i $(pwd)/start.psql'\" >> ~/.psqlrc"
 
 Connect to any Postgres server via psql and type `:dba`.
 
-> **Requires psql 10+.** Tested server versions are Postgres 13–19. Postgres 13 and 14 are retained as compatibility targets but are end-of-life upstream. For best results, use the latest psql client.
+> **Requires psql 10+.** Tested server and psql client versions are Postgres 13–19; psql 10–12 are not covered by the current test matrix. Postgres 13 and 14 are retained as compatibility targets but are end-of-life upstream. For best results, use the latest psql client.
 
 ## Reports
 
