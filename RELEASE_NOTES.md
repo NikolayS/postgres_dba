@@ -1,10 +1,10 @@
-# postgres_dba 2026.8.1
+# postgres_dba 2026.11.1
 
-**34 reports** | Tested on **PostgreSQL 13–19beta2** | Works with `pg_monitor` role
+**34 reports** | Tested on **PostgreSQL 13–19** | Works with `pg_monitor` role
 
-## PostgreSQL 19 Beta 2
+## PostgreSQL 19
 
-- Added PostgreSQL 19 beta 2 to the compatibility matrix.
+- Added PostgreSQL 19 to the compatibility matrix.
 - Verified all non-interactive reports with a non-superuser `pg_monitor` member
   holding the minimal database and object grants the reports require.
 - Verified extension-backed reports with `amcheck`, `intarray`,

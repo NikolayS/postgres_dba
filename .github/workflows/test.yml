@@ -9,10 +9,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      PGPASSWORD: postgres
     
     strategy:
       matrix:
-        postgres-version: ['13', '14', '15', '16', '17', '18', '19beta2']
+        postgres-version: ['13', '14', '15', '16', '17', '18', '19']
       fail-fast: false
     
     steps:
@@ -25,11 +27,12 @@ jobs:
           --name postgres-dba-test \
           --env POSTGRES_PASSWORD=postgres \
           --env POSTGRES_DB=test \
-          --env POSTGRES_HOST_AUTH_METHOD=trust \
-          --env POSTGRES_INITDB_ARGS='--auth-host=trust --auth-local=trust' \
+          --env POSTGRES_HOST_AUTH_METHOD=scram-sha-256 \
+          --env POSTGRES_INITDB_ARGS='--auth-host=scram-sha-256 --auth-local=trust' \
           --publish 127.0.0.1:5432:5432 \
           postgres:${{ matrix.postgres-version }} \
-          -c shared_preload_libraries=pg_stat_statements
+          -c shared_preload_libraries=pg_stat_statements \
+          -c password_encryption=scram-sha-256
     
     - name: Install PostgreSQL client
       run: |
@@ -89,7 +92,7 @@ jobs:
         grant execute on all functions in schema public to public;
 
         -- Minimal privilege user
-        create user dba_user;
+        create user dba_user password 'postgres';
         grant pg_monitor to dba_user;
         grant connect on database test to dba_user;
         grant usage on schema public to dba_user;
@@ -214,13 +217,13 @@ jobs:
           exit 1
         fi
 
-        # md5 works with PG13 verifiers and negotiates SCRAM for newer verifiers.
+        # Require SCRAM authentication for generated credentials on every version.
         docker exec postgres-dba-test sh -c '
           set -eu
           hba="${PGDATA}/pg_hba.conf"
           {
             printf "%s\n" \
-              "host all ci_test_role all md5"
+              "host all ci_test_role all scram-sha-256"
             cat "${hba}"
           } > "${hba}.new"
           test -s "${hba}.new"
