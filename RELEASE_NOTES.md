@@ -25,6 +25,10 @@ Released November 20, 2026.
 
 ## Interactive input and role reports
 
+**Behavior change:** `r2` previously treated `0` as “leave unchanged.” It now
+revokes the selected attribute. Use Enter to preserve attributes while rotating
+a password; explicit `0` for LOGIN can disable a service account.
+
 - Quote prompted values as SQL literals, including names containing apostrophes.
 - Handle quoted invalid menu choices without SQL errors.
 - Reject invalid boolean answers instead of interpreting typos as superuser requests.
