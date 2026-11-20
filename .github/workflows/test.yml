@@ -33,6 +33,7 @@ jobs:
           -c shared_preload_libraries=pg_stat_statements \
           -c password_encryption=scram-sha-256
     
+    # ubuntu-latest may not package psql 19 yet; use the official client image.
     - name: Install PostgreSQL 19 client wrappers
       run: |
         docker pull postgres:19
@@ -229,24 +230,18 @@ jobs:
         fi
 
         # The container's host rules require SCRAM from initialization onward.
-        auth_rule_ready=false
-        for _ in {1..30}; do
-          if auth_error=$(PGPASSWORD='deliberately-wrong' PAGER='cat' psql \
-            --no-psqlrc \
-            --host=localhost \
-            --username=ci_test_role \
-            --dbname=test \
-            --command='select 1;' 2>&1); then
-            :
-          elif [[ "${auth_error}" == \
-            *'password authentication failed for user "ci_test_role"'* ]]; then
-            auth_rule_ready=true
-            break
-          fi
-          sleep 0.1
-        done
-        if [[ "${auth_rule_ready}" != true ]]; then
-          echo "Password-authentication rule did not become active: ${auth_error}" >&2
+        if auth_error=$(PGPASSWORD='deliberately-wrong' PAGER='cat' psql \
+          --no-psqlrc \
+          --host=localhost \
+          --username=ci_test_role \
+          --dbname=test \
+          --command='select 1;' 2>&1); then
+          echo 'An incorrect password unexpectedly authenticated' >&2
+          exit 1
+        fi
+        if [[ "${auth_error}" != \
+          *'password authentication failed for user "ci_test_role"'* ]]; then
+          echo "Unexpected wrong-password failure: ${auth_error}" >&2
           exit 1
         fi
 
