@@ -34,13 +34,23 @@ jobs:
           -c shared_preload_libraries=pg_stat_statements \
           -c password_encryption=scram-sha-256
     
-    - name: Install PostgreSQL client
+    - name: Install PostgreSQL 19 client wrappers
       run: |
-        sudo apt-get update
-        sudo apt-get install -y postgresql-client-19
-        echo /usr/lib/postgresql/19/bin >> "$GITHUB_PATH"
-        /usr/lib/postgresql/19/bin/psql --version | grep -E '^psql \(PostgreSQL\) 19\.'
-    
+        docker pull postgres:19
+        mkdir -p "$RUNNER_TEMP/pg-client"
+        cat > "$RUNNER_TEMP/pg-client/psql" <<'SH'
+        #!/bin/sh
+        exec docker run --rm --interactive --network host \
+          --env PGHOST --env PGPORT --env PGUSER --env PGDATABASE \
+          --env PGPASSWORD --env PGOPTIONS --env PAGER=cat \
+          --volume "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE:ro" \
+          --workdir "$PWD" postgres:19 "$(basename "$0")" "$@"
+        SH
+        chmod +x "$RUNNER_TEMP/pg-client/psql"
+        cp "$RUNNER_TEMP/pg-client/psql" "$RUNNER_TEMP/pg-client/pg_isready"
+        echo "$RUNNER_TEMP/pg-client" >> "$GITHUB_PATH"
+        "$RUNNER_TEMP/pg-client/psql" --version | grep -E '^psql \(PostgreSQL\) 19\.'
+
     - name: Prepare test database
       run: |
         ready=false
