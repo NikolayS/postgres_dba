@@ -23,9 +23,9 @@ def literal(text):
     return "'" + text.replace("'", "''") + "'"
 
 
-def report(action, name, superuser, login, success=True):
+def report(action, name, superuser, login, success=True, actor='postgres'):
     result = subprocess.run(BASE + ['-f', str(ROOT / 'roles' / f'{action}_user_with_random_password.psql')],
-                            input=f'{name}\n{superuser}\n{login}\n', env=ADMIN,
+                            input=f'{name}\n{superuser}\n{login}\n', env=ADMIN | {'PGUSER': actor},
                             capture_output=True, text=True)
     if not success:
         assert result.returncode != 0, 'Invalid input was accepted'
@@ -46,7 +46,7 @@ def authenticate(name, password, success=True):
         assert 'password authentication failed' in result.stderr or 'is not permitted to log in' in result.stderr
 
 
-names = [PREFIX + "_'quoted;--", PREFIX + '_invalid']
+names = [PREFIX + "_'quoted;--", PREFIX + '_invalid', PREFIX + '_managed', PREFIX + '_manager']
 try:
     name = names[0]
     initial = report('create', name, '1', '1')
@@ -65,6 +65,14 @@ try:
     report('alter', name, 'typo', '1', False)
     assert sql(f'select rolsuper, rolcanlogin from pg_roles where rolname={literal(name)}') == 'f|t'
     authenticate(name, rotated)
+    manager = names[3]
+    sql('create role "' + manager + '" login createrole password \'postgres\'')
+    managed = names[2]
+    managed_initial = report('create', managed, '0', '1', actor=manager)
+    authenticate(managed, managed_initial)
+    managed_rotated = report('alter', managed, '0', '1', actor=manager)
+    authenticate(managed, managed_rotated)
+    authenticate(managed, managed_initial, False)
     menu = subprocess.run(BASE + ['-f', str(ROOT / 'start.psql')], input="'\n0\n\nq\n",
                           env=ADMIN, capture_output=True, text=True, timeout=30)
     assert menu.returncode == 0, 'Quoted menu input caused an SQL error'
