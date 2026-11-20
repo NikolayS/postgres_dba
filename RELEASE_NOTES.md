@@ -1,5 +1,7 @@
 # postgres_dba 2026.11.1
 
+Released November 20, 2026.
+
 **34 reports** | Tested on **PostgreSQL 13–19** | Works with `pg_monitor` role
 
 ## PostgreSQL 19
