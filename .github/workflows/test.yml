@@ -37,8 +37,9 @@ jobs:
     - name: Install PostgreSQL client
       run: |
         sudo apt-get update
-        sudo apt-get install -y postgresql-client
-        psql --version
+        sudo apt-get install -y postgresql-client-19
+        echo /usr/lib/postgresql/19/bin >> "$GITHUB_PATH"
+        /usr/lib/postgresql/19/bin/psql --version | grep -E '^psql \(PostgreSQL\) 19\.'
     
     - name: Prepare test database
       run: |
@@ -153,6 +154,7 @@ jobs:
     - name: Test non-interactive reports
       run: |
         echo "Testing all non-interactive reports with minimal privileges..."
+        # Exercise both accepted legacy settings; reports currently use identical SQL.
         for mode in off on; do
           echo "Testing reports with postgres_dba.wide=${mode}..."
           for report in ./sql/*.sql; do
@@ -217,26 +219,7 @@ jobs:
           exit 1
         fi
 
-        # Require SCRAM authentication for generated credentials on every version.
-        docker exec postgres-dba-test sh -c '
-          set -eu
-          hba="${PGDATA}/pg_hba.conf"
-          {
-            printf "%s\n" \
-              "host all ci_test_role all scram-sha-256"
-            cat "${hba}"
-          } > "${hba}.new"
-          test -s "${hba}.new"
-          mv "${hba}.new" "${hba}"
-        '
-        PAGER='cat' psql \
-          --no-psqlrc \
-          --set=ON_ERROR_STOP=1 \
-          --host=localhost \
-          --username=postgres \
-          --dbname=test \
-          --command='select pg_reload_conf();'
-
+        # The container's host rules require SCRAM from initialization onward.
         auth_rule_ready=false
         for _ in {1..30}; do
           if auth_error=$(PGPASSWORD='deliberately-wrong' PAGER='cat' psql \

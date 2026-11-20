@@ -111,7 +111,7 @@ Some reports benefit from additional extensions:
 
 ## Compatibility
 
-Tested on **PostgreSQL 13 through 18 and PostgreSQL 19** via CI on every commit. Older versions (9.6–12) may work but are not actively tested.
+Tested on **PostgreSQL 13 through 19** via CI on every commit. Older versions (9.6–12) may work but are not actively tested.
 
 Works with the `pg_monitor` role — superuser is not required for most reports (corruption checks need superuser or explicit `GRANT EXECUTE`).
 
