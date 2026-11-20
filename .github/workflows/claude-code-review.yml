@@ -19,6 +19,8 @@ jobs:
     #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
 
     runs-on: ubuntu-latest
+    env:
+      CLAUDE_REVIEW_CONFIGURED: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
     permissions:
       contents: read
       pull-requests: read
@@ -26,12 +28,18 @@ jobs:
       id-token: write
 
     steps:
+      - name: Report unavailable optional reviewer
+        if: env.CLAUDE_REVIEW_CONFIGURED != 'true'
+        run: echo "Optional Claude review is not configured. This is not a code-review approval; a posted samorev review is required before merge." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Checkout repository
+        if: env.CLAUDE_REVIEW_CONFIGURED == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       - name: Run Claude Code Review
+        if: env.CLAUDE_REVIEW_CONFIGURED == 'true'
         id: claude-review
         uses: anthropics/claude-code-action@v1
         with:
