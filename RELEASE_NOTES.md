@@ -23,6 +23,28 @@ Released November 20, 2026.
 - Added assertions that every job is running its expected PostgreSQL version.
 - Restricted the test database to loopback and added unconditional cleanup.
 
+## Password tracking safety
+
+- Refuse role password generation with `pg_stat_statements.track=all`, which
+  otherwise exposes live passwords to monitoring roles through nested statements.
+
+## Interactive input and role reports
+
+**Behavior change:** `r2` previously treated `0` as “leave unchanged.” It now
+revokes the selected attribute. Use Enter to preserve attributes while rotating
+a password; explicit `0` for LOGIN can disable a service account.
+
+- Quote prompted values as SQL literals, including names containing apostrophes.
+- Handle quoted invalid menu choices without SQL errors.
+- Reject invalid boolean answers instead of interpreting typos as superuser requests.
+- Generate 32-character lowercase hexadecimal passwords using the built-in
+  cryptographic UUID generator (122 random bits, requires PG13+). Policies
+  requiring uppercase or special characters may reject this format.
+- Make explicit negative alter-role answers apply NOSUPERUSER and NOLOGIN;
+  Enter preserves existing attributes during password rotation.
+- Display rotated passwords without requiring DEBUG, and stop printing password-bearing SQL.
+- Clarify that server/audit logging and terminal capture can still expose credentials.
+
 ## Versioning
 
 Starting with this release, postgres_dba uses calendar versions in

@@ -109,9 +109,21 @@ Some reports benefit from additional extensions:
 | `pgstattuple` | b3, b4 | `CREATE EXTENSION pgstattuple;` |
 | `pg_buffercache` | m1 | `CREATE EXTENSION pg_buffercache;` |
 
+The role tools (`r1`/`r2`) require role-administration privileges. They generate
+32-character lowercase hexadecimal passwords with 122 random bits using the built-in UUID generator.
+Password policies requiring uppercase or special characters may reject this format.
+Error CONTEXT and nested-statement tracking (`pg_stat_statements.track = all`)
+can expose generated passwords to `pg_monitor` / `pg_read_all_stats` members.
+The role tools refuse to generate passwords with `pg_stat_statements.track=all`.
+Server/audit logging and terminal capture remain separate exposure paths.
+Behavior change: `r2` previously treated `0` as “leave unchanged.”
+Now answering `0` explicitly removes SUPERUSER or LOGIN; an empty answer
+leaves that attribute unchanged. For `r1`, empty answers mean false. Invalid boolean answers fail rather than enabling privileges.
+Generated credentials are displayed in the terminal; these scripts do not guarantee secrecy.
+
 ## Compatibility
 
-Tested on **PostgreSQL 13 through 19** via CI on every commit. Older versions (9.6–12) may work but are not actively tested.
+Tested on **PostgreSQL 13 through 19** via CI on every commit. Older versions (9.6–12) are not actively tested; role reports `r1`/`r2` require Postgres 13+.
 
 Works with the `pg_monitor` role — superuser is not required for most reports (corruption checks need superuser or explicit `GRANT EXECUTE`).
 

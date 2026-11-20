@@ -4,7 +4,6 @@ on:
   push:
     branches: [ master, main ]
   pull_request:
-    branches: [ master, main ]
 
 jobs:
   test:
@@ -34,6 +33,7 @@ jobs:
           -c shared_preload_libraries=pg_stat_statements \
           -c password_encryption=scram-sha-256
     
+    # Use official clients so the runner package catalog does not limit versions.
     - name: Install PostgreSQL client wrappers
       run: |
         docker pull postgres:${{ matrix.postgres-version }}
@@ -226,24 +226,18 @@ jobs:
         fi
 
         # The container's host rules require SCRAM from initialization onward.
-        auth_rule_ready=false
-        for _ in {1..30}; do
-          if auth_error=$(PGPASSWORD='deliberately-wrong' PAGER='cat' psql \
-            --no-psqlrc \
-            --host=localhost \
-            --username=ci_test_role \
-            --dbname=test \
-            --command='select 1;' 2>&1); then
-            :
-          elif [[ "${auth_error}" == \
-            *'password authentication failed for user "ci_test_role"'* ]]; then
-            auth_rule_ready=true
-            break
-          fi
-          sleep 0.1
-        done
-        if [[ "${auth_rule_ready}" != true ]]; then
-          echo "Password-authentication rule did not become active: ${auth_error}" >&2
+        if auth_error=$(PGPASSWORD='deliberately-wrong' PAGER='cat' psql \
+          --no-psqlrc \
+          --host=localhost \
+          --username=ci_test_role \
+          --dbname=test \
+          --command='select 1;' 2>&1); then
+          echo 'An incorrect password unexpectedly authenticated' >&2
+          exit 1
+        fi
+        if [[ "${auth_error}" != \
+          *'password authentication failed for user "ci_test_role"'* ]]; then
+          echo "Unexpected wrong-password failure: ${auth_error}" >&2
           exit 1
         fi
 
@@ -267,9 +261,9 @@ jobs:
           --command="select md5(rolpassword) from pg_authid
                      where rolname = 'ci_test_role';")
 
-        # r2 emits its generated password at DEBUG level.
+        # r2 displays its generated password without enabling DEBUG.
         if ! output=$(printf 'ci_test_role\n0\n1\n' \
-          | PGOPTIONS='-c client_min_messages=debug' PAGER='cat' psql \
+          | PAGER='cat' psql \
           --no-psqlrc \
           --set=ON_ERROR_STOP=1 \
           --host=localhost \
@@ -283,7 +277,7 @@ jobs:
 
         altered_password=$(printf '%s\n' "${output}" \
           | sed -nE \
-            's/^.*DEBUG:[[:space:]]+User ci_test_role altered, password: ([[:alnum:]]+)$/\1/p')
+            's/^.*INFO:[[:space:]]+User ci_test_role altered, password: ([[:alnum:]]+)$/\1/p')
         if [[ -z "${altered_password}" ]]; then
           echo 'Alter-role report did not return a parseable password' >&2
           exit 1
@@ -351,6 +345,13 @@ jobs:
           exit 1
         fi
     
+    - name: Test role input and privilege edge cases
+      env:
+        PGHOST: localhost
+        PGUSER: postgres
+        PGDATABASE: test
+      run: POSTGRES_DBA_TEST_CONTAINER=postgres-dba-test python3 tests/role_reports.py
+
     - name: Run regression tests
       run: |
         echo "Running regression tests with minimal privileges..."

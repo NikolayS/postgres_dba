@@ -17,7 +17,7 @@ GitHub Actions (`test.yml`): runs on push and PRs — tests across PostgreSQL 13
 
 The hosted Claude review is optional and reports when its credential is absent; that status is not review approval.
 
-All changes go through PRs. Before merging, run a REV review (https://gitlab.com/postgres-ai/rev/) and post the report as a PR comment. REV is designed for GitLab but works on GitHub PRs too.
+All changes go through PRs. Before merging, run the REV-based samorev reviewer (https://github.com/Tanya301/samorev) and post the report as a PR comment. Review the source findings as well as CI; green CI alone is not approval.
 
 Never merge without explicit approval from the project owner.
 
