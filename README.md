@@ -116,8 +116,7 @@ Error CONTEXT and nested-statement tracking (`pg_stat_statements.track = all`)
 can expose generated passwords, in addition to server/audit logs and terminal capture.
 For `r2`, answering `0` explicitly removes SUPERUSER or LOGIN; an empty answer
 leaves that attribute unchanged. For `r1`, empty answers mean false. Invalid boolean answers fail rather than enabling privileges.
-Generated credentials are displayed in the terminal. Server/audit logging or
-terminal capture can still record them; these scripts do not guarantee secrecy.
+Generated credentials are displayed in the terminal; these scripts do not guarantee secrecy.
 
 ## Compatibility
 

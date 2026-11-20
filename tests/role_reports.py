@@ -9,6 +9,7 @@ import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
 PREFIX = 'dba_test_' + uuid.uuid4().hex[:10]
+MANAGER_PASSWORD = uuid.uuid4().hex
 BASE = ['psql', '-X', '-v', 'ON_ERROR_STOP=1', '-At']
 ADMIN = os.environ | {'PGUSER': 'postgres', 'PGDATABASE': 'test'}
 
@@ -26,7 +27,7 @@ def literal(text):
 
 def report(action, name, superuser, login, success=True, actor='postgres'):
     result = subprocess.run(BASE + ['-f', str(ROOT / 'roles' / f'{action}_user_with_random_password.psql')],
-                            input=f'{name}\n{superuser}\n{login}\n', env=ADMIN | {'PGUSER': actor},
+                            input=f'{name}\n{superuser}\n{login}\n', env=ADMIN | {'PGUSER': actor, 'PGPASSWORD': ADMIN.get('PGPASSWORD', '') if actor == 'postgres' else MANAGER_PASSWORD},
                             capture_output=True, text=True)
     if not success:
         assert result.returncode != 0, 'Invalid input was accepted'
@@ -47,8 +48,13 @@ def authenticate(name, password, success=True):
         assert 'password authentication failed' in result.stderr or 'is not permitted to log in' in result.stderr
 
 
-names = [PREFIX + "_'quoted;--", PREFIX + '_invalid', PREFIX + '_managed', PREFIX + '_manager']
+names = [PREFIX + "_'quoted;--", PREFIX + '_invalid', PREFIX + '_managed', PREFIX + '_manager', PREFIX + '_blank']
 try:
+    blank_password = report('create', names[4], '', '')
+    assert sql(f'select rolsuper, rolcanlogin from pg_roles where rolname={literal(names[4])}') == 'f|f'
+    authenticate(names[4], blank_password, False)
+    report('create', '', '0', '1', False)
+    report('alter', '', '0', '1', False)
     name = names[0]
     initial = report('create', name, '1', '1')
     assert sql(f'select rolsuper, rolcanlogin from pg_roles where rolname={literal(name)}') == 't|t'
@@ -76,7 +82,7 @@ try:
     assert sql(f'select rolsuper, rolcanlogin from pg_roles where rolname={literal(name)}') == 'f|t'
     authenticate(name, rotated)
     manager = names[3]
-    sql('create role "' + manager + '" login createrole password \'postgres\'')
+    sql('create role "' + manager + '" login createrole password ' + literal(MANAGER_PASSWORD))
     managed = names[2]
     report('create', names[1], '1', '1', False, actor=manager)
     assert sql(f'select count(*) from pg_roles where rolname={literal(names[1])}') == '0'
