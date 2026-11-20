@@ -21,6 +21,16 @@
 - Added assertions that every job is running its expected PostgreSQL version.
 - Restricted the test database to loopback and added unconditional cleanup.
 
+## Interactive input and role reports
+
+- Quote prompted values as SQL literals, including names containing apostrophes.
+- Handle quoted invalid menu choices without SQL errors.
+- Reject invalid boolean answers instead of interpreting typos as superuser requests.
+- Generate passwords using the built-in cryptographic UUID generator (122 random bits).
+- Make negative alter-role answers explicitly apply NOSUPERUSER and NOLOGIN.
+- Display rotated passwords without requiring DEBUG, and stop printing password-bearing SQL.
+- Clarify that server/audit logging and terminal capture can still expose credentials.
+
 ## Versioning
 
 Starting with this release, postgres_dba uses calendar versions in

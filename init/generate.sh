@@ -59,15 +59,14 @@ printf "%s '%4s – %s'\n" "\\echo" "q" "Quit" >> "$OUT"
 echo "\\echo" >> "$OUT"
 echo "\\echo Type your choice and press <Enter>:" >> "$OUT"
 echo "\\prompt d_step_unq" >> "$OUT"
-echo "\\set d_stp '\\'' :d_step_unq '\\''" >> "$OUT"
 echo "select" >> "$OUT"
 
 for f in ./sql/*.sql
 do
   prefix=$(echo $f | sed -e 's/_.*$//g' -e 's/^.*\///g')
-  echo ":d_stp::text = '$prefix' as d_step_is_$prefix," >> "$OUT"
+  echo ":'d_step_unq'::text = '$prefix' as d_step_is_$prefix," >> "$OUT"
 done
-echo ":d_stp::text = 'q' as d_step_is_q \\gset" >> "$OUT"
+echo ":'d_step_unq'::text = 'q' as d_step_is_q \\gset" >> "$OUT"
 
 echo "\\if :d_step_is_q" >> "$OUT"
 echo "  \\echo 'Bye!'" >> "$OUT"

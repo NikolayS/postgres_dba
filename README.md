@@ -109,6 +109,13 @@ Some reports benefit from additional extensions:
 | `pgstattuple` | b3, b4 | `CREATE EXTENSION pgstattuple;` |
 | `pg_buffercache` | m1 | `CREATE EXTENSION pg_buffercache;` |
 
+The role tools (`r1`/`r2`) require role-administration privileges. They generate
+32-character passwords with 122 random bits using the built-in UUID generator.
+For `r2`, answering `0` explicitly removes SUPERUSER or LOGIN; an empty answer
+also means false. Invalid boolean answers fail rather than enabling privileges.
+Generated credentials are displayed in the terminal. Server/audit logging or
+terminal capture can still record them; these scripts do not guarantee secrecy.
+
 ## Compatibility
 
 Tested on **PostgreSQL 13 through 18 and PostgreSQL 19** via CI on every commit. Older versions (9.6–12) may work but are not actively tested.

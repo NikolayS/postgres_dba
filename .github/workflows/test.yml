@@ -278,9 +278,9 @@ jobs:
           --command="select md5(rolpassword) from pg_authid
                      where rolname = 'ci_test_role';")
 
-        # r2 emits its generated password at DEBUG level.
+        # r2 displays its generated password without enabling DEBUG.
         if ! output=$(printf 'ci_test_role\n0\n1\n' \
-          | PGOPTIONS='-c client_min_messages=debug' PAGER='cat' psql \
+          | PAGER='cat' psql \
           --no-psqlrc \
           --set=ON_ERROR_STOP=1 \
           --host=localhost \
@@ -294,7 +294,7 @@ jobs:
 
         altered_password=$(printf '%s\n' "${output}" \
           | sed -nE \
-            's/^.*DEBUG:[[:space:]]+User ci_test_role altered, password: ([[:alnum:]]+)$/\1/p')
+            's/^.*INFO:[[:space:]]+User ci_test_role altered, password: ([[:alnum:]]+)$/\1/p')
         if [[ -z "${altered_password}" ]]; then
           echo 'Alter-role report did not return a parseable password' >&2
           exit 1
@@ -362,6 +362,13 @@ jobs:
           exit 1
         fi
     
+    - name: Test role input and privilege edge cases
+      env:
+        PGHOST: localhost
+        PGUSER: postgres
+        PGDATABASE: test
+      run: python3 tests/role_reports.py
+
     - name: Run regression tests
       run: |
         echo "Running regression tests with minimal privileges..."
