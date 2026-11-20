@@ -28,8 +28,11 @@ Released November 20, 2026.
 - Quote prompted values as SQL literals, including names containing apostrophes.
 - Handle quoted invalid menu choices without SQL errors.
 - Reject invalid boolean answers instead of interpreting typos as superuser requests.
-- Generate passwords using the built-in cryptographic UUID generator (122 random bits).
-- Make negative alter-role answers explicitly apply NOSUPERUSER and NOLOGIN.
+- Generate 32-character lowercase hexadecimal passwords using the built-in
+  cryptographic UUID generator (122 random bits, requires PG13+). Policies
+  requiring uppercase or special characters may reject this format.
+- Make explicit negative alter-role answers apply NOSUPERUSER and NOLOGIN;
+  Enter preserves existing attributes during password rotation.
 - Display rotated passwords without requiring DEBUG, and stop printing password-bearing SQL.
 - Clarify that server/audit logging and terminal capture can still expose credentials.
 

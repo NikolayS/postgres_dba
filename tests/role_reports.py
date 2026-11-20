@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,12 +53,21 @@ try:
     initial = report('create', name, '1', '1')
     assert sql(f'select rolsuper, rolcanlogin from pg_roles where rolname={literal(name)}') == 't|t'
     authenticate(name, initial)
+    unchanged = report('alter', name, '', '')
+    assert sql(f'select rolsuper, rolcanlogin from pg_roles where rolname={literal(name)}') == 't|t'
+    authenticate(name, unchanged)
+    authenticate(name, initial, False)
     disabled = report('alter', name, '0', '0')
     assert sql(f'select rolsuper, rolcanlogin from pg_roles where rolname={literal(name)}') == 'f|f'
     authenticate(name, disabled, False)
     rotated = report('alter', name, '0', '1')
     assert len({initial, disabled, rotated}) == 3
     authenticate(name, rotated)
+    promoted = report('alter', name, '1', '1')
+    assert sql(f'select rolsuper from pg_roles where rolname={literal(name)}') == 't'
+    rotated = report('alter', name, '0', '1')
+    authenticate(name, rotated)
+    authenticate(name, promoted, False)
     authenticate(name, initial, False)
     authenticate(name, disabled, False)
     report('create', names[1], 'typo', '1', False)
@@ -68,9 +78,14 @@ try:
     manager = names[3]
     sql('create role "' + manager + '" login createrole password \'postgres\'')
     managed = names[2]
+    report('create', names[1], '1', '1', False, actor=manager)
+    assert sql(f'select count(*) from pg_roles where rolname={literal(names[1])}') == '0'
     managed_initial = report('create', managed, '0', '1', actor=manager)
     authenticate(managed, managed_initial)
     managed_rotated = report('alter', managed, '0', '1', actor=manager)
+    authenticate(managed, managed_rotated)
+    report('alter', managed, '1', '1', False, actor=manager)
+    assert sql(f'select rolsuper from pg_roles where rolname={literal(managed)}') == 'f'
     authenticate(managed, managed_rotated)
     authenticate(managed, managed_initial, False)
     menu = subprocess.run(BASE + ['-f', str(ROOT / 'start.psql')], input="'\n0\n\nq\n",
@@ -79,5 +94,13 @@ try:
     assert 'Unknown option' in menu.stdout and 'Bye!' in menu.stdout and 'Primary' in menu.stdout
     print('PASS: quoted names, cryptographic password format, role flags, rotation, login, invalid-input atomicity')
 finally:
+    active_error = sys.exc_info()[0] is not None
+    cleanup_failed = False
     for name in names:
-        sql('drop role if exists "' + name.replace('"', '""') + '"')
+        try:
+            sql('drop role if exists "' + name.replace('"', '""') + '"')
+        except AssertionError:
+            cleanup_failed = True
+            print('Cleanup failed for a disposable test role', file=sys.stderr)
+    if cleanup_failed and not active_error:
+        raise AssertionError('Test role cleanup failed')
