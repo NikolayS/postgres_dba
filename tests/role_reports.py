@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PREFIX = 'dba_test_' + uuid.uuid4().hex[:10]
 MANAGER_PASSWORD = uuid.uuid4().hex
 BASE = ['psql', '-X', '-v', 'ON_ERROR_STOP=1', '-At']
+PASSWORDS = []
 ADMIN = os.environ | {'PGUSER': 'postgres', 'PGDATABASE': 'test'}
 
 
@@ -25,17 +26,23 @@ def literal(text):
     return "'" + text.replace("'", "''") + "'"
 
 
-def report(action, name, superuser, login, success=True, actor='postgres'):
+def report(action, name, superuser, login, success=True, actor='postgres', tracking='top', expected_error=None):
     result = subprocess.run(BASE + ['-f', str(ROOT / 'roles' / f'{action}_user_with_random_password.psql')],
-                            input=f'{name}\n{superuser}\n{login}\n', env=ADMIN | {'PGUSER': actor, 'PGPASSWORD': ADMIN.get('PGPASSWORD', '') if actor == 'postgres' else MANAGER_PASSWORD},
+                            input=f'{name}\n{superuser}\n{login}\n', env=ADMIN | {'PGOPTIONS': '-c client_min_messages=debug1' + (' -c pg_stat_statements.track=' + tracking if actor == 'postgres' else ''), 'PGUSER': actor, 'PGPASSWORD': ADMIN.get('PGPASSWORD', '') if actor == 'postgres' else MANAGER_PASSWORD},
                             capture_output=True, text=True)
     if not success:
         assert result.returncode != 0, 'Invalid input was accepted'
+        if expected_error:
+            assert expected_error in result.stderr, 'Unexpected rejection reason'
         return None
     assert result.returncode == 0, f'{action} failed (credential-bearing output suppressed)'
     password = re.search(r'password: ([a-f0-9]{32})\s*$', result.stderr, re.MULTILINE)
     assert password, 'Password not visible at default message level'
-    return password.group(1)
+    value = password.group(1)
+    assert re.fullmatch(r'[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}', value), 'Expected UUIDv4 password format'
+    assert (result.stdout + result.stderr).count(value) == 1, 'Password repeated in diagnostic output'
+    PASSWORDS.append(value)
+    return value
 
 
 def authenticate(name, password, success=True):
@@ -66,6 +73,9 @@ try:
     disabled = report('alter', name, '0', '0')
     assert sql(f'select rolsuper, rolcanlogin from pg_roles where rolname={literal(name)}') == 'f|f'
     authenticate(name, disabled, False)
+    still_disabled = report('alter', name, '', '')
+    assert sql(f'select rolsuper, rolcanlogin from pg_roles where rolname={literal(name)}') == 'f|f'
+    authenticate(name, still_disabled, False)
     rotated = report('alter', name, '0', '1')
     assert len({initial, disabled, rotated}) == 3
     authenticate(name, rotated)
@@ -88,17 +98,26 @@ try:
     assert sql(f'select count(*) from pg_roles where rolname={literal(names[1])}') == '0'
     managed_initial = report('create', managed, '0', '1', actor=manager)
     authenticate(managed, managed_initial)
-    managed_rotated = report('alter', managed, '0', '1', actor=manager)
+    managed_rotated = report('alter', managed, '', '', actor=manager)
+    assert sql(f'select rolsuper, rolcanlogin from pg_roles where rolname={literal(managed)}') == 'f|t'
     authenticate(managed, managed_rotated)
     report('alter', managed, '1', '1', False, actor=manager)
     assert sql(f'select rolsuper from pg_roles where rolname={literal(managed)}') == 'f'
     authenticate(managed, managed_rotated)
     authenticate(managed, managed_initial, False)
+    for action, target in [('create', names[1]), ('alter', name)]:
+        report(action, target, '0', '1', False, tracking='all',
+               expected_error='Refusing password generation with pg_stat_statements.track=all')
+    assert sql(f'select count(*) from pg_roles where rolname={literal(names[1])}') == '0'
+    authenticate(name, rotated)
+    if os.environ.get('POSTGRES_DBA_TEST_CONTAINER'):
+        logs = subprocess.check_output(['docker', 'logs', os.environ['POSTGRES_DBA_TEST_CONTAINER']], stderr=subprocess.STDOUT, text=True)
+        assert not any(value in logs for value in PASSWORDS), 'Applied password leaked to server logs'
     menu = subprocess.run(BASE + ['-f', str(ROOT / 'start.psql')], input="'\n0\n\nq\n",
                           env=ADMIN, capture_output=True, text=True, timeout=30)
     assert menu.returncode == 0, 'Quoted menu input caused an SQL error'
     assert 'Unknown option' in menu.stdout and 'Bye!' in menu.stdout and 'Primary' in menu.stdout
-    print('PASS: quoted names, cryptographic password format, role flags, rotation, login, invalid-input atomicity')
+    print('PASS: quoted names, UUIDv4 password format, tracking guard, diagnostic secrecy, role flags, rotation, login, invalid-input atomicity')
 finally:
     active_error = sys.exc_info()[0] is not None
     cleanup_failed = False

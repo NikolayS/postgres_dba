@@ -23,6 +23,11 @@ Released November 20, 2026.
 - Added assertions that every job is running its expected PostgreSQL version.
 - Restricted the test database to loopback and added unconditional cleanup.
 
+## Password tracking safety
+
+- Refuse role password generation with `pg_stat_statements.track=all`, which
+  otherwise exposes live passwords to monitoring roles through nested statements.
+
 ## Interactive input and role reports
 
 **Behavior change:** `r2` previously treated `0` as “leave unchanged.” It now

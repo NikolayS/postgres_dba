@@ -350,7 +350,7 @@ jobs:
         PGHOST: localhost
         PGUSER: postgres
         PGDATABASE: test
-      run: python3 tests/role_reports.py
+      run: POSTGRES_DBA_TEST_CONTAINER=postgres-dba-test python3 tests/role_reports.py
 
     - name: Run regression tests
       run: |
